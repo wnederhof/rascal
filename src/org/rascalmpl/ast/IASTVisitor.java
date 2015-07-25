@@ -347,6 +347,8 @@ public interface IASTVisitor<T> {
 
   public T visitFunctionDeclarationExpression(FunctionDeclaration.Expression x);
 
+  public T visitFunctionDeclarationSugar(FunctionDeclaration.Sugar x);
+
   public T visitFunctionModifierDefault(FunctionModifier.Default x);
 
   public T visitFunctionModifierJava(FunctionModifier.Java x);

@@ -759,6 +759,7 @@ syntax Variant
 syntax FunctionDeclaration
 	= abstract: Tags tags Visibility visibility Signature signature ";" 
 	| @Foldable @breakable{expression} expression: Tags tags Visibility visibility Signature signature "=" Expression expression ";"
+	| @Foldable @breakable{expression} sugar: Tags tags Visibility visibility Name name "(" Type typeLhs ":" Pattern patternLhs ")" "=" Type typeRhs ":" Pattern patternRhs ";"
 	| @Foldable @breakable{expression,conditions} conditional: Tags tags Visibility visibility Signature signature "=" Expression expression "when" {Expression ","}+ conditions ";"
 	| @Foldable \default: Tags tags Visibility visibility Signature signature FunctionBody body ;
 

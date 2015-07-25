@@ -14,6 +14,7 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
 import org.rascalmpl.interpreter.utils.Names;
+import org.rascalmpl.parser.ASTBuilder;
 
 public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 
@@ -93,8 +95,41 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 		}
 
 		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
-			eval.__getTypeDeclarator().declareConstructor(this, eval.getCurrentEnvt());
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.__getTypeDeclarator().declareConstructor(this, __eval.getCurrentEnvt());
+
+			// Declare SYSTEM annotations
+			
+			// TODO: Perhaps only when @sugarAnnotations tag is there?
+			
+			org.rascalmpl.ast.BasicType mapType = ASTBuilder.make("BasicType", "Map", this.getLocation());
+			
+			List<org.rascalmpl.ast.TypeArg> mapArgs = new LinkedList<>();
+			mapArgs.add(
+					ASTBuilder.make("TypeArg", "Default", this.getLocation(),
+						ASTBuilder.make("Type", "Basic", this.getLocation(),
+							ASTBuilder.make("BasicType", "String", this.getLocation()))));
+			mapArgs.add(
+					ASTBuilder.make("TypeArg", "Default", this.getLocation(),
+						ASTBuilder.make("Type", "Basic", this.getLocation(),
+							ASTBuilder.make("BasicType", "Value", this.getLocation()))));
+			
+			org.rascalmpl.ast.StructuredType structuredType = ASTBuilder.make("StructuredType", "Default", this.getLocation(), mapType, mapArgs);
+
+			
+			Type annoType = ASTBuilder.make("Type", "Structured", this.getLocation(), structuredType).typeOf(__eval.getCurrentEnvt(), true, __eval);;
+			
+			String name = "unusedVariables";
+
+			Type onType = __eval.getCurrentEnvt().getAbstractDataType(Names.typeName(getUser().getName()));
+			
+			if (onType.isAbstractData() || onType.isConstructor() || onType.isNode()) {
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						name, annoType);
+			} else {
+				throw new UnsupportedOperation("Can only declare annotations on node and ADT types",getOnType());
+			}
+
 			return ResultFactory.nothing();
 		}
 

@@ -16,7 +16,10 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
@@ -25,6 +28,7 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
+import org.rascalmpl.ast.Name;
 import org.rascalmpl.ast.Signature;
 import org.rascalmpl.ast.Tags;
 import org.rascalmpl.ast.Visibility;
@@ -36,6 +40,7 @@ import org.rascalmpl.interpreter.result.RascalFunction;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.MissingModifier;
 import org.rascalmpl.interpreter.staticErrors.NonAbstractJavaFunction;
+import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.parser.ASTBuilder;
 
 public abstract class FunctionDeclaration extends
@@ -147,6 +152,139 @@ public abstract class FunctionDeclaration extends
 			return lambda;
 		}
 
+	}
+	
+
+	static public class Sugar extends
+		org.rascalmpl.ast.FunctionDeclaration.Sugar {
+		
+		public Sugar(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility, Name name,
+				org.rascalmpl.ast.Type typeLhs, org.rascalmpl.ast.Expression patternLhs, org.rascalmpl.ast.Type typeRhs,
+				org.rascalmpl.ast.Expression patternRhs) {
+			super(src, node, tags, visibility, name, typeLhs, patternLhs, typeRhs, patternRhs);
+		}
+
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			// Yeehaw!! :-D
+			System.out.println("Yolo!");
+			AbstractFunction lambdaDesugar = constructTransformationFunction(__eval, getTypeRhs(), getPatternLhs(), getPatternRhs());
+			
+			// Resugaring.
+			//constructTransformationFunction(__eval, getTypeLhs(), getPatternRhs(), getPatternLhs());
+			return lambdaDesugar;
+		}
+		
+		private RascalFunction declareFunction(IEvaluator<Result<IValue>> __eval, RascalFunction lambda) {
+			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
+			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
+			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
+			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
+			return lambda;
+		}
+		
+		private Signature createSignature(org.rascalmpl.ast.Type type, org.rascalmpl.ast.Expression signaturePattern) {
+			
+			// -.-'
+			org.rascalmpl.ast.OptionalComma optionalComma = null; //ASTBuilder.make("OptionalComma", "Lexical", getSignature().getLocation(), "");
+			
+			List<org.rascalmpl.ast.Expression> listOfFormals = new LinkedList<>();
+			listOfFormals.add(signaturePattern);
+			
+			org.rascalmpl.ast.Formals formals = ASTBuilder.make("Formals", "Default", getLocation(), listOfFormals);
+			
+			org.rascalmpl.ast.KeywordFormals keywordFormals = ASTBuilder.make("KeywordFormals", "Default", getLocation(),
+					optionalComma, new LinkedList<org.rascalmpl.ast.KeywordFormal>());
+			
+			org.rascalmpl.ast.Parameters parameters = ASTBuilder.make("Parameters", "Default",
+					getLocation(), formals, keywordFormals);
+			
+			org.rascalmpl.ast.FunctionModifiers modifiers = ASTBuilder.make("FunctionModifiers", "Modifierlist",
+					getLocation(), new LinkedList<>());
+			
+			org.rascalmpl.ast.Signature signature =  
+					ASTBuilder.make("Signature", "NoThrows",
+							getLocation(), modifiers,
+							type, getName(), parameters);
+			return signature;
+		}
+		
+		/* Visit all elements in the given expression, collecting the names. */
+		private Set<String> findVariables(org.rascalmpl.ast.Expression p) {
+			Set<String> vars = new HashSet<String>();
+			
+			// TODO needs appropriate checking to see if all variables all collected.
+			if (p.hasElements()) {
+				for (org.rascalmpl.ast.Expression pC : p.getElements()) {
+					vars.addAll(findVariables(pC));
+				}
+			}
+			
+			if (p.hasArguments()) {
+				for (org.rascalmpl.ast.Expression pC : p.getArguments()) {
+					vars.addAll(findVariables(pC));
+				}
+			}
+			
+			if (p.hasElements0()) {
+				for (org.rascalmpl.ast.Expression pC : p.getElements0()) {
+					vars.addAll(findVariables(pC));
+				}
+			}
+			
+			if (p.hasQualifiedName()) {
+				vars.add(org.rascalmpl.interpreter.utils.Names.fullName(p.getQualifiedName()));
+			}
+			return vars;
+		}
+		
+		private AbstractFunction constructTransformationFunction(
+				IEvaluator<Result<IValue>> __eval, org.rascalmpl.ast.Type type,
+				org.rascalmpl.ast.Expression signaturePattern,
+				org.rascalmpl.ast.Expression expression) {
+			ISourceLocation src = this.getLocation();
+			
+			Signature signature = createSignature(type, signaturePattern);
+			
+			Set<String> varsSig = findVariables(signaturePattern);
+			Set<String> varsPat = findVariables(expression);
+			
+			List<org.rascalmpl.ast.Mapping_Expression> mappingExpressions = new LinkedList<>();
+			
+			for (String s : varsSig) {
+				if (!varsPat.contains(s)) {
+					System.out.println("Found one! " + s);
+					
+					org.rascalmpl.ast.Expression from = ASTBuilder.makeExp("Literal", src,
+						ASTBuilder.make("Literal", "String", src, 
+								ASTBuilder.make("StringLiteral", "NonInterpolated", src,
+										ASTBuilder.make("StringConstant", "Lexical", src, "\"" + s + "\""))));
+					//if (1==1) return null;
+					org.rascalmpl.ast.Expression to = ASTBuilder.makeExp("QualifiedName", src, org.rascalmpl.interpreter.utils.Names.toQualifiedName(s, src));
+					
+					mappingExpressions.add(ASTBuilder.make("Mapping_Expression", "Default", src, from, to));
+				}
+			}
+			
+			// Annotate ...
+			// AbstractAST anno = ASTBuilder.makeStat(cons, src, args)
+			
+			// makeExp was makeStat??
+			AbstractAST ret = ASTBuilder.makeStat("Return", src, 
+					ASTBuilder.makeStat("Expression", src,
+						ASTBuilder.makeExp("SetAnnotation", src, expression, Names.toName("unusedVariables", src),
+								ASTBuilder.makeExp("Map", src, mappingExpressions))));
+			
+			List<AbstractAST> sl = Arrays.<AbstractAST>asList(ret);
+			AbstractAST body = ASTBuilder.make("FunctionBody", "Default", src, sl);
+			
+			FunctionDeclaration.Default func = ASTBuilder.make("FunctionDeclaration", "Default", src, getTags(), getVisibility(), signature, body);
+			RascalFunction lambda = new RascalFunction(__eval, func, false, __eval
+					.getCurrentEnvt(), __eval.__getAccumulators());
+			
+			return declareFunction(__eval, lambda);
+		}
+		
 	}
 	
 	static public class Conditional extends
