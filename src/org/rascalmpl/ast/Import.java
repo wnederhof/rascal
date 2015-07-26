@@ -111,7 +111,7 @@ public abstract class Import extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 239 + 151 * module.hashCode() ; 
+      return 167 + 53 * module.hashCode() ; 
     } 
   
     
@@ -185,7 +185,7 @@ public abstract class Import extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 397 + 137 * module.hashCode() ; 
+      return 463 + 127 * module.hashCode() ; 
     } 
   
     
@@ -269,7 +269,7 @@ public abstract class Import extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 811 + 709 * name.hashCode() + 167 * at.hashCode() ; 
+      return 67 + 643 * name.hashCode() + 229 * at.hashCode() ; 
     } 
   
     
@@ -352,7 +352,7 @@ public abstract class Import extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 53 + 463 * syntax.hashCode() ; 
+      return 271 + 331 * syntax.hashCode() ; 
     } 
   
     

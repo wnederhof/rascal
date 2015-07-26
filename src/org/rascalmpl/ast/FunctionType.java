@@ -109,7 +109,7 @@ public abstract class FunctionType extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 173 + 761 * type.hashCode() + 409 * arguments.hashCode() ; 
+      return 139 + 937 * type.hashCode() + 521 * arguments.hashCode() ; 
     } 
   
     

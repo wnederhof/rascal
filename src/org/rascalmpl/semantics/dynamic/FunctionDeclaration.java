@@ -16,7 +16,8 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.Expression.Closure;
 import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
 import org.rascalmpl.ast.Name;
@@ -166,12 +168,7 @@ public abstract class FunctionDeclaration extends
 
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-			// Yeehaw!! :-D
-			System.out.println("Yolo!");
-			AbstractFunction lambdaDesugar = constructTransformationFunction(__eval, getTypeRhs(), getPatternLhs(), getPatternRhs());
-			
-			// Resugaring.
-			//constructTransformationFunction(__eval, getTypeLhs(), getPatternRhs(), getPatternLhs());
+			AbstractFunction lambdaDesugar = constructExpansionFunction(__eval, getTypeRhs(), getTypeLhs(), getPatternLhs(), getPatternRhs());
 			return lambdaDesugar;
 		}
 		
@@ -183,14 +180,12 @@ public abstract class FunctionDeclaration extends
 			return lambda;
 		}
 		
-		private Signature createSignature(org.rascalmpl.ast.Type type, org.rascalmpl.ast.Expression signaturePattern) {
-			
-			// -.-'
-			org.rascalmpl.ast.OptionalComma optionalComma = null; //ASTBuilder.make("OptionalComma", "Lexical", getSignature().getLocation(), "");
-			
+		private Signature createSignature(org.rascalmpl.ast.Type type, org.rascalmpl.ast.Expression signaturePattern, Collection<org.rascalmpl.ast.Expression> additionalParameters) {
+			// -.-' ASTBuilder.make("OptionalComma", "Lexical", getSignature().getLocation(), "");
+			org.rascalmpl.ast.OptionalComma optionalComma = null;
 			List<org.rascalmpl.ast.Expression> listOfFormals = new LinkedList<>();
 			listOfFormals.add(signaturePattern);
-			
+			listOfFormals.addAll(additionalParameters);
 			org.rascalmpl.ast.Formals formals = ASTBuilder.make("Formals", "Default", getLocation(), listOfFormals);
 			
 			org.rascalmpl.ast.KeywordFormals keywordFormals = ASTBuilder.make("KeywordFormals", "Default", getLocation(),
@@ -210,8 +205,8 @@ public abstract class FunctionDeclaration extends
 		}
 		
 		/* Visit all elements in the given expression, collecting the names. */
-		private Set<String> findVariables(org.rascalmpl.ast.Expression p) {
-			Set<String> vars = new HashSet<String>();
+		private LinkedHashSet<String> findVariables(org.rascalmpl.ast.Expression p) {
+			LinkedHashSet<String> vars = new LinkedHashSet<String>();
 			
 			// TODO needs appropriate checking to see if all variables all collected.
 			if (p.hasElements()) {
@@ -238,53 +233,49 @@ public abstract class FunctionDeclaration extends
 			return vars;
 		}
 		
-		private AbstractFunction constructTransformationFunction(
-				IEvaluator<Result<IValue>> __eval, org.rascalmpl.ast.Type type,
-				org.rascalmpl.ast.Expression signaturePattern,
-				org.rascalmpl.ast.Expression expression) {
+		private Closure constructUnexpansionClosure(IEvaluator<Result<IValue>> __eval, org.rascalmpl.ast.Type type,
+				org.rascalmpl.ast.Expression signaturePattern, org.rascalmpl.ast.Expression expression,
+				List<org.rascalmpl.ast.Expression> unusedVariableExps) {
+			Signature signature = createSignature(type, signaturePattern, unusedVariableExps);
+			org.rascalmpl.ast.Parameters parameters = signature.getParameters();
+			AbstractAST ret = ASTBuilder.makeStat("Return", getLocation(), ASTBuilder.makeStat("Expression", src, expression));
+			List<AbstractAST> statements = new LinkedList<AbstractAST>();
+			statements.add(ret);
+			return ASTBuilder.makeExp("Closure", getLocation(), type, parameters, statements);
+		}
+
+		private AbstractFunction constructExpansionFunction(IEvaluator<Result<IValue>> __eval,
+				org.rascalmpl.ast.Type type, org.rascalmpl.ast.Type toType,
+				org.rascalmpl.ast.Expression signaturePattern, org.rascalmpl.ast.Expression expression) {
 			ISourceLocation src = this.getLocation();
-			
-			Signature signature = createSignature(type, signaturePattern);
-			
 			Set<String> varsSig = findVariables(signaturePattern);
 			Set<String> varsPat = findVariables(expression);
-			
-			List<org.rascalmpl.ast.Mapping_Expression> mappingExpressions = new LinkedList<>();
-			
+			Signature signature = createSignature(type, signaturePattern,
+					new LinkedHashSet<org.rascalmpl.ast.Expression>());
+			List<org.rascalmpl.ast.Expression> unusedVariableExps = new LinkedList<>();
 			for (String s : varsSig) {
 				if (!varsPat.contains(s)) {
-					System.out.println("Found one! " + s);
-					
-					org.rascalmpl.ast.Expression from = ASTBuilder.makeExp("Literal", src,
-						ASTBuilder.make("Literal", "String", src, 
-								ASTBuilder.make("StringLiteral", "NonInterpolated", src,
-										ASTBuilder.make("StringConstant", "Lexical", src, "\"" + s + "\""))));
-					//if (1==1) return null;
-					org.rascalmpl.ast.Expression to = ASTBuilder.makeExp("QualifiedName", src, org.rascalmpl.interpreter.utils.Names.toQualifiedName(s, src));
-					
-					mappingExpressions.add(ASTBuilder.make("Mapping_Expression", "Default", src, from, to));
+					unusedVariableExps.add(ASTBuilder.makeExp("QualifiedName", src,
+							org.rascalmpl.interpreter.utils.Names.toQualifiedName(s, src)));
 				}
 			}
-			
-			// Annotate ...
-			// AbstractAST anno = ASTBuilder.makeStat(cons, src, args)
-			
-			// makeExp was makeStat??
-			AbstractAST ret = ASTBuilder.makeStat("Return", src, 
+			AbstractAST ret = ASTBuilder.makeStat("Return", src,
 					ASTBuilder.makeStat("Expression", src,
-						ASTBuilder.makeExp("SetAnnotation", src, expression, Names.toName("unusedVariables", src),
-								ASTBuilder.makeExp("Map", src, mappingExpressions))));
-			
-			List<AbstractAST> sl = Arrays.<AbstractAST>asList(ret);
+							ASTBuilder.makeExp("SetAnnotation", src,
+								ASTBuilder.makeExp("SetAnnotation", src, expression,
+										Names.toName("unusedVariables", src),
+											ASTBuilder.makeExp("List", src, unusedVariableExps)),
+								Names.toName("unexpandFn", src), constructUnexpansionClosure(__eval, toType, expression,
+										signaturePattern, unusedVariableExps))));
+			List<AbstractAST> sl = Arrays.<AbstractAST> asList(ret);
 			AbstractAST body = ASTBuilder.make("FunctionBody", "Default", src, sl);
-			
-			FunctionDeclaration.Default func = ASTBuilder.make("FunctionDeclaration", "Default", src, getTags(), getVisibility(), signature, body);
-			RascalFunction lambda = new RascalFunction(__eval, func, false, __eval
-					.getCurrentEnvt(), __eval.__getAccumulators());
-			
+			FunctionDeclaration.Default func = ASTBuilder.make("FunctionDeclaration", "Default", src, getTags(),
+					getVisibility(), signature, body);
+			RascalFunction lambda = new RascalFunction(__eval, func, false, __eval.getCurrentEnvt(),
+					__eval.__getAccumulators());
 			return declareFunction(__eval, lambda);
 		}
-		
+
 	}
 	
 	static public class Conditional extends

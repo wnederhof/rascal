@@ -405,6 +405,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitExpressionDesugar(Expression.Desugar x) { 
+    return null; 
+  }
+
   public T visitExpressionDivision(Expression.Division x) { 
     return null; 
   }
@@ -577,6 +581,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitExpressionResugar(Expression.Resugar x) { 
+    return null; 
+  }
+
   public T visitExpressionSet(Expression.Set x) { 
     return null; 
   }
@@ -630,6 +638,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
   }
 
   public T visitExpressionTypedVariableBecomes(Expression.TypedVariableBecomes x) { 
+    return null; 
+  }
+
+  public T visitExpressionUnexpand(Expression.Unexpand x) { 
     return null; 
   }
 

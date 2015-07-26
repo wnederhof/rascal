@@ -211,6 +211,8 @@ public interface IASTVisitor<T> {
 
   public T visitExpressionDescendant(Expression.Descendant x);
 
+  public T visitExpressionDesugar(Expression.Desugar x);
+
   public T visitExpressionDivision(Expression.Division x);
 
   public T visitExpressionEnumerator(Expression.Enumerator x);
@@ -297,6 +299,8 @@ public interface IASTVisitor<T> {
 
   public T visitExpressionRemainder(Expression.Remainder x);
 
+  public T visitExpressionResugar(Expression.Resugar x);
+
   public T visitExpressionSet(Expression.Set x);
 
   public T visitExpressionSetAnnotation(Expression.SetAnnotation x);
@@ -324,6 +328,8 @@ public interface IASTVisitor<T> {
   public T visitExpressionTypedVariable(Expression.TypedVariable x);
 
   public T visitExpressionTypedVariableBecomes(Expression.TypedVariableBecomes x);
+
+  public T visitExpressionUnexpand(Expression.Unexpand x);
 
   public T visitExpressionVariableBecomes(Expression.VariableBecomes x);
 

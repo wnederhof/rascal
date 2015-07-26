@@ -203,7 +203,10 @@ syntax Expression
 	| callOrTree     : Expression!transitiveClosure!transitiveReflexiveClosure!isDefined expression "(" {Expression ","}* arguments KeywordArguments[Expression] keywordArguments ")"
 	| literal        : Literal literal 
 	| \any            : "any" "(" {Expression ","}+ generators ")" 
-	| \all            : "all" "(" {Expression ","}+ generators ")" 
+	| \all            : "all" "(" {Expression ","}+ generators ")"
+	| \unexpand 	 : "unexpand" "(" Expression expression ")"
+	| \desugar 	 : "desugar" "(" Expression expression ")"
+	| \resugar 	 : "resugar" "(" Expression expression ")"
 	| comprehension  : Comprehension comprehension 
 	| \set            : "{" {Expression ","}* elements0 "}" 
 	| \list           : "[" {Expression ","}* elements0 "]"
@@ -710,7 +713,11 @@ keyword RascalKeywords
 	| "set" 
 	| "start"
 	| "datetime" 
-	| "value" 
+	| "value"
+	
+	| "unexpand"
+	| "desugar"
+	| "resugar" 
 	;
 
 syntax Type

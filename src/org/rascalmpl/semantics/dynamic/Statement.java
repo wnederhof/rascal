@@ -119,7 +119,7 @@ public abstract class Statement extends org.rascalmpl.ast.Statement {
 		}
 
 	}
-
+	
 	static public class Assert extends org.rascalmpl.ast.Statement.Assert {
 
 		public Assert(ISourceLocation __param1, IConstructor tree, org.rascalmpl.ast.Expression __param2) {

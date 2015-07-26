@@ -24,6 +24,7 @@ import java.util.LinkedList;
 
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.IMapWriter;
@@ -135,6 +136,29 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 
 		}
 
+	}
+	
+	static public class Unexpand extends org.rascalmpl.ast.Expression.Unexpand {
+
+		public Unexpand(ISourceLocation src, IConstructor node, org.rascalmpl.ast.Expression expression) {
+			super(src, node, expression);
+		}
+
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			Result<IValue> expressionValue = getExpression().interpret(__eval);
+			Result<AbstractFunction> lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
+			java.util.List<Type> mTypes = new LinkedList<Type>();
+			java.util.List<IValue> mValues = new LinkedList<IValue>();
+			mTypes.add(expressionValue.getValue().getType());
+			mValues.add(expressionValue.getValue());
+			org.rascalmpl.interpreter.result.ListResult vals = (org.rascalmpl.interpreter.result.ListResult) (Result) expressionValue.getAnnotation("unusedVariables", __eval.getCurrentEnvt());
+			for (IValue v : vals.getValue()) {
+				mTypes.add(v.getType());
+				mValues.add(v);
+			}
+			return lambda.getValue().call(mTypes.toArray(new Type[mTypes.size()]), mValues.toArray(new IValue[mValues.size()]), new HashMap<String, IValue>());
+		}
 	}
 
 	static public class All extends org.rascalmpl.ast.Expression.All {

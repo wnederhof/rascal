@@ -93,43 +93,67 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 				UserType __param4, CommonKeywordParameters __param5, List<Variant> __param6) {
 			super(__param1, tree, __param2, __param3, __param4, __param5, __param6);
 		}
-
-		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-			__eval.__getTypeDeclarator().declareConstructor(this, __eval.getCurrentEnvt());
-
-			// Declare SYSTEM annotations
-			
-			// TODO: Perhaps only when @sugarAnnotations tag is there?
-			
-			org.rascalmpl.ast.BasicType mapType = ASTBuilder.make("BasicType", "Map", this.getLocation());
-			
-			List<org.rascalmpl.ast.TypeArg> mapArgs = new LinkedList<>();
-			mapArgs.add(
+		
+		private boolean hasTag(String t) {
+			for (org.rascalmpl.ast.Tag tag : this.getTags().getTags()) {
+				if (Names.name(tag.getName()).equals(t)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		// -> list[val] // list[tuple[str, val]]
+		private org.rascalmpl.ast.StructuredType createListOfTuplesStrVal() {
+			/*org.rascalmpl.ast.BasicType tupleType = ASTBuilder.make("BasicType", "Tuple", this.getLocation());
+			List<org.rascalmpl.ast.TypeArg> tupleArgs = new LinkedList<>();
+			tupleArgs.add(
 					ASTBuilder.make("TypeArg", "Default", this.getLocation(),
 						ASTBuilder.make("Type", "Basic", this.getLocation(),
 							ASTBuilder.make("BasicType", "String", this.getLocation()))));
-			mapArgs.add(
+			tupleArgs.add(
 					ASTBuilder.make("TypeArg", "Default", this.getLocation(),
 						ASTBuilder.make("Type", "Basic", this.getLocation(),
 							ASTBuilder.make("BasicType", "Value", this.getLocation()))));
+			org.rascalmpl.ast.StructuredType structuredTupleType = ASTBuilder.make("StructuredType", "Default", this.getLocation(), tupleType, tupleArgs);
+			*/
 			
-			org.rascalmpl.ast.StructuredType structuredType = ASTBuilder.make("StructuredType", "Default", this.getLocation(), mapType, mapArgs);
-
+			List<org.rascalmpl.ast.TypeArg> listArgs = new LinkedList<>();
+			listArgs.add(
+				ASTBuilder.make("TypeArg", "Default", this.getLocation(),
+					ASTBuilder.make("Type", "Basic", this.getLocation(),
+						ASTBuilder.make("BasicType", "Value", this.getLocation()))));
 			
-			Type annoType = ASTBuilder.make("Type", "Structured", this.getLocation(), structuredType).typeOf(__eval.getCurrentEnvt(), true, __eval);;
-			
-			String name = "unusedVariables";
-
-			Type onType = __eval.getCurrentEnvt().getAbstractDataType(Names.typeName(getUser().getName()));
-			
-			if (onType.isAbstractData() || onType.isConstructor() || onType.isNode()) {
-				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-						name, annoType);
-			} else {
-				throw new UnsupportedOperation("Can only declare annotations on node and ADT types",getOnType());
+			return ASTBuilder.make("StructuredType", "Default", this.getLocation(),
+					ASTBuilder.make("BasicType", "List", this.getLocation()),
+					listArgs);
+		}
+	
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.__getTypeDeclarator().declareConstructor(this, __eval.getCurrentEnvt());			
+			if (hasTag("sugar")) {
+				
+	
+				Type annoType = ASTBuilder.make("Type", "Structured", this.getLocation(), createListOfTuplesStrVal())
+						.typeOf(__eval.getCurrentEnvt(), true, __eval);
+	
+				Type onType = __eval.getCurrentEnvt().getAbstractDataType(Names.typeName(getUser().getName()));
+				
+				Type annoTypeFun = ASTBuilder.make("Type", "Basic", this.getLocation(),
+						ASTBuilder.make("BasicType", "Value", this.getLocation()))
+						.typeOf(__eval.getCurrentEnvt(), true, __eval);
+				
+				if (onType.isAbstractData() || onType.isConstructor() || onType.isNode()) {
+					__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+							"unusedVariables", annoType);
+					
+					__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+							"unexpandFn", annoTypeFun);
+				} else {
+					throw new UnsupportedOperation("Can only declare annotations on node and ADT types",getOnType());
+				}
 			}
-
 			return ResultFactory.nothing();
 		}
 
