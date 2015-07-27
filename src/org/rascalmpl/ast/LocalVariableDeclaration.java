@@ -90,7 +90,7 @@ public abstract class LocalVariableDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 229 + 211 * declarator.hashCode() ; 
+      return 211 + 83 * declarator.hashCode() ; 
     } 
   
     
@@ -164,7 +164,7 @@ public abstract class LocalVariableDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 83 + 673 * declarator.hashCode() ; 
+      return 673 + 557 * declarator.hashCode() ; 
     } 
   
     

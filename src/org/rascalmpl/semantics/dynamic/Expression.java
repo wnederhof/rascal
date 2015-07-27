@@ -18,13 +18,13 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IConstructor;
-import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.IMapWriter;
@@ -34,6 +34,7 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.rascalmpl.ast.Case;
 import org.rascalmpl.ast.Field;
 import org.rascalmpl.ast.KeywordArgument_Expression;
 import org.rascalmpl.ast.KeywordArguments_Expression;
@@ -138,6 +139,76 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 
 	}
 	
+	static public class Resugar extends org.rascalmpl.ast.Expression.Resugar {
+
+		public Resugar(ISourceLocation src, IConstructor node, org.rascalmpl.ast.Expression expression) {
+			super(src, node, expression);
+		}
+		
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
+			ISourceLocation src = getLocation();
+			
+			org.rascalmpl.ast.Expression pattern = ASTBuilder.makeExp("QualifiedName", src,
+					Names.toQualifiedName("_ANY", src));
+			
+			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
+					ASTBuilder.makeExp("Unexpand", src,
+							ASTBuilder.makeExp("QualifiedName", src,
+									Names.toQualifiedName("_ANY", src))));
+			
+			
+			
+			java.util.List<Case> cases = new LinkedList<>();
+			cases.add(ASTBuilder.make("Case", "PatternWithAction", src, 
+					ASTBuilder.make("PatternWithAction", "Replacing", src, pattern, replacement)));
+			
+			return eval.eval(
+				ASTBuilder.makeStat("Visit", src, 
+					ASTBuilder.make("Label", "Empty", src),
+					ASTBuilder.make("Visit", "GivenStrategy", src,
+						ASTBuilder.make("Strategy", "TopDown", src),
+							getExpression(), cases)
+				));
+		}
+		
+	}
+	
+	static public class Desugar extends org.rascalmpl.ast.Expression.Desugar {
+
+		public Desugar(ISourceLocation src, IConstructor node, org.rascalmpl.ast.QualifiedName unexpandFn,
+				org.rascalmpl.ast.Expression expression) {
+			super(src, node, unexpandFn, expression);
+		}
+
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
+			ISourceLocation src = getLocation();
+			
+			org.rascalmpl.ast.Expression pattern = ASTBuilder.makeExp("QualifiedName", src,
+					Names.toQualifiedName("_ANY", src));
+			
+			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
+					ASTBuilder.makeExp("CallOrTree", src,
+							ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
+							Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
+							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList())));
+			
+			
+			
+			java.util.List<Case> cases = new LinkedList<>();
+			cases.add(ASTBuilder.make("Case", "PatternWithAction", src, 
+					ASTBuilder.make("PatternWithAction", "Replacing", src, pattern, replacement)));
+			
+			return eval.eval(
+				ASTBuilder.makeStat("Visit", src, 
+					ASTBuilder.make("Label", "Empty", src),
+					ASTBuilder.make("Visit", "DefaultStrategy", src, getExpression(), cases)
+				));
+		}
+		
+	}
+	
 	static public class Unexpand extends org.rascalmpl.ast.Expression.Unexpand {
 
 		public Unexpand(ISourceLocation src, IConstructor node, org.rascalmpl.ast.Expression expression) {
@@ -147,12 +218,17 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
 			Result<IValue> expressionValue = getExpression().interpret(__eval);
-			Result<AbstractFunction> lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
+			Result<AbstractFunction> lambda;
+			try {
+				lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
+			} catch(Exception e) {
+				return expressionValue;
+			}
 			java.util.List<Type> mTypes = new LinkedList<Type>();
 			java.util.List<IValue> mValues = new LinkedList<IValue>();
 			mTypes.add(expressionValue.getValue().getType());
 			mValues.add(expressionValue.getValue());
-			org.rascalmpl.interpreter.result.ListResult vals = (org.rascalmpl.interpreter.result.ListResult) (Result) expressionValue.getAnnotation("unusedVariables", __eval.getCurrentEnvt());
+			org.rascalmpl.interpreter.result.ListResult vals = (org.rascalmpl.interpreter.result.ListResult) (Result<?>) expressionValue.getAnnotation("unusedVariables", __eval.getCurrentEnvt());
 			for (IValue v : vals.getValue()) {
 				mTypes.add(v.getType());
 				mValues.add(v);

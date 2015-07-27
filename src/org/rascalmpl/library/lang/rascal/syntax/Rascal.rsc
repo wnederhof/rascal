@@ -1,4 +1,4 @@
- @license{
+@license{
   Copyright (c) 2009-2015 CWI
   All rights reserved. This program and the accompanying materials
   are made available under the terms of the Eclipse Public License v1.0
@@ -205,7 +205,7 @@ syntax Expression
 	| \any            : "any" "(" {Expression ","}+ generators ")" 
 	| \all            : "all" "(" {Expression ","}+ generators ")"
 	| \unexpand 	 : "unexpand" "(" Expression expression ")"
-	| \desugar 	 : "desugar" "(" Expression expression ")"
+	| \desugar 	 : "desugar" "(" QualifiedName unexpandFn "," Expression expression ")"
 	| \resugar 	 : "resugar" "(" Expression expression ")"
 	| comprehension  : Comprehension comprehension 
 	| \set            : "{" {Expression ","}* elements0 "}" 
