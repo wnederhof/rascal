@@ -149,13 +149,27 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
 			ISourceLocation src = getLocation();
 			
+			// Note that this is necessary, because visit will ONLY throw a SyntaxException on strings when matching X => fn(X).
+			java.util.List<org.rascalmpl.ast.Expression> conditions = Arrays.asList(
+					ASTBuilder.makeExp("Negation", src,
+						ASTBuilder.makeExp("CallOrTree", src, 
+							ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("isStrType", src)),
+							Arrays.asList(ASTBuilder.makeExp("CallOrTree", src, 
+									ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("typeOf", src)),
+									Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
+									ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))),
+							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))));
+
 			org.rascalmpl.ast.Expression pattern = ASTBuilder.makeExp("QualifiedName", src,
 					Names.toQualifiedName("_ANY", src));
 			
-			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
+			
+			
+			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Conditional", src,
 					ASTBuilder.makeExp("Unexpand", src,
 							ASTBuilder.makeExp("QualifiedName", src,
-									Names.toQualifiedName("_ANY", src))));
+									Names.toQualifiedName("_ANY", src))),
+					conditions);
 			
 			
 			
@@ -186,16 +200,25 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			ISourceLocation src = getLocation();
 			// typedVariable
 			org.rascalmpl.ast.Expression pattern = 
-					ASTBuilder.makeExp("TypedVariable", src,
-							ASTBuilder.make("Type", "Basic", src,
-									ASTBuilder.make("BasicType", "Node", src)),
-							Names.toName("_ANY", src));
+					ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src));
 			
-			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
+			// Note that this is necessary, because visit will ONLY throw a SyntaxException on strings when matching X => fn(X).
+			java.util.List<org.rascalmpl.ast.Expression> conditions = Arrays.asList(
+					ASTBuilder.makeExp("Negation", src,
+						ASTBuilder.makeExp("CallOrTree", src, 
+							ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("isStrType", src)),
+							Arrays.asList(ASTBuilder.makeExp("CallOrTree", src, 
+									ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("typeOf", src)),
+									Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
+									ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))),
+							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))));
+			
+			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Conditional", src,
 					ASTBuilder.makeExp("CallOrTree", src,
 							ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
 							Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
-							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList())));
+							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList())),
+					conditions);
 			
 			
 			
