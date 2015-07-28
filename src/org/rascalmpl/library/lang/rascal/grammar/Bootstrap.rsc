@@ -50,6 +50,7 @@ public void bootAST(Grammar g, loc rascalHome) {
   g = expandParameterizedSymbols(g);
   
   patterns = g.rules[sort("Pattern")];
+  symmetricPatterns = g.rules[sort("SymmetricPattern")];
   //patterns = visit(patterns) { case sort("Pattern") => sort("Expression") }
   
   // extend Expression with the Patterns
@@ -58,6 +59,10 @@ public void bootAST(Grammar g, loc rascalHome) {
   
   // make sure all uses of Pattern have been replaced by Expression
   g = visit(g) { case sort("Pattern") => sort("Expression") }
+  
+  // extend Expression with the SymmetricPatterns
+  g.rules[sort("Expression")] = choice(sort("Expression"), {symmetricPatterns, g.rules[sort("Expression")]}); 
+  g.rules -= (sort("SymmetricPattern"): choice(sort("SymmetricPattern"), {}));
   
   // make sure all uses of SymmetricPattern have been replaced by Expression
   g = visit(g) { case sort("SymmetricPattern") => sort("Expression") }

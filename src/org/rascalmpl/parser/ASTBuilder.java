@@ -159,6 +159,12 @@ public class ASTBuilder {
 				return newLift(tree, true);
 			}
 		}
+		
+		if (sortName(tree).equals("SymmetricPattern")) {
+			if (isNewEmbedding(tree)) {
+				return newLift(tree, true);
+			}
+		}
 
 		if (sortName(tree).equals("Expression")) {
 			if (isNewEmbedding(tree)) {
@@ -191,6 +197,7 @@ public class ASTBuilder {
 			throw new ImplementationError("Could not retrieve sort name for " + tree);
 		}
 		sort = sort.equalsIgnoreCase("pattern") ? "Expression" : capitalize(sort); 
+		sort = sort.equalsIgnoreCase("symmetricpattern") ? "Expression" : capitalize(sort);
 
 		switch(sort){
 		case "Mapping":

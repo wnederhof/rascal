@@ -496,7 +496,7 @@ public abstract class Import {
 
        private IConstructor getConcretePattern(ITree tree) {
          String sort = TreeAdapter.getSortName(tree);
-         if (sort.equals("Expression") || sort.equals("Pattern")) {
+         if (sort.equals("Expression") || sort.equals("Pattern") || sort.equals("SymmetricPattern")) {
            String cons = TreeAdapter.getConstructorName(tree);
            if (cons.equals("concrete")) {
              return (IConstructor) TreeAdapter.getArgs(tree).get(0);
