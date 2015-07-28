@@ -59,6 +59,9 @@ public void bootAST(Grammar g, loc rascalHome) {
   // make sure all uses of Pattern have been replaced by Expression
   g = visit(g) { case sort("Pattern") => sort("Expression") }
   
+  // make sure all uses of SymmetricPattern have been replaced by Expression
+  g = visit(g) { case sort("SymmetricPattern") => sort("Expression") }
+  
   grammarToJavaAPI(rascalHome + "src/org/rascalmpl/ast", "org.rascalmpl.ast", g);
 }
 

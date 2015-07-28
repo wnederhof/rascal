@@ -184,9 +184,12 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
 			ISourceLocation src = getLocation();
-			
-			org.rascalmpl.ast.Expression pattern = ASTBuilder.makeExp("QualifiedName", src,
-					Names.toQualifiedName("_ANY", src));
+			// typedVariable
+			org.rascalmpl.ast.Expression pattern = 
+					ASTBuilder.makeExp("TypedVariable", src,
+							ASTBuilder.make("Type", "Basic", src,
+									ASTBuilder.make("BasicType", "Node", src)),
+							Names.toName("_ANY", src));
 			
 			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
 					ASTBuilder.makeExp("CallOrTree", src,

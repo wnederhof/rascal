@@ -30,6 +30,7 @@ syntax Literal
 
 syntax Expression = concrete: Concrete concrete;
 syntax Pattern    = concrete: Concrete concrete;
+syntax SymmetricPattern = concrete: Concrete concrete;
 
 lexical Concrete 
   = typed: "(" LAYOUTLIST l1 Sym symbol LAYOUTLIST l2 ")" LAYOUTLIST l3 "`" ConcretePart* parts "`";
@@ -766,7 +767,7 @@ syntax Variant
 syntax FunctionDeclaration
 	= abstract: Tags tags Visibility visibility Signature signature ";" 
 	| @Foldable @breakable{expression} expression: Tags tags Visibility visibility Signature signature "=" Expression expression ";"
-	| @Foldable @breakable{expression} sugar: Tags tags Visibility visibility Name name "(" Type typeLhs ":" Pattern patternLhs ")" "=" Type typeRhs ":" Pattern patternRhs ";"
+	| @Foldable @breakable{expression} sugar: Tags tags Visibility visibility Type typeRhs Name name "(" SymmetricPattern patternLhs ")" "=\>" "(" Type typeLhs ")" SymmetricPattern patternRhs ";"
 	| @Foldable @breakable{expression,conditions} conditional: Tags tags Visibility visibility Signature signature "=" Expression expression "when" {Expression ","}+ conditions ";"
 	| @Foldable \default: Tags tags Visibility visibility Signature signature FunctionBody body ;
 
@@ -876,6 +877,24 @@ syntax Pattern
 	| descendant          : "/" Pattern pattern 
 	| anti                : "!" Pattern pattern 
 	| typedVariableBecomes: Type type Name name ":" Pattern pattern 
+    ;
+    
+/*
+  Note that SymmetricPattern must closely follow the definitions of Expression and Pattern because eventually
+  these two non-terminals will be fused just before AST generation.
+*/
+syntax SymmetricPattern
+	= \set                 : "{" {SymmetricPattern ","}* elements0 "}" 
+	| \list                : "[" {SymmetricPattern ","}* elements0 "]" 
+	| qualifiedName       : QualifiedName qualifiedName 
+	| splice              : "*" SymmetricPattern argument
+	| negative            : "-" SymmetricPattern argument
+	| literal             : Literal literal 
+	| \tuple               : "\<" {SymmetricPattern ","}+ elements "\>" 
+	| \map                 : "(" {Mapping[SymmetricPattern] ","}* mappings ")" 
+	| reifiedType         : "type" "(" SymmetricPattern symbol "," SymmetricPattern definitions ")" 
+	| callOrTree          : SymmetricPattern expression "(" {SymmetricPattern ","}* arguments KeywordArguments[SymmetricPattern] keywordArguments ")" 
+	> asType              : "[" Type type "]" SymmetricPattern argument 
     ;
     
 syntax Tag

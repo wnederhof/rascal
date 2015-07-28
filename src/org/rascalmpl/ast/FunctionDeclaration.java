@@ -637,26 +637,26 @@ public abstract class FunctionDeclaration extends AbstractAST {
   }
 
   static public class Sugar extends FunctionDeclaration {
-    // Production: sig("Sugar",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
+    // Production: sig("Sugar",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
     private final org.rascalmpl.ast.Visibility visibility;
-    private final org.rascalmpl.ast.Name name;
-    private final org.rascalmpl.ast.Type typeLhs;
-    private final org.rascalmpl.ast.Expression patternLhs;
     private final org.rascalmpl.ast.Type typeRhs;
+    private final org.rascalmpl.ast.Name name;
+    private final org.rascalmpl.ast.Expression patternLhs;
+    private final org.rascalmpl.ast.Type typeLhs;
     private final org.rascalmpl.ast.Expression patternRhs;
   
-    public Sugar(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternLhs,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Expression patternRhs) {
+    public Sugar(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternLhs,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternRhs) {
       super(src, node);
       
       this.tags = tags;
       this.visibility = visibility;
-      this.name = name;
-      this.typeLhs = typeLhs;
-      this.patternLhs = patternLhs;
       this.typeRhs = typeRhs;
+      this.name = name;
+      this.patternLhs = patternLhs;
+      this.typeLhs = typeLhs;
       this.patternRhs = patternRhs;
     }
   
@@ -693,17 +693,17 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = name.getLocation();
+      $l = typeRhs.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        name.addForLineNumber($line, $result);
+        typeRhs.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
       }
       
-      $l = typeLhs.getLocation();
+      $l = name.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        typeLhs.addForLineNumber($line, $result);
+        name.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -717,9 +717,9 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = typeRhs.getLocation();
+      $l = typeLhs.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        typeRhs.addForLineNumber($line, $result);
+        typeLhs.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -741,12 +741,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return false;
       }        
       Sugar tmp = (Sugar) o;
-      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.name.equals(this.name) && tmp.typeLhs.equals(this.typeLhs) && tmp.patternLhs.equals(this.patternLhs) && tmp.typeRhs.equals(this.typeRhs) && tmp.patternRhs.equals(this.patternRhs) ; 
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeRhs.equals(this.typeRhs) && tmp.name.equals(this.name) && tmp.patternLhs.equals(this.patternLhs) && tmp.typeLhs.equals(this.typeLhs) && tmp.patternRhs.equals(this.patternRhs) ; 
     }
    
     @Override
     public int hashCode() {
-      return 281 + 43 * tags.hashCode() + 103 * visibility.hashCode() + 673 * name.hashCode() + 509 * typeLhs.hashCode() + 61 * patternLhs.hashCode() + 173 * typeRhs.hashCode() + 761 * patternRhs.hashCode() ; 
+      return 281 + 43 * tags.hashCode() + 103 * visibility.hashCode() + 673 * typeRhs.hashCode() + 509 * name.hashCode() + 61 * patternLhs.hashCode() + 173 * typeLhs.hashCode() + 761 * patternRhs.hashCode() ; 
     } 
   
     
@@ -769,21 +769,21 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
+    public org.rascalmpl.ast.Type getTypeRhs() {
+      return this.typeRhs;
+    }
+  
+    @Override
+    public boolean hasTypeRhs() {
+      return true;
+    }
+    @Override
     public org.rascalmpl.ast.Name getName() {
       return this.name;
     }
   
     @Override
     public boolean hasName() {
-      return true;
-    }
-    @Override
-    public org.rascalmpl.ast.Type getTypeLhs() {
-      return this.typeLhs;
-    }
-  
-    @Override
-    public boolean hasTypeLhs() {
       return true;
     }
     @Override
@@ -796,12 +796,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Type getTypeRhs() {
-      return this.typeRhs;
+    public org.rascalmpl.ast.Type getTypeLhs() {
+      return this.typeLhs;
     }
   
     @Override
-    public boolean hasTypeRhs() {
+    public boolean hasTypeLhs() {
       return true;
     }
     @Override
@@ -816,7 +816,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(name), clone(typeLhs), clone(patternLhs), clone(typeRhs), clone(patternRhs));
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeRhs), clone(name), clone(patternLhs), clone(typeLhs), clone(patternRhs));
     }
             
   }

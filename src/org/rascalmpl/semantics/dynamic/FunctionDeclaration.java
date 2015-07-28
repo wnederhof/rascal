@@ -31,6 +31,7 @@ import org.rascalmpl.ast.Expression.Closure;
 import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
 import org.rascalmpl.ast.Name;
+import org.rascalmpl.ast.OptionalComma;
 import org.rascalmpl.ast.Signature;
 import org.rascalmpl.ast.Tags;
 import org.rascalmpl.ast.Visibility;
@@ -160,10 +161,11 @@ public abstract class FunctionDeclaration extends
 	static public class Sugar extends
 		org.rascalmpl.ast.FunctionDeclaration.Sugar {
 		
-		public Sugar(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility, Name name,
-				org.rascalmpl.ast.Type typeLhs, org.rascalmpl.ast.Expression patternLhs, org.rascalmpl.ast.Type typeRhs,
-				org.rascalmpl.ast.Expression patternRhs) {
-			super(src, node, tags, visibility, name, typeLhs, patternLhs, typeRhs, patternRhs);
+
+		public Sugar(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
+				org.rascalmpl.ast.Type typeRhs, Name name, org.rascalmpl.ast.Expression patternLhs,
+				org.rascalmpl.ast.Type typeLhs, org.rascalmpl.ast.Expression patternRhs) {
+			super(src, node, tags, visibility, typeRhs, name, patternLhs, typeLhs, patternRhs);
 		}
 
 		@Override
@@ -182,7 +184,7 @@ public abstract class FunctionDeclaration extends
 		
 		private Signature createSignature(org.rascalmpl.ast.Type type, org.rascalmpl.ast.Expression signaturePattern, Collection<org.rascalmpl.ast.Expression> additionalParameters) {
 			// -.-' ASTBuilder.make("OptionalComma", "Lexical", getSignature().getLocation(), "");
-			org.rascalmpl.ast.OptionalComma optionalComma = null;
+			OptionalComma optionalComma = new OptionalComma.Lexical(src, null, ",");
 			List<org.rascalmpl.ast.Expression> listOfFormals = new LinkedList<>();
 			listOfFormals.add(signaturePattern);
 			listOfFormals.addAll(additionalParameters);
