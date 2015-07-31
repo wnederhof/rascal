@@ -46,6 +46,11 @@ import org.rascalmpl.ast.Parameters;
 import org.rascalmpl.ast.Statement;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.TraversalEvaluator;
+import org.rascalmpl.interpreter.TraversalEvaluator.CaseBlockList;
+import org.rascalmpl.interpreter.TraversalEvaluator.DIRECTION;
+import org.rascalmpl.interpreter.TraversalEvaluator.FIXEDPOINT;
+import org.rascalmpl.interpreter.TraversalEvaluator.PROGRESS;
 import org.rascalmpl.interpreter.TypeDeclarationEvaluator;
 import org.rascalmpl.interpreter.TypeReifier;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
@@ -97,6 +102,7 @@ import org.rascalmpl.interpreter.types.FunctionType;
 import org.rascalmpl.interpreter.types.NonTerminalType;
 import org.rascalmpl.interpreter.types.OverloadedFunctionType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
+import org.rascalmpl.interpreter.utils.Cases;
 import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
 import org.rascalmpl.parser.ASTBuilder;
@@ -107,6 +113,19 @@ import org.rascalmpl.values.uptr.SymbolAdapter;
 
 public abstract class Expression extends org.rascalmpl.ast.Expression {
   private static final Name IT = ASTBuilder.makeLex("Name", null, "<it>");
+  
+  	/**
+  	 * This function creates the CaseBlockList for desugaring and resugaring.
+  	 */
+	private static CaseBlockList createSugarMatchingBlockList(ISourceLocation src, org.rascalmpl.ast.QualifiedName qualifiedName, org.rascalmpl.ast.Expression replacementFn) {
+		org.rascalmpl.ast.Expression pattern = 
+				ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src));
+		org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
+				replacementFn);
+		Case c = ASTBuilder.make("Case", "PatternWithAction", src, 
+				ASTBuilder.make("PatternWithAction", "Replacing", src, pattern, replacement));
+		return new CaseBlockList(Arrays.asList(new Cases.SugarBlock(c)));
+	}
 	
 	static public class Addition extends org.rascalmpl.ast.Expression.Addition {
 
@@ -123,8 +142,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 					this);
 
 		}
-
-	
+		
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
 			
@@ -145,45 +163,32 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			super(src, node, expression);
 		}
 		
-		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
-			ISourceLocation src = getLocation();
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.setCurrentAST(this);
+			__eval.notifyAboutSuspension(this);
 			
-			// Note that this is necessary, because visit will ONLY throw a SyntaxException on strings when matching X => fn(X).
-			java.util.List<org.rascalmpl.ast.Expression> conditions = Arrays.asList(
-					ASTBuilder.makeExp("Negation", src,
-						ASTBuilder.makeExp("CallOrTree", src, 
-							ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("isStrType", src)),
-							Arrays.asList(ASTBuilder.makeExp("CallOrTree", src, 
-									ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("typeOf", src)),
-									Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
-									ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))),
-							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))));
-
-			org.rascalmpl.ast.Expression pattern = ASTBuilder.makeExp("QualifiedName", src,
-					Names.toQualifiedName("_ANY", src));
-			
-			
-			
-			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Conditional", src,
+			ISourceLocation src = this.getLocation();
+			CaseBlockList blocks = createSugarMatchingBlockList(src, Names.toQualifiedName("_ANY", src), 
 					ASTBuilder.makeExp("Unexpand", src,
 							ASTBuilder.makeExp("QualifiedName", src,
-									Names.toQualifiedName("_ANY", src))),
-					conditions);
-			
-			
-			
-			java.util.List<Case> cases = new LinkedList<>();
-			cases.add(ASTBuilder.make("Case", "PatternWithAction", src, 
-					ASTBuilder.make("PatternWithAction", "Replacing", src, pattern, replacement)));
-			
-			return eval.eval(
-				ASTBuilder.makeStat("Visit", src, 
-					ASTBuilder.make("Label", "Empty", src),
-					ASTBuilder.make("Visit", "GivenStrategy", src,
-						ASTBuilder.make("Strategy", "TopDown", src),
-							getExpression(), cases)
-				));
+									Names.toQualifiedName("_ANY", src))));
+			Result<IValue> subject = this.getExpression().interpret(__eval);
+			TraversalEvaluator te = new TraversalEvaluator(__eval);
+			try {
+				__eval.__pushTraversalEvaluator(te);
+				IValue val = te.traverse(subject.getValue(),
+						blocks, DIRECTION.TopDown,
+						PROGRESS.Continuing, FIXEDPOINT.No);
+				if (!val.getType().isSubtypeOf(subject.getType())) {
+				  // this is not a static error but an extra run-time sanity check
+				  throw new ImplementationError("this should really never happen",
+				      new UnexpectedType(subject.getType(), val.getType(), this));
+				}
+				return org.rascalmpl.interpreter.result.ResultFactory.makeResult(subject.getType(),
+						val, __eval);
+			} finally {
+				__eval.__popTraversalEvaluator();
+			}
 		}
 		
 	}
@@ -194,43 +199,77 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				org.rascalmpl.ast.Expression expression) {
 			super(src, node, unexpandFn, expression);
 		}
-
+		
 		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
-			ISourceLocation src = getLocation();
-			// typedVariable
-			org.rascalmpl.ast.Expression pattern = 
-					ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src));
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.setCurrentAST(this);
+			__eval.notifyAboutSuspension(this);
 			
-			// Note that this is necessary, because visit will ONLY throw a SyntaxException on strings when matching X => fn(X).
-			java.util.List<org.rascalmpl.ast.Expression> conditions = Arrays.asList(
-					ASTBuilder.makeExp("Negation", src,
-						ASTBuilder.makeExp("CallOrTree", src, 
-							ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("isStrType", src)),
-							Arrays.asList(ASTBuilder.makeExp("CallOrTree", src, 
-									ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("typeOf", src)),
-									Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
-									ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))),
-							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))));
+			ISourceLocation src = this.getLocation();
+			CaseBlockList blocks = createSugarMatchingBlockList(src, Names.toQualifiedName("_ANY", src), 
+				ASTBuilder.makeExp("CallOrTree", src,
+						ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
+						Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
+						ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList())));
+						
+			Result<IValue> subject = this.getExpression().interpret(__eval);
+			TraversalEvaluator te = new TraversalEvaluator(__eval);
+			try {
+				__eval.__pushTraversalEvaluator(te);
+				IValue val = te.traverse(subject.getValue(),
+						blocks, DIRECTION.BottomUp,
+						PROGRESS.Continuing, FIXEDPOINT.No);
+				if (!val.getType().isSubtypeOf(subject.getType())) {
+				  // this is not a static error but an extra run-time sanity check
+				  throw new ImplementationError("this should really never happen",
+				      new UnexpectedType(subject.getType(), val.getType(), this));
+				}
+				return org.rascalmpl.interpreter.result.ResultFactory.makeResult(subject.getType(),
+						val, __eval);
+			} finally {
+				__eval.__popTraversalEvaluator();
+			}
+		}
+	}
+	
+	static public class Expand extends org.rascalmpl.ast.Expression.Expand {
+
+		public Expand(ISourceLocation src, IConstructor node, org.rascalmpl.ast.QualifiedName unexpandFn,
+				org.rascalmpl.ast.Expression expression) {
+			super(src, node, unexpandFn, expression);
+		}
+		
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+
+			__eval.setCurrentAST(this);
+			__eval.notifyAboutSuspension(this);
 			
-			org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Conditional", src,
-					ASTBuilder.makeExp("CallOrTree", src,
-							ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
-							Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
-							ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList())),
-					conditions);
+			Environment old = __eval.getCurrentEnvt();
+			ISourceLocation src = this.getLocation();
 			
+			// We want to have an entirely new environment, so the annotations cannot be reused.
+			// __eval.setCurrentEnvt(new Environment(src, "Expand"));
 			
+			// This is a LEAKY abstraction, since the annotations cannot be removed after declaration.
+			__eval.getCurrentEnvt().declareAnnotation(TF.nodeType(), "unusedVariables", TF.listType(TF.valueType()));
+			__eval.getCurrentEnvt().declareAnnotation(TF.nodeType(), "unexpandFn", TF.valueType());
 			
-			java.util.List<Case> cases = new LinkedList<>();
-			cases.add(ASTBuilder.make("Case", "PatternWithAction", src, 
-					ASTBuilder.make("PatternWithAction", "Replacing", src, pattern, replacement)));
-			
-			return eval.eval(
-				ASTBuilder.makeStat("Visit", src, 
-					ASTBuilder.make("Label", "Empty", src),
-					ASTBuilder.make("Visit", "DefaultStrategy", src, getExpression(), cases)
-				));
+			try {	
+				// TODO: Check if type is actually of ...
+				return __eval.eval(ASTBuilder.makeStat("Expression", src,
+						ASTBuilder.makeExp("CallOrTree", src,
+								ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
+								Arrays.asList(getExpression()),
+								ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))));
+				
+			} catch(Exception e) {
+				// If unexpansion fails, no worries!
+				e.printStackTrace();
+				return __eval.eval(ASTBuilder.makeStat("Expression", src, getExpression()));
+			} finally {
+				__eval.unwind(old);
+			}
 		}
 		
 	}
@@ -243,11 +282,15 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.setCurrentAST(this);
+			__eval.notifyAboutSuspension(this);
+			
 			Result<IValue> expressionValue = getExpression().interpret(__eval);
 			Result<AbstractFunction> lambda;
 			try {
 				lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
 			} catch(Exception e) {
+				e.printStackTrace(); // TODO remove.
 				return expressionValue;
 			}
 			java.util.List<Type> mTypes = new LinkedList<Type>();
@@ -259,7 +302,16 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				mTypes.add(v.getType());
 				mValues.add(v);
 			}
-			return lambda.getValue().call(mTypes.toArray(new Type[mTypes.size()]), mValues.toArray(new IValue[mValues.size()]), new HashMap<String, IValue>());
+			try {
+				return lambda.getValue().call(
+						mTypes.toArray(new Type[mTypes.size()]),
+						mValues.toArray(new IValue[mValues.size()]),
+						new HashMap<String, IValue>());
+			} catch(Exception e) {
+				// TO DO: Add [@unexpansionFailed = true]?
+				e.printStackTrace(); // TODO remove.
+				return expressionValue;
+			}
 		}
 	}
 
@@ -609,7 +661,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				Type[] types = new Type[args.size()];
 				for (int i = 0; i < args.size(); i++) {
 					Result<IValue> resultElem = args.get(i).interpret(eval);
-					types[i] = resultElem.getType();
+					types[i] = resultElem.getValue().getType();
 					if (types[i].isBottom()) {
 						throw new UninitializedPatternMatch("The argument is of the type 'void'", args.get(i));
 					}
@@ -627,11 +679,14 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 
 				    for (KeywordArgument_Expression kwa : keywordArgs.getKeywordArgumentList()){
 				      Result<IValue> val = kwa.getExpression().interpret(eval);
+				      System.out.println("VALUE: " + val.getValue()); // TODO Remove
+				      System.out.println("VALUET: " + val.getType()); // TODO Remove
+				      
 				      String name = Names.name(kwa.getName());
 
 				      if (kwFormals != null) {
 				        if (kwFormals.hasField(name)) {
-				          if (!val.getType().isSubtypeOf(kwFormals.getFieldType(name))) {
+				          if (!val.getValue().getType().isSubtypeOf(kwFormals.getFieldType(name))) {
 				            throw new UnexpectedType(kwFormals.getFieldType(name), val.getType(), this);
 				          }
 				        }

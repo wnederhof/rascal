@@ -221,6 +221,8 @@ public interface IASTVisitor<T> {
 
   public T visitExpressionEquivalence(Expression.Equivalence x);
 
+  public T visitExpressionExpand(Expression.Expand x);
+
   public T visitExpressionFieldAccess(Expression.FieldAccess x);
 
   public T visitExpressionFieldProject(Expression.FieldProject x);

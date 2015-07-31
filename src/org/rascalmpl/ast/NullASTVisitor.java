@@ -425,6 +425,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitExpressionExpand(Expression.Expand x) { 
+    return null; 
+  }
+
   public T visitExpressionFieldAccess(Expression.FieldAccess x) { 
     return null; 
   }

@@ -221,6 +221,57 @@ public class Cases  {
 			return false;
 		}
 	}
+	
+	public static class SugarBlock extends CaseBlock {
+		private final Case theCase;
+		private final PatternWithAction pattern;
+		private final Replacement replacement;
+		private final List<Expression> conditions;
+		private final Expression insert;
+
+		public SugarBlock(Case c) {
+			this.theCase = c;
+			this.pattern = c.hasPatternWithAction() ? c.getPatternWithAction() : null;
+			this.replacement = pattern != null && pattern.hasReplacement() ? pattern.getReplacement() : null;
+			this.conditions = replacement != null && replacement.hasConditions() ? replacement.getConditions() : Collections.<Expression>emptyList();
+			this.insert = replacement != null ? replacement.getReplacementExpression() : null;
+			
+			computePredicates(c);
+		}
+		
+		@Override
+		public boolean matchAndEval(IEvaluator<Result<IValue>> eval, Result<IValue> subject) {
+			if (theCase.isDefault()) {
+				theCase.getStatement().interpret(eval);
+				return true;
+			}
+			
+			PatternWithAction rule = theCase.getPatternWithAction();
+			
+			return matchEvalAndReplace(subject, rule.getPattern(), conditions, insert, eval);
+		}
+		
+		public static boolean matchEvalAndReplace(Result<IValue> subject, Expression pat, List<Expression> conditions, Expression replacementExpr, IEvaluator<Result<IValue>> eval) {
+		    Environment old = eval.getCurrentEnvt();
+		    try {
+		      IMatchingResult mp = pat.getMatcher(eval);
+		      mp.initMatch(subject);
+
+		      while (mp.hasNext()) {
+		        if (eval.isInterrupted())
+		          throw new InterruptException(eval.getStackTrace(), eval.getCurrentAST().getLocation());
+		        if (mp.next()) {
+		          if (!mp.getType(eval.getCurrentEnvt(), null).equals(TF.stringType())) {
+		            throw new Insert(replacementExpr.interpret(eval), mp, mp.getType(eval.getCurrentEnvt(), null));
+		          }
+		        }
+		      }
+		    } finally {
+		      eval.unwind(old);
+		    }
+		    return false;
+		  }
+	}
 
 	private static class DefaultBlock extends CaseBlock {
 		private final Case theCase;
