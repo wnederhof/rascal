@@ -232,48 +232,6 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		}
 	}
 	
-	static public class Expand extends org.rascalmpl.ast.Expression.Expand {
-
-		public Expand(ISourceLocation src, IConstructor node, org.rascalmpl.ast.QualifiedName unexpandFn,
-				org.rascalmpl.ast.Expression expression) {
-			super(src, node, unexpandFn, expression);
-		}
-		
-		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-
-			__eval.setCurrentAST(this);
-			__eval.notifyAboutSuspension(this);
-			
-			Environment old = __eval.getCurrentEnvt();
-			ISourceLocation src = this.getLocation();
-			
-			// We want to have an entirely new environment, so the annotations cannot be reused.
-			// __eval.setCurrentEnvt(new Environment(src, "Expand"));
-			
-			// This is a LEAKY abstraction, since the annotations cannot be removed after declaration.
-			__eval.getCurrentEnvt().declareAnnotation(TF.nodeType(), "unusedVariables", TF.listType(TF.valueType()));
-			__eval.getCurrentEnvt().declareAnnotation(TF.nodeType(), "unexpandFn", TF.valueType());
-			
-			try {	
-				// TODO: Check if type is actually of ...
-				return __eval.eval(ASTBuilder.makeStat("Expression", src,
-						ASTBuilder.makeExp("CallOrTree", src,
-								ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
-								Arrays.asList(getExpression()),
-								ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList()))));
-				
-			} catch(Exception e) {
-				// If unexpansion fails, no worries!
-				e.printStackTrace();
-				return __eval.eval(ASTBuilder.makeStat("Expression", src, getExpression()));
-			} finally {
-				__eval.unwind(old);
-			}
-		}
-		
-	}
-	
 	static public class Unexpand extends org.rascalmpl.ast.Expression.Unexpand {
 
 		public Unexpand(ISourceLocation src, IConstructor node, org.rascalmpl.ast.Expression expression) {

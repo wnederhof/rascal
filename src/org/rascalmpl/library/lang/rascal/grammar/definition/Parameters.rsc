@@ -18,14 +18,14 @@ import List;
 import Set;
 
 public Grammar expandParameterizedSymbols(Grammar g) {
-  return grammar(g.starts, \expand({g.rules[nt] | nt <- g.rules}));
+  return grammar(g.starts, expand({g.rules[nt] | nt <- g.rules}));
 } 
 
 private Symbol delabel(Symbol l) {
   return (label(x,m) := l) ? m : l;
 }
 
-set[Production] \expand(set[Production] prods) {
+set[Production] expand(set[Production] prods) {
   // First we collect all the parametrized definitions
   defs = { p | p <- prods, Symbol s := delabel(p.def),  s is \parameterized-sort || s is \parameterized-lex};
   result = prods - defs;
