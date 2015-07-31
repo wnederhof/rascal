@@ -20,7 +20,7 @@ public Grammar expandRegularSymbols(Grammar G) {
     if (choice(def, {regular(def)}) := G.rules[def]) { 
       Production init = choice(def,{});
       
-      for (p <- expand(def)) {
+      for (p <- \expand(def)) {
         G.rules[p.def] = choice(p.def, {p, G.rules[p.def]?\init});
       }
     }
@@ -28,19 +28,19 @@ public Grammar expandRegularSymbols(Grammar G) {
   return G;
 }
 
-public set[Production] expand(Symbol s) {
+public set[Production] \expand(Symbol s) {
   switch (s) {
     case \opt(t) : 
       return {choice(s,{prod(label("absent",s),[],{}),prod(label("present",s),[t],{})})};
     case \iter(t) : 
       return {choice(s,{prod(label("single",s),[t],{}),prod(label("multiple",s),[t,s],{})})};
     case \iter-star(t) : 
-      return {choice(s,{prod(label("empty",s),[],{}),prod(label("nonEmpty",s),[\iter(t)],{})})} + expand(\iter(t));
+      return {choice(s,{prod(label("empty",s),[],{}),prod(label("nonEmpty",s),[\iter(t)],{})})} + \expand(\iter(t));
     case \iter-seps(t,list[Symbol] seps) : 
       return {choice(s, {prod(label("single",s),[t],{}),prod(label("multiple",s),[t,*seps,s],{})})};
     case \iter-star-seps(t, list[Symbol] seps) : 
       return {choice(s,{prod(label("empty",s),[],{}),prod(label("nonEmpty",s),[\iter-seps(t,seps)],{})})} 
-             + expand(\iter-seps(t,seps));
+             + \expand(\iter-seps(t,seps));
     case \alt(set[Symbol] alts) :
       return {choice(s, {prod(s,[a],{}) | a <- alts})};
     case \seq(list[Symbol] elems) :

@@ -149,7 +149,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 19 + 157 * lhs.hashCode() + 139 * rhs.hashCode() ; 
+      return 5 + 19 * lhs.hashCode() + 19 * rhs.hashCode() ; 
     } 
   
     
@@ -242,7 +242,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 193 + 859 * associativity.hashCode() + 3 * group.hashCode() ; 
+      return 19 + 157 * associativity.hashCode() + 139 * group.hashCode() ; 
     } 
   
     
@@ -335,7 +335,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 701 + 283 * lhs.hashCode() + 349 * rhs.hashCode() ; 
+      return 193 + 859 * lhs.hashCode() + 3 * rhs.hashCode() ; 
     } 
   
     
@@ -442,7 +442,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 139 + 73 * modifiers.hashCode() + 439 * name.hashCode() + 191 * syms.hashCode() ; 
+      return 701 + 283 * modifiers.hashCode() + 349 * name.hashCode() + 139 * syms.hashCode() ; 
     } 
   
     
@@ -524,7 +524,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 89 ; 
+      return 73 ; 
     } 
   
     	
@@ -589,7 +589,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 787 + 73 * referenced.hashCode() ; 
+      return 439 + 191 * referenced.hashCode() ; 
     } 
   
     
@@ -677,7 +677,7 @@ public abstract class Prod extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 673 + 233 * modifiers.hashCode() + 331 * syms.hashCode() ; 
+      return 89 + 787 * modifiers.hashCode() + 73 * syms.hashCode() ; 
     } 
   
     

@@ -205,7 +205,6 @@ syntax Expression
 	| literal        : Literal literal 
 	| \any            : "any" "(" {Expression ","}+ generators ")" 
 	| \all            : "all" "(" {Expression ","}+ generators ")"
-	| \expand 	 	: "expand" "(" QualifiedName unexpandFn "," Expression expression ")"
 	| \unexpand 	 : "unexpand" "(" Expression expression ")"
 	| \desugar 	 : "desugar" "(" QualifiedName unexpandFn "," Expression expression ")"
 	| \resugar 	 : "resugar" "(" Expression expression ")"
@@ -224,7 +223,7 @@ syntax Expression
 	| fieldAccess  : Expression expression "." Name field 
 	| fieldUpdate  : Expression expression "[" Name key "=" Expression replacement "]" 
 	| fieldProject : Expression expression!transitiveClosure!transitiveReflexiveClosure!isDefined "\<" {Field ","}+ fields "\>" 
-	| isNonTerminalTypetation: Expression expression "[" "@" Name name "=" Expression value "]" 
+	| setAnnotation: Expression expression "[" "@" Name name "=" Expression value "]" 
     | getAnnotation: Expression expression "@" Name name 
 	| is           : Expression expression "is" Name name
 	| has          : Expression expression "has" Name name
@@ -716,7 +715,6 @@ keyword RascalKeywords
 	| "start"
 	| "datetime" 
 	| "value"
-	| "expand"
 	| "unexpand"
 	| "desugar"
 	| "resugar" 
