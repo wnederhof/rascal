@@ -180,7 +180,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 163 + 71 * tags.hashCode() + 503 * visibility.hashCode() + 31 * signature.hashCode() ; 
+      return 31 + 181 * tags.hashCode() + 313 * visibility.hashCode() + 463 * signature.hashCode() ; 
     } 
   
     
@@ -314,7 +314,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 181 + 313 * tags.hashCode() + 463 * visibility.hashCode() + 257 * signature.hashCode() + 211 * expression.hashCode() + 179 * conditions.hashCode() ; 
+      return 257 + 211 * tags.hashCode() + 179 * visibility.hashCode() + 457 * signature.hashCode() + 839 * expression.hashCode() + 2 * conditions.hashCode() ; 
     } 
   
     
@@ -454,7 +454,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 457 + 839 * tags.hashCode() + 2 * visibility.hashCode() + 461 * signature.hashCode() + 877 * body.hashCode() ; 
+      return 461 + 877 * tags.hashCode() + 599 * visibility.hashCode() + 281 * signature.hashCode() + 43 * body.hashCode() ; 
     } 
   
     
@@ -585,7 +585,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 599 + 281 * tags.hashCode() + 43 * visibility.hashCode() + 103 * signature.hashCode() + 673 * expression.hashCode() ; 
+      return 103 + 673 * tags.hashCode() + 509 * visibility.hashCode() + 61 * signature.hashCode() + 173 * expression.hashCode() ; 
     } 
   
     
@@ -746,7 +746,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 509 + 61 * tags.hashCode() + 173 * visibility.hashCode() + 761 * typeRhs.hashCode() + 409 * name.hashCode() + 997 * patternLhs.hashCode() + 367 * typeLhs.hashCode() + 401 * patternRhs.hashCode() ; 
+      return 761 + 409 * tags.hashCode() + 997 * visibility.hashCode() + 367 * typeRhs.hashCode() + 401 * name.hashCode() + 139 * patternLhs.hashCode() + 937 * typeLhs.hashCode() + 521 * patternRhs.hashCode() ; 
     } 
   
     

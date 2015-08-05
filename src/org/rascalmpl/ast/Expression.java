@@ -6322,6 +6322,99 @@ public abstract class Expression extends AbstractAST {
     }
             
   }
+  public boolean isSubstitute() {
+    return false;
+  }
+
+  static public class Substitute extends Expression {
+    // Production: sig("Substitute",[arg("org.rascalmpl.ast.Expression","pattern"),arg("org.rascalmpl.ast.Expression","expression")],breakable=false)
+  
+    
+    private final org.rascalmpl.ast.Expression pattern;
+    private final org.rascalmpl.ast.Expression expression;
+  
+    public Substitute(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Expression pattern,  org.rascalmpl.ast.Expression expression) {
+      super(src, node);
+      
+      this.pattern = pattern;
+      this.expression = expression;
+    }
+  
+    @Override
+    public boolean isSubstitute() { 
+      return true; 
+    }
+  
+    @Override
+    public <T> T accept(IASTVisitor<T> visitor) {
+      return visitor.visitExpressionSubstitute(this);
+    }
+  
+    @Override
+    protected void addForLineNumber(int $line, java.util.List<AbstractAST> $result) {
+      if (getLocation().getBeginLine() == $line) {
+        $result.add(this);
+      }
+      ISourceLocation $l;
+      
+      $l = pattern.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        pattern.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = expression.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        expression.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+    }
+  
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof Substitute)) {
+        return false;
+      }        
+      Substitute tmp = (Substitute) o;
+      return true && tmp.pattern.equals(this.pattern) && tmp.expression.equals(this.expression) ; 
+    }
+   
+    @Override
+    public int hashCode() {
+      return 863 + 331 * pattern.hashCode() + 347 * expression.hashCode() ; 
+    } 
+  
+    
+    @Override
+    public org.rascalmpl.ast.Expression getPattern() {
+      return this.pattern;
+    }
+  
+    @Override
+    public boolean hasPattern() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Expression getExpression() {
+      return this.expression;
+    }
+  
+    @Override
+    public boolean hasExpression() {
+      return true;
+    }	
+  
+    @Override
+    public Object clone()  {
+      return newInstance(getClass(), src, (IConstructor) null , clone(pattern), clone(expression));
+    }
+            
+  }
   public boolean isSubtraction() {
     return false;
   }
@@ -6386,7 +6479,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 863 + 331 * lhs.hashCode() + 347 * rhs.hashCode() ; 
+      return 487 + 53 * lhs.hashCode() + 983 * rhs.hashCode() ; 
     } 
   
     
@@ -6469,7 +6562,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 487 + 53 * argument.hashCode() ; 
+      return 653 + 29 * argument.hashCode() ; 
     } 
   
     
@@ -6543,7 +6636,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 983 + 653 * argument.hashCode() ; 
+      return 487 + 653 * argument.hashCode() ; 
     } 
   
     
@@ -6619,7 +6712,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 29 + 487 * elements.hashCode() ; 
+      return 373 + 449 * elements.hashCode() ; 
     } 
   
     
@@ -6703,7 +6796,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 653 + 373 * type.hashCode() + 449 * name.hashCode() ; 
+      return 251 + 109 * type.hashCode() + 967 * name.hashCode() ; 
     } 
   
     
@@ -6806,7 +6899,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 251 + 109 * type.hashCode() + 967 * name.hashCode() + 269 * pattern.hashCode() ; 
+      return 269 + 97 * type.hashCode() + 101 * name.hashCode() + 467 * pattern.hashCode() ; 
     } 
   
     
@@ -6898,7 +6991,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 97 + 101 * expression.hashCode() ; 
+      return 89 + 727 * expression.hashCode() ; 
     } 
   
     
@@ -6982,7 +7075,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 467 + 89 * name.hashCode() + 727 * pattern.hashCode() ; 
+      return 673 + 743 * name.hashCode() + 29 * pattern.hashCode() ; 
     } 
   
     
@@ -7075,7 +7168,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 673 + 743 * label.hashCode() + 29 * visit.hashCode() ; 
+      return 571 + 211 * label.hashCode() + 727 * visit.hashCode() ; 
     } 
   
     
@@ -7170,7 +7263,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 571 + 211 * parameters.hashCode() + 727 * statements0.hashCode() ; 
+      return 251 + 131 * parameters.hashCode() + 811 * statements0.hashCode() ; 
     } 
   
     

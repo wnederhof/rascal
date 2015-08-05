@@ -90,7 +90,6 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 	static public class Resugarable extends
 			org.rascalmpl.ast.Declaration.Resugarable {
 		
-		
 		public Resugarable(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
 				org.rascalmpl.ast.Type onType) {
 			super(src, node, tags, visibility, onType);

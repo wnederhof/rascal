@@ -190,9 +190,11 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		if (substitutionMap.containsKey(name)) {
+		String fullName = Names.fullName(name);
+		System.out.println("Trying to fetch: " + fullName);
+		if (substitutionMap.containsKey(fullName)) {
 			// Here we do the substitution.
-			return Arrays.asList(substitutionMap.get(name));
+			return Arrays.asList(substitutionMap.get(fullName));
 		}
 		return Arrays.asList(ctx.getCurrentEnvt().getVariable(name));
 	}

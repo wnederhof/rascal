@@ -17,6 +17,7 @@
 package org.rascalmpl.interpreter.matching;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -39,6 +40,7 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.ast.QualifiedName;
+import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.ConstructorFunction;
@@ -425,7 +427,13 @@ public class NodePattern extends AbstractMatchingResult {
 
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		Map<String, IValue> subjectKeywords = ((ITree) subject).asWithKeywordParameters().getParameters();
+		Map<String, IValue> subjectKeywords = null;
+		if (subject.mayHaveKeywordParameters()) {
+			subjectKeywords = ((IConstructor) subject).asWithKeywordParameters().getParameters();
+			if (subjectKeywords.size() == 0) {
+				subjectKeywords = null;
+			}
+		}
 		// We can completely ignore annotations atm as there is no matching for annotations.
 		for (String s : keywordParameters.keySet()) {
 			List<Result<IValue>> substituted = keywordParameters.get(s).substitute(substitutionMap);
@@ -452,11 +460,21 @@ public class NodePattern extends AbstractMatchingResult {
 		
 		// TODO: Collect used keyword parameters in Pattern, and overwrite them in cons.
 		
-		IConstructor cons = ValueFactory.getInstance().constructor(type, resultValues.toArray(new IValue[resultValues.size()]), 
-				subjectKeywords);
-		cons.asAnnotatable().setAnnotations(subject.asAnnotatable().getAnnotations());
+		IConstructor cons;
 		
-		return Arrays.asList(ResultFactory.makeResult(list.getType(), list, ctx));
+		cons = (IConstructor) ((IEvaluator) ctx).call(qName, subjectKeywords, resultValues.toArray(new IValue[resultValues.size()]));
+		
+		if (subjectKeywords == null) {
+			//if (subject.isAnnotatable()) {
+				Map<String, IValue> annotations = subject.asAnnotatable().getAnnotations();
+				cons = cons.asAnnotatable().setAnnotations(annotations);
+			//}
+			
+		}
+		
+		// huh? ResultFactory.makeResult(list.getType(), list, ctx)
+		
+		return Arrays.asList(ResultFactory.makeResult(cons.getType(), cons, ctx));
 	}
 
 }

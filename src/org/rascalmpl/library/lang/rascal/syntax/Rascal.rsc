@@ -261,7 +261,7 @@ syntax Expression
 	> non-assoc ifDefinedOtherwise: Expression lhs "?" Expression rhs
 	> non-assoc ( noMatch: Pattern pattern "!:=" Expression expression  
 		        | match: Pattern pattern ":=" Expression expression 
-		        // | substitute: Expression pattern "@=\>" Expression expression
+		        | substitute: Pattern pattern "@=\>" Expression expression
 		        | enumerator: Pattern pattern "\<-" Expression expression 
 	            ) 
 	> non-assoc ( implication: Expression lhs "==\>" Expression rhs  

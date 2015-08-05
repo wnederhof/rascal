@@ -17,27 +17,28 @@
 package org.rascalmpl.interpreter;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
+import org.rascalmpl.interpreter.env.EmptyVariablesEnvironment;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.env.ModuleEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 
 public class SubstitutionEvaluator {
 
-	private IValue substitute(Expression pattern, IValue subject, IEvaluator<Result<IValue>> eval) {
+	public static Result<IValue> substitute(Expression pattern, IValue subject, IEvaluator<Result<IValue>> eval) {
 		Environment old = eval.getCurrentEnvt();
 		try {
-			eval.pushEnv();
+			eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
 			
 			IMatchingResult r = pattern.buildMatcher(eval);
 			
 			r.initMatch(ResultFactory.makeResult(subject.getType(), subject, eval));
 			
 			if (r.hasNext() && r.next()) {
-				return r.substitute(old.getVariables()).get(0).getValue();
+				return r.substitute(old.getVariables()).get(0);
 			}
 			throw new MatchFailed();
 		} finally {

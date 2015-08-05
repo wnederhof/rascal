@@ -46,6 +46,7 @@ import org.rascalmpl.ast.Parameters;
 import org.rascalmpl.ast.Statement;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.SubstitutionEvaluator;
 import org.rascalmpl.interpreter.TraversalEvaluator;
 import org.rascalmpl.interpreter.TraversalEvaluator.CaseBlockList;
 import org.rascalmpl.interpreter.TraversalEvaluator.DIRECTION;
@@ -230,6 +231,20 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				__eval.__popTraversalEvaluator();
 			}
 		}
+	}
+	
+	static public class Substitute extends org.rascalmpl.ast.Expression.Substitute {
+
+		public Substitute(ISourceLocation src, IConstructor node, org.rascalmpl.ast.Expression pattern,
+				org.rascalmpl.ast.Expression expression) {
+			super(src, node, pattern, expression);
+		}
+		
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
+			return SubstitutionEvaluator.substitute(getPattern(), getExpression().interpret(eval).getValue(), eval);
+		}
+		
 	}
 	
 	static public class Unexpand extends org.rascalmpl.ast.Expression.Unexpand {

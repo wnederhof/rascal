@@ -621,6 +621,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitExpressionSubstitute(Expression.Substitute x) { 
+    return null; 
+  }
+
   public T visitExpressionSubtraction(Expression.Subtraction x) { 
     return null; 
   }

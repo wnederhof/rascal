@@ -319,6 +319,8 @@ public interface IASTVisitor<T> {
 
   public T visitExpressionSubscript(Expression.Subscript x);
 
+  public T visitExpressionSubstitute(Expression.Substitute x);
+
   public T visitExpressionSubtraction(Expression.Subtraction x);
 
   public T visitExpressionTransitiveClosure(Expression.TransitiveClosure x);
