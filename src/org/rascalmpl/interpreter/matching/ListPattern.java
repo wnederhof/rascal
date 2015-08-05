@@ -16,15 +16,22 @@
  *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
+import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
@@ -66,8 +73,22 @@ public class ListPattern extends AbstractMatchingResult  {
   private boolean debug = false;
   private Type staticListSubjectElementType;
   private Type staticListSubjectType;
- 
 
+  @Override
+  public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		List<Result<IValue>> result = new LinkedList<Result<IValue>>();
+		for (IMatchingResult pc : patternChildren) {
+			List<Result<IValue>> substitute = pc.substitute(substitutionMap);
+			result.addAll(substitute);
+		}
+		List<IValue> resultValues = new LinkedList<IValue>();
+		for (Result<IValue> pc : result) {
+			resultValues.add(pc.getValue());
+		}
+		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
+		IList list = ValueFactory.getInstance().list(listArr);
+		return Arrays.asList(ResultFactory.makeResult(list.getType(), list, ctx));
+  }
 
   public ListPattern(IEvaluatorContext ctx, AbstractAST x, List<IMatchingResult> list){
     this(ctx, x, list, 1);  // Default delta=1; Set to 2 to run DeltaListPatternTests

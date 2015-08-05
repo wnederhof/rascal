@@ -133,7 +133,7 @@ public abstract class Header extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 773 + 277 * tags.hashCode() + 239 * name.hashCode() + 151 * imports.hashCode() ; 
+      return 397 + 137 * tags.hashCode() + 811 * name.hashCode() + 709 * imports.hashCode() ; 
     } 
   
     
@@ -257,7 +257,7 @@ public abstract class Header extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 397 + 137 * tags.hashCode() + 811 * name.hashCode() + 709 * params.hashCode() + 167 * imports.hashCode() ; 
+      return 167 + 53 * tags.hashCode() + 463 * name.hashCode() + 127 * params.hashCode() + 67 * imports.hashCode() ; 
     } 
   
     

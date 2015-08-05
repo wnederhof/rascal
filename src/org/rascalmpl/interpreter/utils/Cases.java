@@ -261,7 +261,7 @@ public class Cases  {
 		        if (eval.isInterrupted())
 		          throw new InterruptException(eval.getStackTrace(), eval.getCurrentAST().getLocation());
 		        if (mp.next()) {
-		          if (!mp.getType(eval.getCurrentEnvt(), null).equals(TF.stringType())) {
+		          if (mp.getType(eval.getCurrentEnvt(), null).isNode()) {
 		            throw new Insert(replacementExpr.interpret(eval), mp, mp.getType(eval.getCurrentEnvt(), null));
 		          }
 		        }

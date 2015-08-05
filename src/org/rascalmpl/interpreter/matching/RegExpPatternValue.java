@@ -19,6 +19,7 @@ import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -27,6 +28,7 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
@@ -193,5 +195,11 @@ public class RegExpPatternValue extends AbstractMatchingResult  {
 	
 	public boolean bindingInstance() {
 		return this.iWroteItMySelf;
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// TODO
+		throw new ImplementationError("RegExpPatternValue.substitute not implemented");
 	}
 }

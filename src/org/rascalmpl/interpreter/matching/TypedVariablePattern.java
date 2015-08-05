@@ -20,11 +20,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.utils.Names;
 
@@ -143,6 +147,11 @@ public class TypedVariablePattern extends AbstractMatchingResult implements IVar
 	
 	public boolean bindingInstance() {
 		return this.alreadyStored;
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		throw new ImplementationError("TypedVariablePattern.substitute not implemented");
 	}
 	 
 }

@@ -32,7 +32,7 @@ syntax Expression = concrete: Concrete concrete;
 syntax Pattern    = concrete: Concrete concrete;
 syntax SymmetricPattern = concrete: Concrete concrete;
 
-lexical Concrete 
+lexical Concrete
   = typed: "(" LAYOUTLIST l1 Sym symbol LAYOUTLIST l2 ")" LAYOUTLIST l3 "`" ConcretePart* parts "`";
 
 lexical ConcretePart
@@ -261,6 +261,7 @@ syntax Expression
 	> non-assoc ifDefinedOtherwise: Expression lhs "?" Expression rhs
 	> non-assoc ( noMatch: Pattern pattern "!:=" Expression expression  
 		        | match: Pattern pattern ":=" Expression expression 
+		        // | substitute: Expression pattern "@=\>" Expression expression
 		        | enumerator: Pattern pattern "\<-" Expression expression 
 	            ) 
 	> non-assoc ( implication: Expression lhs "==\>" Expression rhs  
@@ -663,6 +664,7 @@ keyword RascalKeywords
 	| "filter" 
 	| "if" 
 	| "tag" 
+	| "resugarable"
 	| BasicType
 	| "extend" 
 	| "append" 
@@ -735,7 +737,8 @@ syntax Declaration
 	= variable    : Tags tags Visibility visibility Type type {Variable ","}+ variables ";" 
 	| annotation  : Tags tags Visibility visibility "anno" Type annoType Type onType "@" Name name ";" 
 	| \alias       : Tags tags Visibility visibility "alias" UserType user "=" Type base ";" 
-	| \tag         : Tags tags Visibility visibility "tag" Kind kind Name name "on" {Type ","}+ types ";" 
+	| \tag         : Tags tags Visibility visibility "tag" Kind kind Name name "on" {Type ","}+ types ";"
+	| \resugarable : Tags tags Visibility visibility "resugarable" Type onType ";" 
 	| dataAbstract: Tags tags Visibility visibility "data" UserType user CommonKeywordParameters commonKeywordParameters ";" 
 	| @Foldable \data : Tags tags Visibility visibility "data" UserType user CommonKeywordParameters commonKeywordParameters"=" {Variant "|"}+ variants ";"
 	| function       : FunctionDeclaration functionDeclaration 

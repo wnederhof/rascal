@@ -16,11 +16,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.TypeReifier;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
@@ -63,5 +67,11 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 			return result;
 		}
 		return false;
+	}
+
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// TODO implement
+		throw new ImplementationError("ReifiedTypePattern.substitute not implemented");
 	}
 }

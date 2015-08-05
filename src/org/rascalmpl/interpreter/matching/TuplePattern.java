@@ -14,15 +14,21 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
@@ -154,5 +160,19 @@ public class TuplePattern extends AbstractMatchingResult {
 		res.append(">");
 		
 		return res.toString();
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		List<Result<IValue>> results = new LinkedList<Result<IValue>>();
+		for (IMatchingResult c : children) {
+			results.addAll(c.substitute(substitutionMap));
+		}
+		List<IValue> resultsAsValues = new LinkedList<IValue>();
+		for (Result<IValue> value : results) {
+			resultsAsValues.add(value.getValue());
+		}
+		ITuple t = ValueFactory.getInstance().tuple(resultsAsValues.toArray(new IValue[resultsAsValues.size()]));
+		return Arrays.asList(ResultFactory.makeResult(t.getType(), t, ctx));
 	}
 }

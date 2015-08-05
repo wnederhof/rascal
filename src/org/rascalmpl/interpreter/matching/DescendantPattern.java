@@ -16,12 +16,15 @@ package org.rascalmpl.interpreter.matching;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
@@ -102,5 +105,11 @@ public class DescendantPattern extends AbstractMatchingResult  {
 		}
 		hasNext = false;
 		return false;
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// TODO IMPLEMENT LESS IMPORTANT!!!!
+		throw new ImplementationError("ConcreteApplicationPattern.substitute not implemented");
 	}
 }

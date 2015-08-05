@@ -86,6 +86,41 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 		}
 
 	}
+	
+	static public class Resugarable extends
+			org.rascalmpl.ast.Declaration.Resugarable {
+		
+		
+		public Resugarable(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
+				org.rascalmpl.ast.Type onType) {
+			super(src, node, tags, visibility, onType);
+			// TODO Auto-generated constructor stub
+		}
+		
+		public static void declareSugarAnnotations(IEvaluator<Result<IValue>> __eval, org.rascalmpl.ast.Type onTypeAst, ISourceLocation loc) {
+			Type onType = onTypeAst.typeOf(__eval.getCurrentEnvt(), true, __eval);
+			if (onType.isAbstractData() || onType.isConstructor() || onType.isNode()) {
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						"unusedVariables", TF.listType(TF.valueType()));
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						"unexpandFn", TF.valueType());
+				
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						"unexpansionFailed", TF.valueType());
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						"oldLoc", TF.sourceLocationType());
+			} else {
+				throw new UnsupportedOperation("Can only declare annotations on node and ADT types", onTypeAst);
+			}
+		}
+
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			declareSugarAnnotations(__eval, getOnType(), this.getLocation());
+			return org.rascalmpl.interpreter.result.ResultFactory.nothing();
+		}
+		
+	}
 
 	static public class Data extends org.rascalmpl.ast.Declaration.Data {
 

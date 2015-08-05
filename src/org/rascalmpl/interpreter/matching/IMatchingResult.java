@@ -13,10 +13,12 @@ package org.rascalmpl.interpreter.matching;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 
@@ -29,13 +31,19 @@ import org.rascalmpl.interpreter.result.Result;
  */
 public interface IMatchingResult extends IBooleanResult {
 	/**
+	  * Create a new value while substituting the variables in the substitution map. 
+	  * @param substitutionMap the substitution map.
+	  * @return
+	  */
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap);
+	  
+	/**
 	 * @param patternVars TODO
 	 * @param env: the module scope
 	 * @param patternVars: the variable introduced earlier in the pattern.
 	 * @return the Rascal type of this MatchPattern
 	 */
 	public Type getType(Environment env, HashMap<String,IVarPattern> patternVars);
-	
 	
 	/**
 	 * @param subject to be matched is stored in the matching result, which initialized the state for lazy backtracking behavior.

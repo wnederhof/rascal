@@ -15,11 +15,13 @@ package org.rascalmpl.interpreter.matching;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
@@ -156,5 +158,11 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 		}
 		
 		return Collections.emptyList();
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// TODO IMPLEMENT VERY IMPORTANT!!!!
+		throw new ImplementationError("ConcreteApplicationPattern.substitute not implemented");
 	}
 }

@@ -13,12 +13,16 @@ package org.rascalmpl.interpreter.matching;
 
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 
@@ -54,5 +58,11 @@ public class ValuePattern extends AbstractMatchingResult {
 	@Override
 	public String toString(){
 		return val.toString();
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// NOT USED ANYWHERE.
+		throw new ImplementationError("ValuePattern.substitute not implemented");
 	}
 }

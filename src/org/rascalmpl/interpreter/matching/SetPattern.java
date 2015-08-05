@@ -15,15 +15,20 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.impl.persistent.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.control_exceptions.InterruptException;
 import org.rascalmpl.interpreter.env.Environment;
@@ -721,5 +726,21 @@ public class SetPattern extends AbstractMatchingResult {
 		res.append("}");
 		
 		return res.toString();
+	}
+
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		List<Result<IValue>> result = new LinkedList<Result<IValue>>();
+		for (IMatchingResult pc : patternChildren) {
+			List<Result<IValue>> substitute = pc.substitute(substitutionMap);
+			result.addAll(substitute);
+		}
+		List<IValue> resultValues = new LinkedList<IValue>();
+		for (Result<IValue> pc : result) {
+			resultValues.add(pc.getValue());
+		}
+		IValue[] setArr = resultValues.toArray(new IValue[resultValues.size()]);
+		ISet set = ValueFactory.getInstance().set(setArr);
+		return Arrays.asList(ResultFactory.makeResult(set.getType(), set, ctx));
 	}
 }

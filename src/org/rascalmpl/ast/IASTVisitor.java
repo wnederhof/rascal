@@ -171,6 +171,8 @@ public interface IASTVisitor<T> {
 
   public T visitDeclarationFunction(Declaration.Function x);
 
+  public T visitDeclarationResugarable(Declaration.Resugarable x);
+
   public T visitDeclarationTag(Declaration.Tag x);
 
   public T visitDeclarationVariable(Declaration.Variable x);

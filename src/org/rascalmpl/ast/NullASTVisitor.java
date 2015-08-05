@@ -325,6 +325,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitDeclarationResugarable(Declaration.Resugarable x) { 
+    return null; 
+  }
+
   public T visitDeclarationTag(Declaration.Tag x) { 
     return null; 
   }

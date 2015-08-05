@@ -19,14 +19,18 @@ import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.types.NonTerminalType;
@@ -196,5 +200,11 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 	@Override
 	public Type getType() {
 		return declaredType;
+	}
+	
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// TODO IMPLEMENT VERY IMPORTANT!!!!
+		throw new ImplementationError("ConcreteApplicationPattern.substitute not implemented");
 	}
 }

@@ -15,12 +15,16 @@ package org.rascalmpl.interpreter.matching;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.result.Result;
 
 /* package */ class MapPattern extends AbstractMatchingResult {
 	private java.util.List<IMatchingResult> children;
@@ -50,5 +54,10 @@ import org.rascalmpl.interpreter.env.Environment;
 	public boolean next(){
 		checkInitialized();
 		throw new ImplementationError("AbstractPatternMap.match not implemented");
+	}
+
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		throw new ImplementationError("AbstractPatternMap.substitute not implemented");
 	}
 }

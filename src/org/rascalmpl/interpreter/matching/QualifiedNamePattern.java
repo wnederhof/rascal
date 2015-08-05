@@ -14,13 +14,16 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
@@ -183,5 +186,14 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 	@Override
 	public void updateType(Type type) {
 	  declaredType = type;
+	}
+
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		if (substitutionMap.containsKey(name)) {
+			// Here we do the substitution.
+			return Arrays.asList(substitutionMap.get(name));
+		}
+		return Arrays.asList(ctx.getCurrentEnvt().getVariable(name));
 	}
 }

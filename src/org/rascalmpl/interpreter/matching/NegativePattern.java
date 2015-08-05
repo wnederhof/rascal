@@ -14,11 +14,16 @@
 package org.rascalmpl.interpreter.matching;
 
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
@@ -54,5 +59,16 @@ public class NegativePattern extends AbstractMatchingResult {
 	@Override
 	public boolean next() {
 		return pat.next();
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		List<Result<IValue>> substituted = pat.substitute(substitutionMap);
+		if (substituted.size() != 1) {
+			throw new RuntimeException("Substituted is not of length 1.");
+		}
+		// IBool extends from IValue, but casting does not work directly, so we add @suppressWarning.
+		return Arrays.asList((Result) substituted.get(0).negate());
 	}
 }

@@ -21,13 +21,11 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.ast.Expression.Closure;
 import org.rascalmpl.ast.FunctionBody;
@@ -47,7 +45,6 @@ import org.rascalmpl.interpreter.result.RascalFunction;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.MissingModifier;
 import org.rascalmpl.interpreter.staticErrors.NonAbstractJavaFunction;
-import org.rascalmpl.interpreter.staticErrors.StaticError;
 import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.parser.ASTBuilder;
 
@@ -172,9 +169,11 @@ public abstract class FunctionDeclaration extends
 				org.rascalmpl.ast.Type typeLhs, org.rascalmpl.ast.Expression patternRhs) {
 			super(src, node, tags, visibility, typeRhs, name, patternLhs, typeLhs, patternRhs);
 		}
-
+		
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			// typeLhs is actually the type on the RHS, which defines the type for the expression on the LHS.
+			Declaration.Resugarable.declareSugarAnnotations(__eval, getTypeRhs(), this.getLocation());
 			AbstractFunction lambdaDesugar = constructExpansionFunction(__eval, getTypeRhs(), getTypeLhs(), getPatternLhs(), getPatternRhs());
 			return lambdaDesugar;
 		}
@@ -192,7 +191,6 @@ public abstract class FunctionDeclaration extends
 			List<org.rascalmpl.ast.Expression> listOfFormals = new LinkedList<>();
 			listOfFormals.add(signaturePattern);
 			listOfFormals.addAll(additionalParameters);
-			System.out.println("List Of Formals: " + listOfFormals);
 			
 			org.rascalmpl.ast.Formals formals = ASTBuilder.make("Formals", "Default", getLocation(), listOfFormals);
 			
@@ -280,22 +278,20 @@ public abstract class FunctionDeclaration extends
 			// We write LinkedHashSet instead of Set, to stress the fact that the sets need to be ordered!
 			LinkedHashSet<String> varsSig = findVariables(signaturePattern);
 			LinkedHashSet<String> varsPat = findVariables(expression);
-			System.out.println(varsSig);
-			System.out.println(varsPat);
 			Signature signature = createSignature(type, signaturePattern,
 					new LinkedHashSet<org.rascalmpl.ast.Expression>());
 			List<org.rascalmpl.ast.Expression> unusedVariableExps = new LinkedList<>();
 			for (String s : varsSig) {
 				if (!varsPat.contains(s)) {
-					System.out.println("UNUSED: " + s);
 					unusedVariableExps.add(ASTBuilder.makeExp("QualifiedName", src,
 							org.rascalmpl.interpreter.utils.Names.toQualifiedName(s, src)));
 				}
 			}
+			
 			AbstractAST ret = ASTBuilder.makeStat("Return", src,
 					ASTBuilder.makeStat("Expression", src,
 							ASTBuilder.makeExp("SetAnnotation", src,
-								ASTBuilder.makeExp("SetAnnotation", src, expression,
+								ASTBuilder.makeExp("FieldUpdate", src, expression,
 										Names.toName("unusedVariables", src),
 											ASTBuilder.makeExp("List", src, unusedVariableExps)),
 								Names.toName("unexpandFn", src), constructUnexpansionClosure(__eval, toType, expression,
@@ -310,15 +306,9 @@ public abstract class FunctionDeclaration extends
 					__eval.__getAccumulators()) {
 				
 				public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
-					if (declarationEnvironment.declaresAnnotation(TF.nodeType(), "unusedVariables") ||
-							declarationEnvironment.declaresAnnotation(TF.nodeType(), "unusedVariables")) {
-						eval.setCurrentAST(thisAst);
-						eval.notifyAboutSuspension(thisAst);	
-						return super.call(actualTypes, actuals, keyArgValues);
-					}
-					throw new StaticError("Please extend SugarAnnotations.", src){
-						private static final long serialVersionUID = 7440217875097146664L;
-					};
+					eval.setCurrentAST(thisAst);
+					eval.notifyAboutSuspension(thisAst);	
+					return super.call(actualTypes, actuals, keyArgValues);
 				}
 			};
 			return declareFunction(__eval, lambda);

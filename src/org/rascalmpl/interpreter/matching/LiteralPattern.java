@@ -15,17 +15,21 @@ package org.rascalmpl.interpreter.matching;
 
 import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 
 public class LiteralPattern extends AbstractMatchingResult {
@@ -82,6 +86,11 @@ public class LiteralPattern extends AbstractMatchingResult {
 	@Override
 	public String toString(){
 		return "pattern: " + literal;
+	}
+
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		return Arrays.asList(ResultFactory.makeResult(literal.getType(), literal, ctx));
 	}
 	
 	

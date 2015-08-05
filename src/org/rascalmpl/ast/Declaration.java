@@ -765,6 +765,118 @@ public abstract class Declaration extends AbstractAST {
     }
             
   }
+  public boolean isResugarable() {
+    return false;
+  }
+
+  static public class Resugarable extends Declaration {
+    // Production: sig("Resugarable",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","onType")],breakable=false)
+  
+    
+    private final org.rascalmpl.ast.Tags tags;
+    private final org.rascalmpl.ast.Visibility visibility;
+    private final org.rascalmpl.ast.Type onType;
+  
+    public Resugarable(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type onType) {
+      super(src, node);
+      
+      this.tags = tags;
+      this.visibility = visibility;
+      this.onType = onType;
+    }
+  
+    @Override
+    public boolean isResugarable() { 
+      return true; 
+    }
+  
+    @Override
+    public <T> T accept(IASTVisitor<T> visitor) {
+      return visitor.visitDeclarationResugarable(this);
+    }
+  
+    @Override
+    protected void addForLineNumber(int $line, java.util.List<AbstractAST> $result) {
+      if (getLocation().getBeginLine() == $line) {
+        $result.add(this);
+      }
+      ISourceLocation $l;
+      
+      $l = tags.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        tags.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = visibility.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        visibility.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = onType.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        onType.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+    }
+  
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof Resugarable)) {
+        return false;
+      }        
+      Resugarable tmp = (Resugarable) o;
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.onType.equals(this.onType) ; 
+    }
+   
+    @Override
+    public int hashCode() {
+      return 101 + 479 * tags.hashCode() + 137 * visibility.hashCode() + 223 * onType.hashCode() ; 
+    } 
+  
+    
+    @Override
+    public org.rascalmpl.ast.Tags getTags() {
+      return this.tags;
+    }
+  
+    @Override
+    public boolean hasTags() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Visibility getVisibility() {
+      return this.visibility;
+    }
+  
+    @Override
+    public boolean hasVisibility() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Type getOnType() {
+      return this.onType;
+    }
+  
+    @Override
+    public boolean hasOnType() {
+      return true;
+    }	
+  
+    @Override
+    public Object clone()  {
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(onType));
+    }
+            
+  }
   public boolean isTag() {
     return false;
   }
@@ -861,7 +973,7 @@ public abstract class Declaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 101 + 479 * tags.hashCode() + 137 * visibility.hashCode() + 223 * kind.hashCode() + 307 * name.hashCode() + 733 * types.hashCode() ; 
+      return 307 + 733 * tags.hashCode() + 859 * visibility.hashCode() + 599 * kind.hashCode() + 643 * name.hashCode() + 853 * types.hashCode() ; 
     } 
   
     
@@ -1003,7 +1115,7 @@ public abstract class Declaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 859 + 599 * tags.hashCode() + 643 * visibility.hashCode() + 853 * type.hashCode() + 3 * variables.hashCode() ; 
+      return 3 + 257 * tags.hashCode() + 307 * visibility.hashCode() + 577 * type.hashCode() + 397 * variables.hashCode() ; 
     } 
   
     

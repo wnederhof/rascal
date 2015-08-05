@@ -177,7 +177,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			try {
 				__eval.__pushTraversalEvaluator(te);
 				IValue val = te.traverse(subject.getValue(),
-						blocks, DIRECTION.TopDown,
+						blocks, DIRECTION.BottomUp,
 						PROGRESS.Continuing, FIXEDPOINT.No);
 				if (!val.getType().isSubtypeOf(subject.getType())) {
 				  // this is not a static error but an extra run-time sanity check
@@ -217,7 +217,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			try {
 				__eval.__pushTraversalEvaluator(te);
 				IValue val = te.traverse(subject.getValue(),
-						blocks, DIRECTION.BottomUp,
+						blocks, DIRECTION.TopDown,
 						PROGRESS.Continuing, FIXEDPOINT.No);
 				if (!val.getType().isSubtypeOf(subject.getType())) {
 				  // this is not a static error but an extra run-time sanity check
@@ -246,28 +246,34 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			Result<IValue> expressionValue = getExpression().interpret(__eval);
 			Result<AbstractFunction> lambda;
 			try {
-				lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
+				lambda = expressionValue.fieldAccess("unexpandFn", __eval.getCurrentEnvt().getStore());
+			} catch(Throw e) {
+				//e.printStackTrace(); // TODO remove.
+				return expressionValue;
 			} catch(Exception e) {
-				e.printStackTrace(); // TODO remove.
+				e.printStackTrace();
 				return expressionValue;
 			}
 			java.util.List<Type> mTypes = new LinkedList<Type>();
 			java.util.List<IValue> mValues = new LinkedList<IValue>();
 			mTypes.add(expressionValue.getValue().getType());
 			mValues.add(expressionValue.getValue());
-			org.rascalmpl.interpreter.result.ListResult vals = (org.rascalmpl.interpreter.result.ListResult) (Result<?>) expressionValue.getAnnotation("unusedVariables", __eval.getCurrentEnvt());
+			/* org.rascalmpl.interpreter.result.ListResult vals = (org.rascalmpl.interpreter.result.ListResult) (Result<?>) expressionValue.getAnnotation("unusedVariables", __eval.getCurrentEnvt());
 			for (IValue v : vals.getValue()) {
 				mTypes.add(v.getType());
 				mValues.add(v);
-			}
+			}*/
 			try {
 				return lambda.getValue().call(
 						mTypes.toArray(new Type[mTypes.size()]),
 						mValues.toArray(new IValue[mValues.size()]),
 						new HashMap<String, IValue>());
-			} catch(Exception e) {
+			} catch(Throw e) {
 				// TO DO: Add [@unexpansionFailed = true]?
-				e.printStackTrace(); // TODO remove.
+				// e.printStackTrace(); // TODO remove.
+				return expressionValue;
+			} catch(Exception e) {
+				e.printStackTrace();
 				return expressionValue;
 			}
 		}
@@ -637,9 +643,6 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 
 				    for (KeywordArgument_Expression kwa : keywordArgs.getKeywordArgumentList()){
 				      Result<IValue> val = kwa.getExpression().interpret(eval);
-				      System.out.println("VALUE: " + val.getValue()); // TODO Remove
-				      System.out.println("VALUET: " + val.getType()); // TODO Remove
-				      
 				      String name = Names.name(kwa.getName());
 
 				      if (kwFormals != null) {
