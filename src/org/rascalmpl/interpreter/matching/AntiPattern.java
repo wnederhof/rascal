@@ -21,9 +21,7 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
-import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
@@ -80,6 +78,6 @@ public class AntiPattern extends AbstractMatchingResult {
 
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		throw new ImplementationError("AntiPattern.substitute not implemented");
+		throw new UnsupportedOperation("substitute", getAST());
 	}
 }

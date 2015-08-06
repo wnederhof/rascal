@@ -11,6 +11,7 @@ import org.rascalmpl.interpreter.utils.Names;
 
 /**
  * This environment emulates an environment with no variables, so the pattern matcher will always bind to a variable.
+ * 
  * @author wouter
  * // (NOTE TO SELF: SimpleVariable doesnt check for functions...)
  */

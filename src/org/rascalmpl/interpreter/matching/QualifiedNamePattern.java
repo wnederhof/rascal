@@ -28,6 +28,7 @@ import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
+import org.rascalmpl.interpreter.staticErrors.UndeclaredVariable;
 import org.rascalmpl.interpreter.utils.Names;
 
 public class QualifiedNamePattern extends AbstractMatchingResult implements IVarPattern {
@@ -196,6 +197,7 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 			// Here we do the substitution.
 			return Arrays.asList(substitutionMap.get(fullName));
 		}
-		return Arrays.asList(ctx.getCurrentEnvt().getVariable(name));
+		// We know the context environment MUST be a STUB. THEREFORE:
+		throw new UndeclaredVariable(fullName, getAST());
 	}
 }

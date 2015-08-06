@@ -15,6 +15,7 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +24,8 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
+import org.eclipse.imp.pdb.facts.IListWriter;
+import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
@@ -30,28 +33,32 @@ import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.exceptions.IllegalOperationException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
-import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
+import org.rascalmpl.interpreter.types.RascalTypeFactory;
 import org.rascalmpl.semantics.dynamic.Tree;
+import org.rascalmpl.values.uptr.IRascalValueFactory;
 import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ConcreteApplicationPattern extends AbstractMatchingResult {
+	private static final IRascalValueFactory VF = IRascalValueFactory.getInstance();
 	private IList subjectArgs;
 	private final IMatchingResult tupleMatcher;
 	private IConstructor production;
 	private final ITuple tupleSubject;
 	private final Type myType;
 	private boolean isLiteral;
+	private List<IMatchingResult> list;
 
 	public ConcreteApplicationPattern(IEvaluatorContext ctx, Tree.Appl x, List<IMatchingResult> list) {
 		super(ctx, x);
+		
+		this.list = list;
 		
 		// retrieve the static value of the production of this pattern
 		this.production = x.getProduction();
@@ -246,10 +253,27 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 	  return production.toString();
 	}
 
+	private <T extends IValue> Result<T> makeResult(Type declaredType, IValue value) {
+		return ResultFactory.makeResult(declaredType, value, ctx);
+	}
+	
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		// TODO IMPLEMENT VERY IMPORTANT!!!!
-		throw new ImplementationError("ConcreteApplicationPattern.substitute not implemented");
+		IListWriter w = ctx.getValueFactory().listWriter();
+		for (IMatchingResult arg : list) {
+			w.append(arg.substitute(substitutionMap).get(0).getValue());
+		}
+
+		Type type = RascalTypeFactory.getInstance().nonTerminalType(production);
+		
+		Map<String, IValue> annos = ((ITree) subject).asAnnotatable().getAnnotations();
+		
+		if (!annos.isEmpty()) {
+			return Arrays.asList(makeResult(type, VF.appl(annos, production, w.done())));
+		}
+		else {
+			return Arrays.asList(makeResult(type, VF.appl(production, w.done())));
+		}
 	}
 	
 }

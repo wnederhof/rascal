@@ -12,10 +12,15 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.imp.pdb.facts.IValue;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.utils.Names;
 
@@ -96,6 +101,20 @@ public class MultiVariablePattern extends QualifiedNamePattern {
 	@Override
 	public String toString(){
 		return Names.fullName(name);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+		List<Result<IValue>> resultList = new LinkedList<>();
+		Result<IValue> resultElem = super.substitute(substitutionMap).get(0);
+		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
+			for (IValue val : (Iterable<IValue>) resultElem.getValue()) {
+				resultList.add(ResultFactory.makeResult(val.getType(), val, ctx));
+			}
+		} // We follow Expression.List on this: just return an empty list if not
+		  // a list or a set.
+		return resultList;
 	}
 	
 }

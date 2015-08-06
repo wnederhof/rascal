@@ -20,11 +20,10 @@ import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
-import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
 
 /**
  * For matching a closed pattern (i.e. a value that simply needs to be checked for equality.
@@ -63,6 +62,6 @@ public class ValuePattern extends AbstractMatchingResult {
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
 		// NOT USED ANYWHERE.
-		throw new ImplementationError("ValuePattern.substitute not implemented");
+		throw new UnsupportedOperation("substitute", getAST());
 	}
 }

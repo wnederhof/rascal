@@ -14,21 +14,25 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
+import org.eclipse.imp.pdb.facts.IList;
+import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
+import org.rascalmpl.values.uptr.ITree;
+import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
@@ -36,9 +40,11 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 public class ConcreteListPattern extends AbstractMatchingResult {
 	private ListPattern pat;
 	private Expression callOrTree;
+	private List<IMatchingResult> list;
 
 	public ConcreteListPattern(IEvaluatorContext ctx, Expression x, List<IMatchingResult> list) {
 		super(ctx, x);
+		this.list = list;
 		
 		callOrTree = x;
 		initListPatternDelegate(list);
@@ -114,9 +120,69 @@ public class ConcreteListPattern extends AbstractMatchingResult {
 	  return "concrete: " + pat.toString();
 	}
 	
+	private int getDelta(IConstructor prod) {
+		IConstructor rhs = ProductionAdapter.getType(prod);
+
+		if (SymbolAdapter.isIterPlusSeps(rhs) || SymbolAdapter.isIterStarSeps(rhs)) {
+			return SymbolAdapter.getSeparators(rhs).length();
+		}
+
+		return 0;
+	}
+	
+	private void appendPreviousSeparators(IList args, IListWriter result, int delta, int i, boolean previousWasEmpty) {
+		if (!previousWasEmpty) {
+			for (int j = i - delta; j > 0 && j < i; j++) {
+				result.append(args.get(j));
+			}
+		}
+	}
+	
+	private IList flatten(IList args, int delta, IConstructor production) {
+		IListWriter result = VF.listWriter();
+		boolean previousWasEmpty = false;
+
+		for (int i = 0; i < args.length(); i+=(delta+1)) {
+			org.rascalmpl.values.uptr.ITree tree = (org.rascalmpl.values.uptr.ITree) args.get(i);
+
+			if (TreeAdapter.isList(tree) && ProductionAdapter.shouldFlatten(production, TreeAdapter.getProduction(tree))) {
+				IList nestedArgs = TreeAdapter.getArgs(tree);
+				if (nestedArgs.length() > 0) {
+					appendPreviousSeparators(args, result, delta, i, previousWasEmpty);
+					result.appendAll(nestedArgs);
+				}
+				else {
+					previousWasEmpty = true;
+				}
+			}
+			else {
+				appendPreviousSeparators(args, result, delta, i, previousWasEmpty);
+				result.append(tree);
+				previousWasEmpty = false;
+			}
+		}
+
+		return result.done();
+	}
+
+	private <T extends IValue> Result<T> makeResult(Type declaredType, IValue value) {
+		return ResultFactory.makeResult(declaredType, value, ctx);
+	}
+	
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		// TODO IMPLEMENT VERY IMPORTANT!!!!
-		throw new ImplementationError("ConcreteApplicationPattern.substitute not implemented");
+		IConstructor production = ((ITree) subject).getProduction();
+		IListWriter w = ctx.getValueFactory().listWriter();
+		for (IMatchingResult arg : list) {
+			w.append(arg.substitute(substitutionMap).get(0).getValue());
+		}
+		Map<String, IValue> annos = ((ITree) subject).asAnnotatable().getAnnotations();
+		int delta = getDelta(production);
+		if (!annos.isEmpty()) {
+			return Arrays.asList(makeResult(subject.getType(), VF.appl(annos, production, flatten(w.done(), delta, production))));
+		}
+		else {
+			return Arrays.asList(makeResult(subject.getType(), VF.appl(production, flatten(w.done(), delta, production))));
+		}
 	}
 }

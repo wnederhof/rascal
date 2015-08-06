@@ -28,13 +28,13 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
+import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
 import org.rascalmpl.semantics.dynamic.RegExpLiteral;
 import org.rascalmpl.semantics.dynamic.RegExpLiteral.InterpolationElement;
 
@@ -199,7 +199,6 @@ public class RegExpPatternValue extends AbstractMatchingResult  {
 	
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		// TODO
-		throw new ImplementationError("RegExpPatternValue.substitute not implemented");
+		throw new UnsupportedOperation("substitute", getAST());
 	}
 }
