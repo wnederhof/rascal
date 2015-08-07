@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
@@ -170,7 +169,7 @@ public class TuplePattern extends AbstractMatchingResult {
 		for (Result<IValue> value : results) {
 			resultsAsValues.add(value.getValue());
 		}
-		ITuple t = ValueFactory.getInstance().tuple(resultsAsValues.toArray(new IValue[resultsAsValues.size()]));
+		ITuple t = VF.tuple(resultsAsValues.toArray(new IValue[resultsAsValues.size()]));
 		return Arrays.asList(ResultFactory.makeResult(t.getType(), t, ctx));
 	}
 }

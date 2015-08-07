@@ -26,7 +26,6 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.interpreter.IEvaluatorContext;
@@ -83,7 +82,7 @@ public class ListPattern extends AbstractMatchingResult  {
 			resultValues.add(pc.getValue());
 		}
 		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
-		IList list = ValueFactory.getInstance().list(listArr);
+		IList list = VF.list(listArr);
 		return Arrays.asList(ResultFactory.makeResult(list.getType(), list, ctx));
   }
 

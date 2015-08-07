@@ -128,66 +128,9 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 			super(__param1, tree, __param2, __param3, __param4, __param5, __param6);
 		}
 		
-		private boolean hasTag(String t) {
-			for (org.rascalmpl.ast.Tag tag : this.getTags().getTags()) {
-				if (Names.name(tag.getName()).equals(t)) {
-					return true;
-				}
-			}
-			return false;
-		}
-		
-		// -> list[val] // list[tuple[str, val]]
-		private org.rascalmpl.ast.StructuredType createListOfTuplesStrVal() {
-			/*org.rascalmpl.ast.BasicType tupleType = ASTBuilder.make("BasicType", "Tuple", this.getLocation());
-			List<org.rascalmpl.ast.TypeArg> tupleArgs = new LinkedList<>();
-			tupleArgs.add(
-					ASTBuilder.make("TypeArg", "Default", this.getLocation(),
-						ASTBuilder.make("Type", "Basic", this.getLocation(),
-							ASTBuilder.make("BasicType", "String", this.getLocation()))));
-			tupleArgs.add(
-					ASTBuilder.make("TypeArg", "Default", this.getLocation(),
-						ASTBuilder.make("Type", "Basic", this.getLocation(),
-							ASTBuilder.make("BasicType", "Value", this.getLocation()))));
-			org.rascalmpl.ast.StructuredType structuredTupleType = ASTBuilder.make("StructuredType", "Default", this.getLocation(), tupleType, tupleArgs);
-			*/
-			
-			List<org.rascalmpl.ast.TypeArg> listArgs = new LinkedList<>();
-			listArgs.add(
-				ASTBuilder.make("TypeArg", "Default", this.getLocation(),
-					ASTBuilder.make("Type", "Basic", this.getLocation(),
-						ASTBuilder.make("BasicType", "Value", this.getLocation()))));
-			
-			return ASTBuilder.make("StructuredType", "Default", this.getLocation(),
-					ASTBuilder.make("BasicType", "List", this.getLocation()),
-					listArgs);
-		}
-	
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-			__eval.__getTypeDeclarator().declareConstructor(this, __eval.getCurrentEnvt());			
-			if (hasTag("sugar")) {
-				
-	
-				Type annoType = ASTBuilder.make("Type", "Structured", this.getLocation(), createListOfTuplesStrVal())
-						.typeOf(__eval.getCurrentEnvt(), true, __eval);
-	
-				Type onType = __eval.getCurrentEnvt().getAbstractDataType(Names.typeName(getUser().getName()));
-				
-				Type annoTypeFun = ASTBuilder.make("Type", "Basic", this.getLocation(),
-						ASTBuilder.make("BasicType", "Value", this.getLocation()))
-						.typeOf(__eval.getCurrentEnvt(), true, __eval);
-				
-				if (onType.isAbstractData() || onType.isConstructor() || onType.isNode()) {
-					__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-							"unusedVariables", annoType);
-					
-					__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-							"unexpandFn", annoTypeFun);
-				} else {
-					throw new UnsupportedOperation("Can only declare annotations on node and ADT types",getOnType());
-				}
-			}
+			__eval.__getTypeDeclarator().declareConstructor(this, __eval.getCurrentEnvt());
 			return ResultFactory.nothing();
 		}
 

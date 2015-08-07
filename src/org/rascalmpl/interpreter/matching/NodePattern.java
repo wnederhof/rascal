@@ -17,7 +17,6 @@
 package org.rascalmpl.interpreter.matching;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -34,7 +33,6 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.exceptions.IllegalOperationException;
-import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
@@ -425,26 +423,26 @@ public class NodePattern extends AbstractMatchingResult {
 		}		
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
 		Map<String, IValue> subjectKeywords = null;
+		// Set original keyword parameters.
 		if (subject.mayHaveKeywordParameters()) {
-			subjectKeywords = ((IConstructor) subject).asWithKeywordParameters().getParameters();
-			if (subjectKeywords.size() == 0) {
-				subjectKeywords = null;
-			}
+			subjectKeywords = new HashMap<String, IValue>(((IConstructor) subject).asWithKeywordParameters().getParameters());
 		}
 		// We can completely ignore annotations atm as there is no matching for annotations.
+		// Now, override every matched keyword parameters.
 		for (String s : keywordParameters.keySet()) {
 			List<Result<IValue>> substituted = keywordParameters.get(s).substitute(substitutionMap);
 			if (substituted.size() != 1) {
 				throw new RuntimeException("Substituted length != 1");
 			}
-			
 			subjectKeywords.put(s, substituted.get(0).getValue());
 		}
-		
-		// TODO Auto-generated method stub
+		if (subjectKeywords == null || subjectKeywords.size() == 0) {
+			subjectKeywords = null;
+		}
 		// Reconstruct using the patterns.
 		List<Result<IValue>> result = new LinkedList<Result<IValue>>();
 		for (IMatchingResult pc : patternChildren) {
@@ -454,25 +452,13 @@ public class NodePattern extends AbstractMatchingResult {
 		List<IValue> resultValues = new LinkedList<IValue>();
 		for (Result<IValue> pc : result) {
 			resultValues.add(pc.getValue());
-		}
-		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
-		IList list = ValueFactory.getInstance().list(listArr);
-		
-		// TODO: Collect used keyword parameters in Pattern, and overwrite them in cons.
-		
-		IConstructor cons;
-		
-		cons = (IConstructor) ((IEvaluator) ctx).call(qName, subjectKeywords, resultValues.toArray(new IValue[resultValues.size()]));
+		}		
+		IConstructor cons = (IConstructor) ((IEvaluator) ctx).call(qName, subjectKeywords, resultValues.toArray(new IValue[resultValues.size()]));
 		
 		if (subjectKeywords == null) {
-			//if (subject.isAnnotatable()) {
-				Map<String, IValue> annotations = subject.asAnnotatable().getAnnotations();
-				cons = cons.asAnnotatable().setAnnotations(annotations);
-			//}
-			
+			Map<String, IValue> annotations = subject.asAnnotatable().getAnnotations();
+			cons = cons.asAnnotatable().setAnnotations(annotations);
 		}
-		
-		// huh? ResultFactory.makeResult(list.getType(), list, ctx)
 		
 		return Arrays.asList(ResultFactory.makeResult(cons.getType(), cons, ctx));
 	}

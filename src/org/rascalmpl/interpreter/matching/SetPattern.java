@@ -25,10 +25,8 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.impl.persistent.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.control_exceptions.InterruptException;
 import org.rascalmpl.interpreter.env.Environment;
@@ -740,7 +738,7 @@ public class SetPattern extends AbstractMatchingResult {
 			resultValues.add(pc.getValue());
 		}
 		IValue[] setArr = resultValues.toArray(new IValue[resultValues.size()]);
-		ISet set = ValueFactory.getInstance().set(setArr);
+		ISet set = VF.set(setArr);
 		return Arrays.asList(ResultFactory.makeResult(set.getType(), set, ctx));
 	}
 }

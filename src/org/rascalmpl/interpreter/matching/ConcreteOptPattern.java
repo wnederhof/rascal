@@ -21,10 +21,8 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
@@ -33,7 +31,6 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
 import org.rascalmpl.semantics.dynamic.Tree;
-import org.rascalmpl.values.uptr.IRascalValueFactory;
 import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.RascalValueFactory;
@@ -41,7 +38,6 @@ import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ConcreteOptPattern extends AbstractMatchingResult {
-	private static final IRascalValueFactory VF = IRascalValueFactory.getInstance();
 	private enum Opt { Exist, NotExist, MayExist }
 	private final Opt type;
 	private final IConstructor production;
@@ -179,7 +175,7 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 			w.append(arg.substitute(substitutionMap).get(0).getValue());
 		}
 
-		Type type = RascalTypeFactory.getInstance().nonTerminalType(production);
+		Type type = RTF.nonTerminalType(production);
 		
 		Map<String, IValue> annos = ((ITree) subject).asAnnotatable().getAnnotations();
 		

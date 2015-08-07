@@ -4,10 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
-import org.rascalmpl.ast.Name;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.result.Result;
-import org.rascalmpl.interpreter.utils.Names;
 
 /**
  * This environment emulates an environment with no variables, so the pattern matcher will always bind to a variable.
@@ -19,27 +16,33 @@ public class EmptyVariablesEnvironment extends Environment {
 
 	public EmptyVariablesEnvironment(Environment old) {
 		super(old);
+		variableEnvironment = new HashMap<>();
 	}
-	
+
 	@Override
-	public Result<IValue> getVariable(String name) {
-		// TODO: Not very efficient...
-		if (super.getSimpleVariable(name) == null) {
-			return super.getVariable(name);
+	public Result<IValue> getSimpleVariable(String name) {
+		Result<IValue> t = null;
+		
+		if (variableEnvironment != null) {
+			t = variableEnvironment.get(name);
 		}
-		System.out.println("Debug (getSimpleVariable): Trying to fetch: " + name);
-		return null;
+		
+		return t;
 	}
 	
 	@Override
 	public Map<String, Result<IValue>> getVariables() {
-		return new HashMap<String, Result<IValue>>();
+		return variableEnvironment;
 	}
 	
 	@Override
-	public Result<IValue> getSimpleVariable(String name) {
-		System.out.println("Debug (getSimpleVariable): Trying to fetch: " + name);
-		return null;
+	public void storeLocalVariable(String name, Result<IValue> value) {
+		variableEnvironment.put(name, value);
+	}
+	
+	@Override
+	public void storeVariable(String name, Result<IValue> value) {
+		variableEnvironment.put(name, value);
 	}
 
 }

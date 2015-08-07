@@ -23,7 +23,6 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
@@ -192,7 +191,6 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
 		String fullName = Names.fullName(name);
-		System.out.println("Trying to fetch: " + fullName);
 		if (substitutionMap.containsKey(fullName)) {
 			// Here we do the substitution.
 			return Arrays.asList(substitutionMap.get(fullName));

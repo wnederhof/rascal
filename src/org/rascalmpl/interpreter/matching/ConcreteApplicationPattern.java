@@ -25,7 +25,6 @@ import org.eclipse.imp.pdb.facts.IAnnotatable;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
-import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IWithKeywordParameters;
@@ -37,16 +36,13 @@ import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
-import org.rascalmpl.interpreter.types.RascalTypeFactory;
 import org.rascalmpl.semantics.dynamic.Tree;
-import org.rascalmpl.values.uptr.IRascalValueFactory;
 import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ConcreteApplicationPattern extends AbstractMatchingResult {
-	private static final IRascalValueFactory VF = IRascalValueFactory.getInstance();
 	private IList subjectArgs;
 	private final IMatchingResult tupleMatcher;
 	private IConstructor production;
@@ -264,9 +260,9 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 			w.append(arg.substitute(substitutionMap).get(0).getValue());
 		}
 
-		Type type = RascalTypeFactory.getInstance().nonTerminalType(production);
+		Type type = RTF.nonTerminalType(production);
 		
-		Map<String, IValue> annos = ((ITree) subject).asAnnotatable().getAnnotations();
+		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {
 			return Arrays.asList(makeResult(type, VF.appl(annos, production, w.done())));
