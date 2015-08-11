@@ -32,6 +32,13 @@ public abstract class FunctionDeclaration extends AbstractAST {
   public java.util.List<org.rascalmpl.ast.Expression> getConditions() {
     throw new UnsupportedOperationException();
   }
+  public boolean hasExtraParameters() {
+    return false;
+  }
+
+  public java.util.List<org.rascalmpl.ast.Name> getExtraParameters() {
+    throw new UnsupportedOperationException();
+  }
   public boolean hasExpression() {
     return false;
   }
@@ -817,6 +824,215 @@ public abstract class FunctionDeclaration extends AbstractAST {
     @Override
     public Object clone()  {
       return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeRhs), clone(name), clone(patternLhs), clone(typeLhs), clone(patternRhs));
+    }
+            
+  }
+  public boolean isSugarExtra() {
+    return false;
+  }
+
+  static public class SugarExtra extends FunctionDeclaration {
+    // Production: sig("SugarExtra",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("java.util.List\<org.rascalmpl.ast.Name\>","extraParameters"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
+  
+    
+    private final org.rascalmpl.ast.Tags tags;
+    private final org.rascalmpl.ast.Visibility visibility;
+    private final org.rascalmpl.ast.Type typeRhs;
+    private final org.rascalmpl.ast.Name name;
+    private final org.rascalmpl.ast.Expression patternLhs;
+    private final java.util.List<org.rascalmpl.ast.Name> extraParameters;
+    private final org.rascalmpl.ast.Type typeLhs;
+    private final org.rascalmpl.ast.Expression patternRhs;
+  
+    public SugarExtra(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternLhs,  java.util.List<org.rascalmpl.ast.Name> extraParameters,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternRhs) {
+      super(src, node);
+      
+      this.tags = tags;
+      this.visibility = visibility;
+      this.typeRhs = typeRhs;
+      this.name = name;
+      this.patternLhs = patternLhs;
+      this.extraParameters = extraParameters;
+      this.typeLhs = typeLhs;
+      this.patternRhs = patternRhs;
+    }
+  
+    @Override
+    public boolean isSugarExtra() { 
+      return true; 
+    }
+  
+    @Override
+    public <T> T accept(IASTVisitor<T> visitor) {
+      return visitor.visitFunctionDeclarationSugarExtra(this);
+    }
+  
+    @Override
+    protected void addForLineNumber(int $line, java.util.List<AbstractAST> $result) {
+      if (getLocation().getBeginLine() == $line) {
+        $result.add(this);
+      }
+      ISourceLocation $l;
+      
+      $l = tags.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        tags.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = visibility.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        visibility.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = typeRhs.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        typeRhs.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = name.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        name.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = patternLhs.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        patternLhs.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      for (AbstractAST $elem : extraParameters) {
+        $l = $elem.getLocation();
+        if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+          $elem.addForLineNumber($line, $result);
+        }
+        if ($l.getBeginLine() > $line) {
+          return;
+        }
+  
+      }
+      $l = typeLhs.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        typeLhs.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = patternRhs.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        patternRhs.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+    }
+  
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof SugarExtra)) {
+        return false;
+      }        
+      SugarExtra tmp = (SugarExtra) o;
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeRhs.equals(this.typeRhs) && tmp.name.equals(this.name) && tmp.patternLhs.equals(this.patternLhs) && tmp.extraParameters.equals(this.extraParameters) && tmp.typeLhs.equals(this.typeLhs) && tmp.patternRhs.equals(this.patternRhs) ; 
+    }
+   
+    @Override
+    public int hashCode() {
+      return 719 + 773 * tags.hashCode() + 277 * visibility.hashCode() + 239 * typeRhs.hashCode() + 151 * name.hashCode() + 397 * patternLhs.hashCode() + 137 * extraParameters.hashCode() + 811 * typeLhs.hashCode() + 709 * patternRhs.hashCode() ; 
+    } 
+  
+    
+    @Override
+    public org.rascalmpl.ast.Tags getTags() {
+      return this.tags;
+    }
+  
+    @Override
+    public boolean hasTags() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Visibility getVisibility() {
+      return this.visibility;
+    }
+  
+    @Override
+    public boolean hasVisibility() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Type getTypeRhs() {
+      return this.typeRhs;
+    }
+  
+    @Override
+    public boolean hasTypeRhs() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Name getName() {
+      return this.name;
+    }
+  
+    @Override
+    public boolean hasName() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Expression getPatternLhs() {
+      return this.patternLhs;
+    }
+  
+    @Override
+    public boolean hasPatternLhs() {
+      return true;
+    }
+    @Override
+    public java.util.List<org.rascalmpl.ast.Name> getExtraParameters() {
+      return this.extraParameters;
+    }
+  
+    @Override
+    public boolean hasExtraParameters() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Type getTypeLhs() {
+      return this.typeLhs;
+    }
+  
+    @Override
+    public boolean hasTypeLhs() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.Expression getPatternRhs() {
+      return this.patternRhs;
+    }
+  
+    @Override
+    public boolean hasPatternRhs() {
+      return true;
+    }	
+  
+    @Override
+    public Object clone()  {
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeRhs), clone(name), clone(patternLhs), clone(extraParameters), clone(typeLhs), clone(patternRhs));
     }
             
   }

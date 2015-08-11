@@ -90,7 +90,7 @@ public abstract class Toplevel extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 977 + 173 * declaration.hashCode() ; 
+      return 449 + 571 * declaration.hashCode() ; 
     } 
   
     

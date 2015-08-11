@@ -23,6 +23,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.Formals;
 import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
 import org.rascalmpl.ast.Name;
@@ -154,14 +155,13 @@ public abstract class FunctionDeclaration extends
 
 	static public class Sugar extends
 		org.rascalmpl.ast.FunctionDeclaration.Sugar {
-		
 
 		public Sugar(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
 				org.rascalmpl.ast.Type typeRhs, Name name, org.rascalmpl.ast.Expression patternLhs,
 				org.rascalmpl.ast.Type typeLhs, org.rascalmpl.ast.Expression patternRhs) {
 			super(src, node, tags, visibility, typeRhs, name, patternLhs, typeLhs, patternRhs);
 		}
-		
+
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
 			

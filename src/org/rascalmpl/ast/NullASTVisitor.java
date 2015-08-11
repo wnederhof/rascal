@@ -701,6 +701,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitFunctionDeclarationSugarExtra(FunctionDeclaration.SugarExtra x) { 
+    return null; 
+  }
+
   public T visitFunctionModifierDefault(FunctionModifier.Default x) { 
     return null; 
   }

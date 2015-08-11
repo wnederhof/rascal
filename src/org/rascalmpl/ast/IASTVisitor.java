@@ -359,6 +359,8 @@ public interface IASTVisitor<T> {
 
   public T visitFunctionDeclarationSugar(FunctionDeclaration.Sugar x);
 
+  public T visitFunctionDeclarationSugarExtra(FunctionDeclaration.SugarExtra x);
+
   public T visitFunctionModifierDefault(FunctionModifier.Default x);
 
   public T visitFunctionModifierJava(FunctionModifier.Java x);
