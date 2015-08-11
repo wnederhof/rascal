@@ -171,12 +171,12 @@ public class ConcreteListPattern extends AbstractMatchingResult {
 	
 	@Override
 	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		IConstructor production = ((ITree) subject).getProduction();
+		IConstructor production = ((ITree)subject.getValue()).getProduction();
 		IListWriter w = ctx.getValueFactory().listWriter();
 		for (IMatchingResult arg : list) {
 			w.append(arg.substitute(substitutionMap).get(0).getValue());
 		}
-		Map<String, IValue> annos = ((ITree) subject).asAnnotatable().getAnnotations();
+		Map<String, IValue> annos = ((ITree)subject.getValue()).asAnnotatable().getAnnotations();
 		int delta = getDelta(production);
 		if (!annos.isEmpty()) {
 			return Arrays.asList(makeResult(subject.getType(), VF.appl(annos, production, flatten(w.done(), delta, production))));

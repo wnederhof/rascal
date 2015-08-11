@@ -31,7 +31,6 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
 import org.rascalmpl.semantics.dynamic.Tree;
-import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.SymbolAdapter;
@@ -46,6 +45,7 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 
 	public ConcreteOptPattern(IEvaluatorContext ctx, Tree.Appl x, List<IMatchingResult> list) {
 		super(ctx, x);
+		this.list = list;
 		
 		// retrieve the static value of the production of this pattern
 		this.production = x.getProduction();
@@ -177,7 +177,7 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 
 		Type type = RTF.nonTerminalType(production);
 		
-		Map<String, IValue> annos = ((ITree) subject).asAnnotatable().getAnnotations();
+		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {
 			return Arrays.asList(makeResult(type, VF.appl(annos, production, w.done())));

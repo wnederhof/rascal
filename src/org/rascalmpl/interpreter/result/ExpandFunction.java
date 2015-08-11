@@ -80,8 +80,11 @@ public class ExpandFunction extends CustomNamedFunction {
 		this.func = func;
 		this.varargs = varargs;
 		Type onType = func.getTypeRhs().typeOf(eval.getCurrentEnvt(), true, eval);
+		Type onTypeLhs = func.getTypeLhs().typeOf(eval.getCurrentEnvt(), true, eval);
 		eval.getCurrentModuleEnvironment().declareAnnotation(onType,
 				"unexpandFn", TF.valueType());
+		eval.getCurrentModuleEnvironment().declareAnnotation(onTypeLhs,
+				"unexpansionFailed", TF.valueType());
 	}
 
 	ExpandFunction(AbstractAST ast, IEvaluator<Result<IValue>> eval, String name, FunctionType functionType,
