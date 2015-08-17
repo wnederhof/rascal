@@ -188,6 +188,18 @@ coroutine ENUM_NODE_NO_KEYWORD_PARAMS(iNd, rVal)
    }                  
 }
 
+coroutine ENUM_NODE_APPL_ARGS(iNd, rVal) 
+{
+   var iter = iterator(prim("get_appl_args", iNd))
+  
+   // TODO concrete appl case?
+   // TODO get_nonlayout_args
+ 
+   while(hasNext(iter)){
+   		yield getNext(iter)
+   }                  
+}
+
 coroutine ENUM_TUPLE(iTup, rVal)
 {
     var iter = iterator(iTup);
@@ -406,8 +418,8 @@ guard
 {
     var args 
     //println("MATCH_SIMPLE_CALL_OR_TREE", iName, pats)
-    //println("MATCH_SIMPLE_CALL_OR_TREE", iSubject)    
- 
+    //println("MATCH_SIMPLE_CALL_OR_TREE", iSubject) 
+    
     if(equal(iName, get_name(iSubject))) {
         args = get_children_and_keyword_mmap(iSubject);
         //println("MATCH_SIMPLE_CALL_OR_TREE, args, case 1", args);
@@ -1554,7 +1566,7 @@ coroutine ENUM_SUBSETS(set, rSubset) {
 }
 
 /******************************************************************************************/
-/*					Descendant matching  												  */
+/*					 descendant matching  												  */
 /******************************************************************************************/
 
 
@@ -1565,17 +1577,14 @@ coroutine ENUM_SUBSETS(set, rSubset) {
 // - id (a string to enable cashing)
 // - HashMap of types and constructors
 // - concreteMatch (to distinguish abstract/concrete match)
-
-//coroutine DESCENT_AND_MATCH(pat, descendantDescriptor, iVal)
-//guard prim("should_descent", iVal, descendantDescriptor)
-//{
-//	DESCENT_AND_MATCH1(pat, descendantDescriptor, iVal) 
-//}
+// There are two versions:
+// - DESCENT_AND_MATCH: for abstract trees
+// - DESCENT_AND_MATCH_CONCRETE for concrete trees
 
 coroutine DESCENT_AND_MATCH(pat, descendantDescriptor, iVal) 
 {
 	//println("DESCENT_AND_MATCH", typeOf(iVal),  descendantDescriptor)
-	//if(prim("should_descent", iVal, descendantDescriptor)){
+	//if(prim("should_descent_in_abstract", iVal, descendantDescriptor)){
 	    typeswitch(iVal) {
 	        case list:        DESCENT_AND_MATCH_LIST (pat, descendantDescriptor, iVal)
 	        case lrel:        DESCENT_AND_MATCH_LIST (pat, descendantDescriptor, iVal)
@@ -1587,7 +1596,7 @@ coroutine DESCENT_AND_MATCH(pat, descendantDescriptor, iVal)
 	        case tuple:       DESCENT_AND_MATCH_TUPLE(pat, descendantDescriptor, iVal)
 	        default:          true
 	    }
-	    //println("DESCENT_AND_MATCH, applying pat to", typeOf(iVal))
+	   // println("DESCENT_AND_MATCH, applying pat to", typeOf(iVal))
 	 //}
 	 pat(iVal) 
 }
@@ -1628,44 +1637,10 @@ coroutine DESCENT_AND_MATCH_MAP(pat, descendantDescriptor, iMap)
 }
 
 coroutine DESCENT_AND_MATCH_NODE(pat, descendantDescriptor, iNd)
-//guard
-//	prim("should_descent", iNd, descendantDescriptor)
 {
    var val, iter;
    
-   //println("DESCENT_AND_MATCH_NODE");
-   
-   // isConcreteMatch?
-   /*
-   if(muprim("descendant_is_concrete_match", descendantDescriptor) && iNd is appl){ 
-      //println("DESCENT_AND_MATCH_NODE, enter is_appl", iNd)
-      if(prim("is_concretelist", iNd)){
-         //println("DESCENT_AND_MATCH_NODE, start list matching", prim("get_tree_type_as_symbol", iNd))
-         iter = iterator(prim("get_nonlayout_args", iNd))
-         while(hasNext(iter)) {
-         	val = getNext(iter)
-           	DESCENT_AND_MATCH(pat,descendantDescriptor,  val)
-         }
-         exhaust
-      }  
-      if(iNd is lexical){
-         //println("DESCENT_AND_MATCH_NODE, lexical = ", iNd);
-         exhaust
-      }
- 
-      iter = iterator(prim("get_appl_args", iNd))
-      
-      while(hasNext(iter)) {
-            val = getNext(iter)
-            //println("DESCENT_AND_MATCH_NODE, is_appl", val);
-            DESCENT_AND_MATCH(pat, descendantDescriptor, val)
-      }
-      //println("DESCENT_AND_MATCH_NODE, exhausted:", iNd)
-      exhaust
-   } 
-   */
-   //println("DESCENT_AND_MATCH_NODE, *** bottom ***:", get_name(iNd))                                 
-   // Not a concrete list or appl
+   //println("DESCENT_AND_MATCH_NODE", iNd);
    iter = iterator(get_children_and_keyword_values(iNd))                  
     
    while(hasNext(iter)) {
@@ -1679,6 +1654,54 @@ coroutine DESCENT_AND_MATCH_TUPLE(pat, descendantDescriptor, iTup) {
     while(hasNext(iter)) {
         DESCENT_AND_MATCH(pat, descendantDescriptor, getNext(iter))
     }
+}
+
+
+// Descent and match a concrete tree
+
+coroutine DESCENT_AND_MATCH_CONCRETE(pat, descendantDescriptor, iNd) 
+{  var val, iter;
+
+   //println("DESCENT_AND_MATCH_CONCRETE", typeOf(iNd),  descendantDescriptor)
+	
+   if(prim("is_amb", iNd)){
+      iter = iterator(prim("get_amb_alternatives", iNd))
+      while(hasNext(iter)) {
+            val = getNext(iter)
+            DESCENT_AND_MATCH_CONCRETE_NODE(pat, descendantDescriptor, val)
+      }
+      exhaust
+   }
+   
+   DESCENT_AND_MATCH_CONCRETE_NODE (pat, descendantDescriptor, iNd)
+   pat(iNd) 
+}
+
+coroutine DESCENT_AND_MATCH_CONCRETE_NODE(pat, descendantDescriptor, iNd)
+guard
+	prim("should_descent_in_concrete", iNd, descendantDescriptor)
+{
+   var val, iter;
+   
+   //println("DESCENT_AND_MATCH_CONCRETE_NODE", iNd);
+   
+   if(prim("is_concretelist", iNd)){
+      //println("DESCENT_AND_MATCH_CONCRETE_NODE, start list matching", prim("get_tree_type_as_symbol", iNd))
+      iter = iterator(prim("get_nonlayout_args", iNd))
+      while(hasNext(iter)) {
+         	val = getNext(iter)
+           	DESCENT_AND_MATCH_CONCRETE(pat,descendantDescriptor,  val)
+      }
+      exhaust
+   }      
+
+   iter = iterator(prim("get_appl_args", iNd))
+   while(hasNext(iter)) {
+         val = getNext(iter)
+         //println("DESCENT_AND_MATCH_CONCRETE_NODE, is_appl", val);
+         DESCENT_AND_MATCH_CONCRETE(pat, descendantDescriptor, val)
+   }
+   exhaust
 }
 
 // ***** Regular expressions *****
@@ -1716,569 +1739,4 @@ coroutine MATCH_REGEXP_IN_VISIT(iRegexp, varrefs, rBegin, rEnd, iSubject) {
         muprim("regexp_set_region", matcher, deref rBegin, deref rEnd)
     }
     //println("MATCH_REGEXP_IN_VISIT fails", iSubject, deref rBegin, deref rEnd);
-}
-
-/******************************************************************************************/
-/*					Traversal functions  												  */
-/******************************************************************************************/
-
-// ***** Traversal strategies *****
-
-// The various traversal strategies are implemented by the functions:
-// - TRAVERSE_TOP_DOWN
-// - TRAVERSE_TOP_DOWN_BREAK
-// - TRAVERSE_BOTTOM_UP
-// - TRAVERSE_BOTTOM_UP_BREAK
-// which do not rebuild the subject and the variants *_REBUILD which do.
-//
-// Each strategy function has the following arguments:
-// - phi, a compiler generated function that implements the visit expression with the arguments:
-//   - iSubject
-//   - matched
-//   - hasInsert
-//   - leaveVisit
-//   - rBegin
-//   - rEnd
-//	- descendant descriptor
-// - iSubject, the subject value to be traversed
-// - rHasMatch, a reference parameter that records successfull matches
-// - rBeenChanged, a reference parameter that records subject replacements (due to insert or =>)
-// - rLeaveVisit, a reference parameter that indicates a return in the phi function that should result in leaving the traversal
-// - rBegin, indicates start point of match (inclusive)
-// - rEnd, indicates end point of match (exclusive); for now used for string visit to indicate size of matched substring
-// - descriptor:
-//	- unique id
-//	- symbolset, a set of types, constructors and productions that should be visited
-//  - concreteMatch, true if all visit cases are concrete patterns
-
-function TRAVERSE_TOP_DOWN(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var matched = false, 
-        changed = false
-    //println("TRAVERSE_TOP_DOWN", phi, iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	    if(iSubject is str){
-	       iSubject = iSubject    // avoid duplicate traversal of string
-	    } else {
-	        iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	        //println("TRAVERSE_TOP_DOWN, applied phi ", matched, deref rLeaveVisit, iSubject);
-	        if(deref rLeaveVisit){
-	        	return iSubject
-	        }
-	    }
-	    //println("TRAVERSE_TOP_DOWN, new iSubject", iSubject)
-	    return VISIT_CHILDREN(iSubject, Library::TRAVERSE_TOP_DOWN::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	//}
-	return iSubject
-}
-
-function TRAVERSE_TOP_DOWN_REBUILD(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var matched = false, 
-        changed = false
-    //println("TRAVERSE_TOP_DOWN_REBUILD", phi, iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	    if(iSubject is str){
-	       iSubject = iSubject    // avoid duplicate traversal of string
-	    } else {
-	        iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	        //println("TRAVERSE_TOP_DOWN_REBUILD, applied phi ", matched, deref rLeaveVisit, iSubject);
-	        if(deref rLeaveVisit){
-	        	return iSubject
-	        }
-	    }
-	    //println("TRAVERSE_TOP_DOWN_REBUILD, new iSubject", iSubject)
-        deref rBeenChanged = changed || deref rBeenChanged
-        changed = false
-        iSubject = VISIT_CHILDREN_REBUILD(iSubject, Library::TRAVERSE_TOP_DOWN_REBUILD::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        deref rBeenChanged = changed || deref rBeenChanged
-        return iSubject
-	//}
-	return iSubject
-}
-
-function TRAVERSE_TOP_DOWN_BREAK(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var matched = false, 
-        changed = false
-    //println("TRAVERSE_TOP_DOWN_BREAK", phi, iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	    if(iSubject is str){
-	        iSubject = iSubject    // avoid duplicate traversal of string
-	    } else {
-	        iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	        deref rBeenChanged = changed || deref rBeenChanged    
-	        if(deref rHasMatch = matched || deref rHasMatch || deref rLeaveVisit) {    
-	            return iSubject
-	        }
-	    }
-	    return VISIT_CHILDREN(iSubject, Library::TRAVERSE_TOP_DOWN_BREAK::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-    //}
-    return iSubject
-}
-
-function TRAVERSE_TOP_DOWN_BREAK_REBUILD(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var matched = false, 
-        changed = false
-    //println("TRAVERSE_TOP_BREAK_REBUILD", phi, iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	    if(iSubject is str){
-	        iSubject = iSubject    // avoid duplicate traversal of string
-	    } else {
-	        iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	        deref rBeenChanged = changed || deref rBeenChanged    
-	        if(deref rHasMatch = matched || deref rHasMatch || deref rLeaveVisit) {    
-	            return iSubject
-	        }
-	    }
-        changed = false
-        iSubject = VISIT_CHILDREN_REBUILD(iSubject, Library::TRAVERSE_TOP_DOWN_BREAK_REBUILD::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        deref rBeenChanged = changed || deref rBeenChanged
-        return iSubject
-    //}
-    return iSubject
-}
-
-function TRAVERSE_BOTTOM_UP(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var matched = false, 
-        changed = false
-    //println("TRAVERSE_BOTTOM_UP", phi, iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	        iSubject = VISIT_CHILDREN(iSubject, Library::TRAVERSE_BOTTOM_UP::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    if(iSubject is str){ // avoid duplicate traversal of string
-	        return iSubject
-	    }
-	    
-	    iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    deref rBeenChanged = changed || deref rBeenChanged
-	//}
-    return iSubject
-}
-
-function TRAVERSE_BOTTOM_UP_REBUILD(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var matched = false, 
-        changed = false
-    //println("TRAVERSE_BOTTOM_UP_REBUILD", phi, iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-        iSubject = VISIT_CHILDREN_REBUILD(iSubject, Library::TRAVERSE_BOTTOM_UP_REBUILD::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        deref rBeenChanged = changed || deref rBeenChanged
-        changed = false
-        if(deref rLeaveVisit) {    
-            return iSubject
-        }
-	    if(iSubject is str){ // avoid duplicate traversal of string
-	        return iSubject
-	    }
-	    
-	    iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    deref rBeenChanged = changed || deref rBeenChanged
-	//}
-    return iSubject
-}
-
-function TRAVERSE_BOTTOM_UP_BREAK(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) { 
-    var matched = false, 
-        changed = false
-    
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	    
-	    iSubject = VISIT_CHILDREN(iSubject, Library::TRAVERSE_BOTTOM_UP_BREAK::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    if(deref rHasMatch || (iSubject is str)) {    // avoid duplicate traversal of string
-	        return iSubject
-	    }
-	    iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    deref rHasMatch = matched || deref rHasMatch
-	    deref rBeenChanged = changed || deref rBeenChanged    
-    //}
-    return iSubject
-}
-
-function TRAVERSE_BOTTOM_UP_BREAK_REBUILD(phi, iSubject, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) { 
-    var matched = false, 
-        changed = false
-    
-    //if(prim("should_descent", iSubject, descendantDescriptor)){
-	
-	    iSubject = VISIT_CHILDREN_REBUILD(iSubject, Library::TRAVERSE_BOTTOM_UP_BREAK_REBUILD::8, phi, rHasMatch, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    deref rBeenChanged = changed || deref rBeenChanged
-	    changed = false
-	    if(deref rLeaveVisit) {    
-	       return iSubject
-	    }
-	   
-	    if(deref rHasMatch || (iSubject is str)) {    // avoid duplicate traversal of string
-	        return iSubject
-	    }
-	    iSubject = phi(iSubject, ref matched, ref changed, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    deref rHasMatch = matched || deref rHasMatch
-	    deref rBeenChanged = changed || deref rBeenChanged    
-    //}
-    return iSubject
-}
-
-// ***** Visit subject's children and return (potentially modified) value *****
-// - iSubject
-// - traverse_fun, the traversal strategy used
-// - phi, compiled visit expression
-// - rHasMatch, rBeenChanged, rBegin, rEnd as above
-
-function VISIT_CHILDREN_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) { 
-    var children
-    
-    //println("VISIT_CHILDREN_REBUILD", iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    if(prim("should_descent", iSubject, descendantDescriptor)){
-	    typeswitch(iSubject){
-	        case list: {
-	                children = VISIT_ELEMENTS_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-					//println("VISIT_CHILDREN_REBUILD, list case, leaveVisit=",deref rLeaveVisit)
-					if(deref rLeaveVisit){ return children }
-	                if(deref rBeenChanged) { return prim("list", children) }
-	                
-	            }
-	        case lrel: {
-	                children = VISIT_ELEMENTS_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	                if(deref rLeaveVisit){ return children }
-	                if(deref rBeenChanged) { return prim("list", children) }
-	            }
-	        case set: {
-	                children = VISIT_ELEMENTS_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	                if(deref rLeaveVisit){ return children }
-	                if(deref rBeenChanged) { return prim("set", children) }
-	            }
-	        case rel: {
-	                children = VISIT_ELEMENTS_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	                if(deref rLeaveVisit){ return children }
-	                if(deref rBeenChanged) { return prim("set", children) }
-	            }
-	        case tuple: {
-	                children = VISIT_ELEMENTS_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	                if(deref rLeaveVisit){ return children }
-	                if(deref rBeenChanged) { return prim("tuple", children) }
-	            }
-	        case node: {
-	                return VISIT_NODE_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	            }
-	        case constructor: {
-	                return VISIT_NODE_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	            }
-	        case map: {
-	                return VISIT_MAP_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) 
-	            }
-	        case str: {
-	                return VISIT_STR_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	            }
-	        default:
-	            return iSubject;
-	    }
-    }
-   //println("VISIT_CHILDREN_REBUILD, returns", iSubject);
-    
-    return iSubject
-}
-
-function VISIT_ELEMENTS_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var len = size(iSubject),
-        iChildren = make_iarray(len), 
-        enumerator = create(ENUMERATE_AND_ASSIGN, ref iChild, iSubject), 
-        j = 0,
-        iChild, childHasMatch, childBeenChanged
-        
-    //println("VISIT_ELEMENTS_REBUILD", iSubject, len, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    
-    while(next(enumerator)) {
-        childHasMatch = false
-        childBeenChanged = false
-        //if(prim("should_descent", iChild, descendantDescriptor)){
-        	iChild = traverse_fun(phi, iChild, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        	//println("VISIT_ELEMENTS_REBUILD, leaveVisit=",  deref rLeaveVisit)
-        //}	
-        iChildren[j] = iChild
-        j = j + 1
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        deref rBeenChanged = childBeenChanged || deref rBeenChanged
-        if(deref rLeaveVisit){ return iChild }
-    }
-    return iChildren
-}
-
-function VISIT_MAP_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var writer = prim("mapwriter_open"), 
-        enumerator = create(ENUMERATE_AND_ASSIGN, ref iKey, iSubject),
-        iKey, iVal, childHasMatch, childBeenChanged, replacement 
-           
-    while(next(enumerator)) {
-        iVal = prim("map_subscript", iSubject, iKey)
-        
-        childHasMatch = false
-        childBeenChanged = false
-        //if(prim("should_descent_mapkey", iSubject, descendantDescriptor)){
-        	iKey = traverse_fun(phi, iKey, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        	if(deref rLeaveVisit){ return iKey }
-        //}	
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        deref rBeenChanged = childBeenChanged || deref rBeenChanged
-        
-        childHasMatch = false
-        childBeenChanged = false
-        //if(prim("should_descent_mapval", iSubject, descendantDescriptor)){
-        	iVal = traverse_fun(phi, iVal, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        	if(deref rLeaveVisit){ return iVal }
-        //}
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        deref rBeenChanged = childBeenChanged || deref rBeenChanged
-        
-        prim("mapwriter_add", writer, iKey, iVal)
-    }
-    replacement = prim("mapwriter_close", writer)
-    if(deref rBeenChanged){
-        return replacement
-    } else {
-        return iSubject
-    }
-}
-
-function VISIT_NODE_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var len = size(iSubject),
-        iChildren = make_iarray(len), 
-        enumerator = create(ENUM_NODE_NO_KEYWORD_PARAMS, iSubject, ref iChild),  j,
-        iChild, childHasMatch, childBeenChanged,
-        kwMap = get_keyword_mmap(iSubject),
-        keywords = get_keys_mmap(kwMap),
-        values, iVal
-  
-    //println("VISIT_NODE_REBUILD", iSubject, len, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-    //println("VISIT_NODE_REBUILD, enter", iSubject);
-    
-    // Visit positional arguments
-    j = 0;
-    while(next(enumerator)) {
-        childHasMatch = false
-        childBeenChanged = false
-        //if(prim("should_descent", iChild, descendantDescriptor)){
-        	iChild = traverse_fun(phi, iChild, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        	if(deref rLeaveVisit){ return iChild }
-        //}	
-        iChildren[j] = iChild
-        j = j + 1
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        deref rBeenChanged = childBeenChanged || deref rBeenChanged
-    }
-    
-    // Visit keyword arguments
-    len = size_array(keywords)
-    if(len > 0) {
-        values = make_array(len)
-        j = 0
-        while(j < len) {
-            childHasMatch = false
-            childBeenChanged = false
-            iVal = get_mmap(kwMap, keywords[j])
-            //if(prim("should_descent", iVal, descendantDescriptor)){
-            	iVal = traverse_fun(phi, iVal, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-            	if(deref rLeaveVisit){ return iVal }
-            //}	
-            values[j] = iVal
-            deref rHasMatch = childHasMatch || deref rHasMatch
-            deref rBeenChanged = childBeenChanged || deref rBeenChanged
-            j = j + 1
-        }
-        if(deref rBeenChanged){
-            kwMap = make_keyword_mmap(keywords, values)
-        }
-    }
-
-    if(deref rBeenChanged){
-    	iVal = prim("rebuild", iSubject, iChildren, kwMap);
-    	//println("VISIT_NODE_REBUILD returns (rebuild):", iSubject, iVal);
-    	return iVal;
-    }
-    //println("VISIT_NODE_REBUILD returns", iSubject);
-    return iSubject
-}
-
-function VISIT_STR_REBUILD(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var writer = prim("stringwriter_open"),
-        j = 0,
-        len = size_str(iSubject),
-        repl,
-        childHasMatch, childBeenChanged, replacement
-        
-   
-    deref rBegin = 0;
-    deref rEnd = len;     
-    //println("VISIT_STR_REBUILD", iSubject, len)
-    while(j < len){
-        //println("j", j);
-        childHasMatch = false
-        childBeenChanged = false
-        deref rBegin = j
-        deref rEnd = len
-        repl = phi(iSubject, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        if(deref rLeaveVisit){ return repl }
-        if(childHasMatch){
-            //println("childHasMatch=true", j, mint(deref rBegin))
-            if(mint(deref rBegin) > j){
-              prim("stringwriter_add", writer, substring(iSubject, j, mint(deref rBegin)))
-            }
-            prim("stringwriter_add", writer, repl)
-            j = mint(deref rEnd)
-        } else {
-            //println("childHasMatch=false", j, substring(iSubject, j, j + 1))
-            prim("stringwriter_add", writer, substring(iSubject, j, j + 1))
-            j = j + 1
-        }
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        deref rBeenChanged = childBeenChanged || deref rBeenChanged
-    }
-    replacement = prim("stringwriter_close", writer)
-    if(deref rBeenChanged){
-        return replacement
-    } else {
-        return iSubject
-    }
-}
-
-// ***** Visit subject's children but return no value *****
-// - iSubject
-// - traverse_fun, the traversal strategy used
-// - phi, compiled visit expression
-// - rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd as above
-
-function VISIT_CHILDREN(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) { 
-	var retValue 
-	//println("VISIT_CHILDREN", iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor);
-	if(prim("should_descent", iSubject, descendantDescriptor)){  
-	    typeswitch(iSubject){
-	    case list:
-	        retValue = VISIT_ELEMENTS(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case lrel:
-	        retValue = VISIT_ELEMENTS(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)    
-	    case set:
-	        retValue = VISIT_ELEMENTS(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case rel:
-	        retValue = VISIT_ELEMENTS(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case tuple:
-	        retValue = VISIT_ELEMENTS(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case node:
-	        retValue = VISIT_NODE(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case constructor:
-	        retValue = VISIT_NODE(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case map:
-	        retValue = VISIT_MAP(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    case str:
-	        retValue = VISIT_STR(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-	    default:
-	        return iSubject
-	    }
-	}
-	if(deref rLeaveVisit){
-		return retValue
-	}
-    return iSubject
-}
-
-function VISIT_ELEMENTS(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var enumerator = create(ENUMERATE_AND_ASSIGN, ref iChild, iSubject), 
-        childBeenChanged = false,
-        iChild, childHasMatch, retValue
-        
-    //println("VISIT_ELEMENTS", iSubject, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd);
-    while(next(enumerator)) {
-        childHasMatch = false
-        //if(prim("should_descent", iSubject, descendantDescriptor)){
-        	retValue = traverse_fun(phi, iChild, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        	//println("VISIT_ELEMENTS, applied phi", deref rLeaveVisit, retValue)
-        //}
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        if(deref rLeaveVisit){
-         	//println("VISIT_ELEMENTS returns");
-        	return retValue
-        }
-    }
-    return iSubject
-}
-
-function VISIT_NODE(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var enumerator = create(ENUM_NODE_NO_KEYWORD_PARAMS, iSubject, ref iChild), 
-        iChild, childHasMatch, childBeenChanged = false,
-        kwMap = get_keyword_mmap(iSubject),
-        keywords = get_keys_mmap(kwMap),
-        j = 0, len = size_array(keywords),
-        retValue
-
-    //println("VISIT_NODE", iSubject, len, deref rHasMatch, deref rBeenChanged, deref rLeaveVisit, deref rBegin, deref rEnd, descendantDescriptor)
-
-    while(next(enumerator)) { 
-        childHasMatch = false
-        //if(prim("should_descent", iChild, descendantDescriptor)){
-        	retValue = traverse_fun(phi, iChild, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        //}
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        if(deref rLeaveVisit){
-        	return retValue
-        }
-    }    
-    while(j < len) {
-        childHasMatch = false
-        retValue = traverse_fun(phi, get_mmap(kwMap, keywords[j]), ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        if(deref rLeaveVisit){
-        	return retValue
-        }
-        j = j + 1
-    }
-    return iSubject
-}
-
-function VISIT_MAP(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var enumerator = create(ENUMERATE_AND_ASSIGN, ref iKey, iSubject), 
-        childBeenChanged = false,
-        iKey, iVal, childHasMatch, retValue
-        
-    while(next(enumerator)) {
-        childHasMatch = false
-        //if(prim("should_descent_mapkey", iSubject, descendantDescriptor)){
-        	retValue = traverse_fun(phi, iKey, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        //}
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        if(deref rLeaveVisit){
-        	return retValue
-        }
-        
-        childHasMatch = false
-        //if(prim("should_descent_mapval", iSubject, descendantDescriptor)){
-        	retValue = traverse_fun(phi, prim("map_subscript", iSubject, iKey), ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        //}
-        deref rHasMatch = childHasMatch || deref rHasMatch
-        if(deref rLeaveVisit){
-        	return retValue
-        }
-    }
-    return iSubject
-}
-
-function VISIT_STR(iSubject, traverse_fun, phi, rHasMatch, rBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor) {
-    var j = 0,
-        len = size_str(iSubject), 
-        childHasMatch, childBeenChanged = false, retValue
-        
-    deref rBegin = 0;
-    deref rEnd = len;     
-    while(j < len){
-        childHasMatch = false
-        deref rBegin = j
-        deref rEnd = len
-        retValue = phi(iSubject, ref childHasMatch, ref childBeenChanged, rLeaveVisit, rBegin, rEnd, descendantDescriptor)
-        if(deref rLeaveVisit){
-        	return retValue
-        }
-        if(childHasMatch){
-            j = mint(deref rEnd)
-        } else {
-            j = j + 1
-        }
-        deref rHasMatch = childHasMatch || deref rHasMatch
-    }
-    return iSubject
 }

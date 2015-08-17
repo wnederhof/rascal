@@ -121,7 +121,8 @@ MuExp translateTemplate(str indent, s: (StringTemplate) `while ( <Expression con
                        *translateMiddle(indent, body),  
                        translateStats(postStats)
                      ], [ muBreak(whilename) ])
-                 ]) //,  muCon(666)
+                 ]),  
+              muCon(666)// make sure that while returns some value
            ];
     leaveBacktrackingScope();
     leaveBacktrackingScope();
@@ -166,7 +167,8 @@ MuExp translateTemplate(str indent, s: (StringTemplate) `do { < Statement* preSt
                                translateStats(postStats),
                                muIfelse(ifname, makeBoolExp("ALL", [ translate(condition) ], condition@\loc), 
                                                 [ muContinue(doname) ], 
-                                                [ muBreak(doname) ])]) //,  muCon(666)
+                                                [ muBreak(doname) ])]),  
+             muCon(666)	// make sure that do returns some value
            ];
     leaveBacktrackingScope();
     leaveBacktrackingScope();
@@ -202,7 +204,7 @@ MuExp translateTemplate(str indent, s: (StringTemplate) `for ( <{Expression ","}
                        *translateMiddle(indent, body),
                        translateStats(postStats)
                      ]),
-             muCon("")	// make sure that for results some value
+             muCon("")	// make sure that for returns some value
            ];
     leaveBacktrackingScope();
     leaveLoop();
@@ -408,7 +410,7 @@ int fingerprint1(p:(Pattern) `<Literal lit>`, bool useConcreteFingerprint) =
 int fingerprint1(p:(Pattern) `<Concrete concrete>`, bool useConcreteFingerprint) {
     t = parseConcrete(concrete);
 	res = isConcreteHole(t) ? fingerprintDefault : getFingerprint(parseConcrete(concrete), useConcreteFingerprint);
-	//println("fingerprint <res>, <getType(p@\loc)> for <p>"); iprintln(parseConcrete(concrete));
+	//println("fingerprint <res>, <useConcreteFingerprint>, <getType(p@\loc)> for <p>"); iprintln(parseConcrete(concrete));
 	return res;
 }
 
@@ -420,11 +422,19 @@ int fingerprint1(p:(Pattern) `<Pattern expression> ( <{Pattern ","}* arguments> 
 	   if(useConcreteFingerprint){	// Abstract pattern during concrete match
 	   		pr = getLabeledProduction(s, getType(p@\loc));
 	   		res = getFingerprintNode(pr);
-	   		//println("getProduction= <pr>, <res>");
-	   } else
-	   	 	res = getFingerprint(s[0] == "\\" ? s[1..] : s, size(arguments), useConcreteFingerprint);
+	   		//println("fingerprint1: <pr>, <res>");
+	   } else {						// Abstract pattern druing abstract match
+	        if(isNonTerminalType((getType(p@\loc)))){
+	        ;// an abstract pattern of a nonterminal type will use labels in a production
+	         // and requires an explicit match (as opposed to a selection by a fingerprint)
+	         // Therefore rely on the defaultFingerprint and force sequential matching during
+	         // handling of the default cases
+	        } else {
+	   	 		res = getFingerprint(s[0] == "\\" ? s[1..] : s, size(arguments), useConcreteFingerprint);
+	   	 	}
+	   }	
 	}
-	//println("fingerprint <res>, <getType(p@\loc)> for <p>");
+	//println("fingerprint <res>, <useConcreteFingerprint>, <getType(p@\loc)> for <p>");
 	return res;
 }
 int fingerprint1(p:(Pattern) `{<{Pattern ","}* pats>}`, bool useConcreteFingerprint) = getFingerprint("set", useConcreteFingerprint);

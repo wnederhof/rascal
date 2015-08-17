@@ -315,7 +315,12 @@ private MuExp translateStringLiteral(s: (StringLiteral) `<PreStringChars pre> <E
 					]   );
 }
                     
-private MuExp translateStringLiteral((StringLiteral)`<StringConstant constant>`) = muCon(readTextValueString(removeMargins("<constant>")));
+private MuExp translateStringLiteral(s: (StringLiteral)`<StringConstant constant>`) {
+	//println("RascalExpression::translateStringLiteral constant = <constant>");
+	v = muCon(readTextValueString(removeMargins("<constant>")));
+	//println("RascalExpression::translateStringLiteral <s>, <v>");
+	return v;
+}	
 
 // --- translateExpInStringLiteral
 
@@ -334,7 +339,9 @@ private str removeMargins(str s) {
 	if(findFirst(s, "\n") < 0){
 		return s;
 	} else {
-		return visit(s) { case /^[ \t]*'/m => "" /* case /^[ \t]+$/m => "" */};
+		res = visit(s) { case /^[ \t]*\\?'/m => ""  /*case /^[ \t]+$/m => ""*/};
+		//println("RascalExpression::removeMargins: <s> =\> <res>");
+		return res;
 	}
 }
 
@@ -808,44 +815,24 @@ private int matchedPos = 1;
 private int leaveVisitPos = 3;
 private int beginPos = 4;
 private int endPos = 5;
-private int iDescDescriptorPos = 6;
 
-private int NumberOfPhiFormals = 7;
-private int replacementPos = 7;
-private int NumberOfPhiLocals = 8;
+private int NumberOfPhiFormals = 6;
+private int replacementPos = 6;
+private int NumberOfPhiLocals = 7;
 
-// Generated PHI_FIXPOINT functions
-// iSubjectPos, matchedPos, hasInsert, begin, end, descriptor (as for PHI)
-// Extra locals
+public MuExp translateVisit(Label label, lang::rascal::\syntax::Rascal::Visit \visit) {	
 
-private int changedPos = 7;
-private int valPos = 8;
-
-private int NumberOfPhiFixFormals = 7;
-private int NumberOfPhiFixLocals = 9;
-
-
-public MuExp translateVisit(Label label, lang::rascal::\syntax::Rascal::Visit \visit) {
-	MuExp traverse_fun;
-	bool fixpoint = false;
+	subjectType = getType(\visit.subject@\loc);
+	bool isStringSubject = false; //subjectType == \str();
 	
-	str rebuild = "";
-	if( Case c <- \visit.cases, (c is patternWithAction && c.patternWithAction is replacing 
-									|| hasTopLevelInsert(c)) ) {
-		rebuild = "_REBUILD";
-	}
-	
-	if(\visit is defaultStrategy) {
-		traverse_fun = mkCallToLibFun("Library","TRAVERSE_BOTTOM_UP<rebuild>");
+	if(isStringSubject){		// Only phi function for string subjects need 'begin' and 'end' parameter
+		NumberOfPhiFormals = 4;
+		replacementPos = 4;
+		NumberOfPhiLocals = 5;
 	} else {
-		switch("<\visit.strategy>") {
-			case "bottom-up"      :   traverse_fun = mkCallToLibFun("Library","TRAVERSE_BOTTOM_UP<rebuild>");
-			case "top-down"       :   traverse_fun = mkCallToLibFun("Library","TRAVERSE_TOP_DOWN<rebuild>");
-			case "bottom-up-break":   traverse_fun = mkCallToLibFun("Library","TRAVERSE_BOTTOM_UP_BREAK<rebuild>");
-			case "top-down-break" :   traverse_fun = mkCallToLibFun("Library","TRAVERSE_TOP_DOWN_BREAK<rebuild>");
-			case "innermost"      : { traverse_fun = mkCallToLibFun("Library","TRAVERSE_BOTTOM_UP<rebuild>"); fixpoint = true; }
-			case "outermost"      : { traverse_fun = mkCallToLibFun("Library","TRAVERSE_TOP_DOWN<rebuild>"); fixpoint = true; }
-		}
+		NumberOfPhiFormals = 6;
+		replacementPos = 6;
+		NumberOfPhiLocals = 7;
 	}
 	
 	// Unique 'id' of a visit in the function body
@@ -856,28 +843,72 @@ public MuExp translateVisit(Label label, lang::rascal::\syntax::Rascal::Visit \v
 	// Generate and add a nested function 'phi'
 	str scopeId = topFunctionScope();
 	str phi_fuid = scopeId + "/" + "PHI_<i>";
-	Symbol phi_ftype = Symbol::func(Symbol::\value(), [Symbol::\value(),				// iSubject
-	                                                   Symbol::\bool(),					// matched
-	                                                   Symbol::\bool(),					// hasInsert
-	                                                   Symbol::\bool(),					// leaveVisit
-	                                                   Symbol::\int(),					// begin
-	                                                   Symbol::\int(),					// end
-	                                                   Symbol::\list(Symbol::\value())	// iDescDescriptor
-	                                                  ]);
+	
+	phi_args = [Symbol::\value(),	// iSubject
+	            Symbol::\bool(),	// matched
+	            Symbol::\bool(),	// hasInsert
+	            Symbol::\bool()		// leaveVisit
+	           ] +
+	           (isStringSubject ? 
+	           [Symbol::\int(),		// begin
+	            Symbol::\int()		// end
+	           ]
+	           :
+	           []);
+	
+	Symbol phi_ftype = Symbol::func(Symbol::\value(), phi_args);
 	
 	enterVisit();
 	enterFunctionScope(phi_fuid);
 	cases = [ c | Case c <- \visit.cases ];
 	
-	concreteMatch = hasConcretePatternsOnly(cases);
-	MuExp body = translateVisitCases(phi_fuid, getType(\visit.subject@\loc), concreteMatch, cases);
+	
+	concreteMatch = hasConcretePatternsOnly(cases) 
+	                && isConcreteType(subjectType); // || subjectType == adt("Tree",[]));
+	
+	println("visit: <subjectType>, <concreteMatch>");
+	MuExp body = translateVisitCases(phi_fuid, subjectType, concreteMatch, cases);
 	
 	tc = getTypesAndConstructorsInVisit(cases);
-	reachable = getReachableTypes(getType(\visit.subject@\loc), tc.constructors, tc.types, concreteMatch);
+	reachable = getReachableTypes(subjectType, tc.constructors, tc.types, concreteMatch);
 	println("reachableTypesInVisit: <reachable>");
 	
 	descriptor = muCallMuPrim("make_descendant_descriptor", [muCon(phi_fuid), muCon(reachable), muCon(concreteMatch), muCon(getDefinitions())]);
 	
+	bool direction = true;
+	bool progress = true;
+	bool fixedpoint = true;
+	bool rebuild = true;
+	
+	if( Case c <- \visit.cases, (c is patternWithAction && c.patternWithAction is replacing 
+									|| hasTopLevelInsert(c)) ) {
+		rebuild = true;
+	}
+	
+	if(\visit is defaultStrategy) {
+		direction = true; progress = true; fixedpoint = false; 
+	} else {
+		switch("<\visit.strategy>") {
+			case "bottom-up"      :   { 
+										direction = true;  progress = true; fixedpoint = false;
+									  }
+			case "top-down"       :   { 
+										direction = false; progress = true; fixedpoint = false; 
+									  }
+			case "bottom-up-break":   {
+										direction = true; progress = false; fixedpoint = false; 
+									  }
+			case "top-down-break" :   { 
+										direction = false; progress = false; fixedpoint = false;
+									  }
+			case "innermost"      :   { 
+										direction = true; progress = true; fixedpoint = true; 
+									  }
+			case "outermost"      :   { 
+			                            direction = false; progress = true; fixedpoint = true; 
+			                          }
+		}
+	}
 	
 	// ***Note: (fixes issue #434) 
 	//    (1) All the variables introduced within a visit scope should become local variables of the phi-function
@@ -935,49 +966,11 @@ public MuExp translateVisit(Label label, lang::rascal::\syntax::Rascal::Visit \v
 	leaveFunctionScope();
 	leaveVisit();
 	
-	if(fixpoint) {
-		str phi_fixpoint_fuid = scopeId + "/" + "PHI_FIXPOINT_<i>";
-		
-		enterFunctionScope(phi_fixpoint_fuid);
-		
-		// Local variables of 'phi_fixpoint_fuid': iSubject, matched, hasInsert, leaveVisit, begin, end, iReachableTypes, concreteMatch, changed, val
-		list[MuExp] body_exps = [];
-		body_exps += muAssign("changed", phi_fixpoint_fuid, changedPos, muBool(true));
-		body_exps += muAssignVarDeref("leaveVisit", phi_fixpoint_fuid, leaveVisitPos, muBool(false));
-		body_exps += muWhile(nextLabel(), muVar("changed", phi_fixpoint_fuid, changedPos), 
-						[ muAssign("val", phi_fixpoint_fuid, valPos, 
-						                  muCall(muFun2(phi_fuid,scopeId), [ muVar("iSubject", phi_fixpoint_fuid, iSubjectPos), 
-						                                                     muVar("matched", phi_fixpoint_fuid, matchedPos), 
-						                                                     muVar("hasInsert", phi_fixpoint_fuid, hasInsertPos),
-						                                                     muVar("leaveVisit", phi_fixpoint_fuid, leaveVisitPos),
-						                                                     muVar("begin", phi_fixpoint_fuid, beginPos),	
-						                                                     muVar("end", phi_fixpoint_fuid, endPos),
-						                                                     descriptor			                                                                                   
-						                                                   ])),
-						  muIfelse(nextLabel(), muVarDeref("leaveVisit", phi_fixpoint_fuid, leaveVisitPos), 
-						                        [ muReturn1(muVar("val", phi_fixpoint_fuid, valPos)) ],
-						                        [ muIfelse(nextLabel(), makeBoolExp("ALL", [ muCallPrim3("equal", 
-						                        													[ muVar("val", phi_fixpoint_fuid, valPos), 
-						                                                                              muVar("iSubject", phi_fixpoint_fuid, iSubjectPos)                                                                          
-						                                                                            ], 
-						                                                                            \visit@\loc)
-						                                                              ], \visit@\loc ),
-						  						     					[ muAssign("changed", phi_fixpoint_fuid,changedPos, muBool(false)) ], 
-						  						     					[ muAssign("iSubject", phi_fixpoint_fuid, iSubjectPos, muVar("val", phi_fixpoint_fuid, valPos)) ] )])]);
-		body_exps += muReturn1(muVar("iSubject", phi_fixpoint_fuid, iSubjectPos));
-		
-		leaveFunctionScope();
-		
-		addFunctionToModule(muFunction(phi_fixpoint_fuid, "PHI_FIXPOINT", phi_ftype, scopeId, NumberOfPhiFixFormals, NumberOfPhiFixLocals, false, false, \visit@\loc, [], (), false, 0, 0, muBlock(body_exps)));
-	
-		return traversalCall(traverse_fun, scopeId, phi_fixpoint_fuid, descriptor, translate(\visit.subject));
-	}
-	
-	return traversalCall(traverse_fun, scopeId, phi_fuid, descriptor, translate(\visit.subject));
+	return traversalCall(scopeId, phi_fuid, descriptor, translate(\visit.subject), direction, progress, fixedpoint, rebuild);
 }
 
 
-private MuExp traversalCall(MuExp traverse_fun, str scopeId, str phi_fuid, MuExp descriptor, MuExp subject){
+private MuExp traversalCall(str scopeId, str phi_fuid, MuExp descriptor, MuExp subject, bool direction, bool progress, bool fixedpoint, bool rebuild){
 	// Local variables of the surrounding function
 	str hasMatch = asTmp(nextLabel());
 	str beenChanged = asTmp(nextLabel());
@@ -985,22 +978,19 @@ private MuExp traversalCall(MuExp traverse_fun, str scopeId, str phi_fuid, MuExp
 	str begin = asTmp(nextLabel());
 	str end = asTmp(nextLabel());
 	str val = asTmp(nextLabel());
-	return muBlock([ muAssignTmp(hasMatch,scopeId,muBool(false)), 
-	                 muAssignTmp(beenChanged,scopeId,muBool(false)),
-	                 muAssignTmp(leaveVisit,scopeId,muBool(false)),
-	                 muAssignTmp(val, scopeId, muCall(traverse_fun, [ muFun2(phi_fuid,scopeId), 
-					                        			subject, 
-					                        			muTmpRef(hasMatch,scopeId), 
-					                        			muTmpRef(beenChanged,scopeId), 
-					                        			muTmpRef(leaveVisit,scopeId),
-					                        			muTmpRef(begin,scopeId), 
-					 	 								muTmpRef(end,scopeId),
-					 	 								descriptor
-					                        			])),
-					 muIfelse(nextLabel(), muTmp(leaveVisit, scopeId), 
-						                   [ muReturn1(muTmp(val, scopeId)) ],
-						                   [ muTmp(val, scopeId) ])
-				   ]);
+	
+	return muVisit(direction, 
+				   progress,
+				   fixedpoint,
+				   rebuild,
+				   descriptor,
+	               muFun2(phi_fuid,scopeId), 
+				   subject, 
+				   muTmpRef(hasMatch,scopeId), 
+				   muTmpRef(beenChanged,scopeId), 
+				   muTmpRef(leaveVisit,scopeId),
+				   muTmpRef(begin,scopeId), 
+				   muTmpRef(end,scopeId));
 }
 /*
  * The translated visit cases are placed in a function phi that is called by the traversal function.
@@ -1370,7 +1360,7 @@ MuExp translate(e:(Expression) `<Expression expression> ( <{Expression ","}* arg
                //return t in (getNonDefaultOverloadOptions(ftype) + getDefaultOverloadOptions(ftype));
                return any(Symbol sup <- (getNonDefaultOverloadOptions(ftype) + getDefaultOverloadOptions(ftype)), subtype(t.parameters, sup.parameters)); // TODO function_subtype
            }
-           throw "Ups, unexpected type of the call receiver expression!";
+           throw "Unexpected type <ftype> of call receiver expression";
        }
        
   //     println("e = <expression@\loc>");
@@ -1739,6 +1729,8 @@ MuExp translate (e:(Expression) `<Expression expression> has <Name name>`) {
     	case "adt": 	op = "adt";
     	case "sort":	op = "nonterminal";
     	case "lex":		op = "nonterminal";
+    	case "nonterminal":
+    					op = "nonterminal";
     	default:
      		return muCon(hasField(getType(expression@\loc), unescape("<name>")));		
     }	
