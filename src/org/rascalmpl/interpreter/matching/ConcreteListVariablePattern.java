@@ -108,7 +108,9 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 		}
 	
 		if (!anonymous && !iDeclaredItMyself && !ctx.getCurrentEnvt().declareVariable(declaredType, name)) {
+			// TODO: Experimental.
 			throw new RedeclaredVariable(name, ctx.getCurrentAST());
+//			return true;
 		}
 		
 		iDeclaredItMyself = true;
@@ -201,20 +203,19 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 	public Type getType() {
 		return declaredType;
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+		if (!initialized) throw new RuntimeException("Not initialized!");
 		if (!substitutionMap.containsKey(name)) {
 			throw new UndeclaredVariable(name, getAST());
 		}
-		List<Result<IValue>> resultList = new LinkedList<>();
+		List<IValue> resultList = new LinkedList<>();
 		Result<IValue> resultElem = substitutionMap.get(name);
-		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
-			for (IValue val : (Iterable<IValue>) resultElem.getValue()) {
-				resultList.add(ResultFactory.makeResult(val.getType(), val, ctx));
-			}
-		} // We follow Expression.List on this: just return an empty list if not
+		
+		resultList.add(resultElem.getValue());
+		
+		// We follow Expression.List on this: just return an empty list if not
 		  // a list or a set.
 		return resultList;
 	}

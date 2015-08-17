@@ -52,6 +52,7 @@ public abstract class CustomNamedFunction extends NamedFunction {
 	
 	final boolean isVoidFunction;
 	final List<KeywordFormal> initializers;
+	// TODO Remove IMatchingResult mainMatcher;
 	
 
 	@SuppressWarnings("unchecked")
@@ -242,6 +243,8 @@ public abstract class CustomNamedFunction extends NamedFunction {
       }
       
       matchers[0].initMatch(makeResult(actualTypesTuple.getFieldType(0), actuals[0], ctx));
+      // TODO: Hack.
+      // TODO Remove mainMatcher = matchers[0];
       olds[0] = ctx.getCurrentEnvt();
       ctx.pushEnv();
 

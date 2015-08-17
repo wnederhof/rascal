@@ -36,7 +36,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
     return false;
   }
 
-  public java.util.List<org.rascalmpl.ast.Name> getExtraParameters() {
+  public java.util.List<org.rascalmpl.ast.Expression> getExtraParameters() {
     throw new UnsupportedOperationException();
   }
   public boolean hasExpression() {
@@ -832,7 +832,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   }
 
   static public class SugarExtra extends FunctionDeclaration {
-    // Production: sig("SugarExtra",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("java.util.List\<org.rascalmpl.ast.Name\>","extraParameters"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
+    // Production: sig("SugarExtra",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("java.util.List\<org.rascalmpl.ast.Expression\>","extraParameters"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
@@ -840,11 +840,11 @@ public abstract class FunctionDeclaration extends AbstractAST {
     private final org.rascalmpl.ast.Type typeRhs;
     private final org.rascalmpl.ast.Name name;
     private final org.rascalmpl.ast.Expression patternLhs;
-    private final java.util.List<org.rascalmpl.ast.Name> extraParameters;
+    private final java.util.List<org.rascalmpl.ast.Expression> extraParameters;
     private final org.rascalmpl.ast.Type typeLhs;
     private final org.rascalmpl.ast.Expression patternRhs;
   
-    public SugarExtra(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternLhs,  java.util.List<org.rascalmpl.ast.Name> extraParameters,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternRhs) {
+    public SugarExtra(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternLhs,  java.util.List<org.rascalmpl.ast.Expression> extraParameters,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternRhs) {
       super(src, node);
       
       this.tags = tags;
@@ -1003,7 +1003,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public java.util.List<org.rascalmpl.ast.Name> getExtraParameters() {
+    public java.util.List<org.rascalmpl.ast.Expression> getExtraParameters() {
       return this.extraParameters;
     }
   

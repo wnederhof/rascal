@@ -95,7 +95,7 @@ public class GuardedPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		return pat.substitute(substitutionMap);
 	}
 }

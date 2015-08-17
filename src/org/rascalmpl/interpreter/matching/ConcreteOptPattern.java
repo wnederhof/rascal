@@ -41,11 +41,9 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 	private final Opt type;
 	private final IConstructor production;
 	private final IMatchingResult optArg;
-	private List<IMatchingResult> list;
 
 	public ConcreteOptPattern(IEvaluatorContext ctx, Tree.Appl x, List<IMatchingResult> list) {
 		super(ctx, x);
-		this.list = list;
 		
 		// retrieve the static value of the production of this pattern
 		this.production = x.getProduction();
@@ -163,27 +161,29 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 		return Collections.emptyList();
 	}
 	
-	private <T extends IValue> Result<T> makeResult(Type declaredType, IValue value) {
-		return ResultFactory.makeResult(declaredType, value, ctx);
-	}
-	
 	// TODO source tracking etc.
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// LOOKS OK.
+		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
-		for (IMatchingResult arg : list) {
-			w.append(arg.substitute(substitutionMap).get(0).getValue());
-		}
-
-		Type type = RTF.nonTerminalType(production);
 		
+		// TODO: Not sure what to do with Opt.MayExist
+		if (type != Opt.NotExist) {
+			List<IValue> x = optArg.substitute(substitutionMap);
+			for (int i = 0; i < x.size(); i++) {
+				w.append(x.get(i));
+			}
+		}
+		
+		Type type = RTF.nonTerminalType(production);
+
 		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {
-			return Arrays.asList(makeResult(type, VF.appl(annos, production, w.done())));
-		}
-		else {
-			return Arrays.asList(makeResult(type, VF.appl(production, w.done())));
+			return Arrays.asList(VF.appl(annos, production, w.done()));
+		} else {
+			return Arrays.asList(VF.appl(production, w.done()));
 		}
 	}
 

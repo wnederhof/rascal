@@ -23,7 +23,7 @@ public class EmptyVariablesEnvironment extends Environment {
 	public Result<IValue> getSimpleVariable(String name) {
 		Result<IValue> t = null;
 		
-		if (variableEnvironment != null) {
+		if (variableEnvironment != null) { // TODO: huh?!?
 			t = variableEnvironment.get(name);
 		}
 		
@@ -37,11 +37,13 @@ public class EmptyVariablesEnvironment extends Environment {
 	
 	@Override
 	public void storeLocalVariable(String name, Result<IValue> value) {
+		System.out.println("Stored variable: " + name + ", value: " + value);
 		variableEnvironment.put(name, value);
 	}
 	
 	@Override
 	public void storeVariable(String name, Result<IValue> value) {
+		System.out.println("Stored variable: " + name + ", value: " + value);
 		variableEnvironment.put(name, value);
 	}
 

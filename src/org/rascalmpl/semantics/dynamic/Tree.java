@@ -197,12 +197,16 @@ public abstract class Tree  extends org.rascalmpl.ast.Expression {
 		@Override
 		public IMatchingResult buildMatcher(IEvaluatorContext eval) {
 			java.util.List<IMatchingResult> kids = new java.util.ArrayList<IMatchingResult>(args.size());
+			java.util.List<Expression> layoutExprs = new java.util.ArrayList<Expression>(args.size());
 			for (Expression kid : args) { 
 				if (!((Tree) kid).isLayout()) {
 					kids.add(kid.buildMatcher(eval));
+					layoutExprs.add(null);
+				} else {
+					layoutExprs.add(kid);
 				}
 			}
-			return new ConcreteApplicationPattern(eval, this,  kids);
+			return new ConcreteApplicationPattern(eval, this,  kids, layoutExprs);
 		}
 	}
 
@@ -362,7 +366,7 @@ public abstract class Tree  extends org.rascalmpl.ast.Expression {
 		}
 
 		@Override
-		public IMatchingResult buildMatcher(IEvaluatorContext eval) {
+		public IMatchingResult buildMatcher(IEvaluatorContext eval) { // TODO CHECK THIS OUT (LATER)!!!!
 			java.util.List<IMatchingResult> kids = new java.util.ArrayList<IMatchingResult>(alts.size());
 			for (org.rascalmpl.ast.Expression arg : alts) {
 				kids.add(arg.buildMatcher(eval));

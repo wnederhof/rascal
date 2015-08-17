@@ -32,6 +32,8 @@ import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.exceptions.IllegalOperationException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.rascalmpl.ast.Expression;
+import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
@@ -44,17 +46,15 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ConcreteApplicationPattern extends AbstractMatchingResult {
 	private IList subjectArgs;
-	private final IMatchingResult tupleMatcher;
+	private final TuplePattern tupleMatcher;
 	private IConstructor production;
 	private final ITuple tupleSubject;
 	private final Type myType;
 	private boolean isLiteral;
-	private List<IMatchingResult> list;
+	private List<Expression> layoutExprs;
 
-	public ConcreteApplicationPattern(IEvaluatorContext ctx, Tree.Appl x, List<IMatchingResult> list) {
+	public ConcreteApplicationPattern(IEvaluatorContext ctx, Tree.Appl x, List<IMatchingResult> list, List<Expression> layoutExprs) {
 		super(ctx, x);
-		
-		this.list = list;
 		
 		// retrieve the static value of the production of this pattern
 		this.production = x.getProduction();
@@ -67,6 +67,9 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 		
 		// save the type of this tree
 		this.myType = x.getConcreteSyntaxType();
+		
+		// we need the layouts for substitution.
+		this.layoutExprs = layoutExprs;
 	}
 	
 	public List<IVarPattern> getVariables() {
@@ -248,27 +251,32 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 	public String toString() {
 	  return production.toString();
 	}
-
-	private <T extends IValue> Result<T> makeResult(Type declaredType, IValue value) {
-		return ResultFactory.makeResult(declaredType, value, ctx);
-	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// LOOKS OK.
+		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
-		for (IMatchingResult arg : list) {
-			w.append(arg.substitute(substitutionMap).get(0).getValue());
+		
+		int i = 0;
+		for (Expression l : layoutExprs) {
+			if (l == null) {
+				List<IValue> x = tupleMatcher.getChildren().get(i).substitute(substitutionMap);
+				w.append(x.get(0));
+				i++;
+			} else {
+				// M(&@$#&F@#*&(@#KING LAYOUTS!!!!
+				w.append(l.interpret((IEvaluator<Result<IValue>>) ctx).getValue());
+			}
 		}
 
-		Type type = RTF.nonTerminalType(production);
-		
 		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {
-			return Arrays.asList(makeResult(type, VF.appl(annos, production, w.done())));
-		}
-		else {
-			return Arrays.asList(makeResult(type, VF.appl(production, w.done())));
+			return Arrays.asList(VF.appl(annos, production, w.done()));
+		} else {
+			return Arrays.asList(VF.appl(production, w.done()));
 		}
 	}
 	

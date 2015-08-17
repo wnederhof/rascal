@@ -189,11 +189,11 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		String fullName = Names.fullName(name);
 		if (substitutionMap.containsKey(fullName)) {
 			// Here we do the substitution.
-			return Arrays.asList(substitutionMap.get(fullName));
+			return Arrays.asList(substitutionMap.get(fullName).getValue());
 		}
 		// We know the context environment MUST be a STUB. THEREFORE:
 		throw new UndeclaredVariable(fullName, getAST());

@@ -727,18 +727,20 @@ public class SetPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		List<Result<IValue>> result = new LinkedList<Result<IValue>>();
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// The cool thing about sets is that order does not matter, and the pattern children are
+		// initialized earlier and "nexted" earlier, so in contrast to list patterns, we don't have to track anything.
+		List<IValue> result = new LinkedList<IValue>();
 		for (IMatchingResult pc : patternChildren) {
-			List<Result<IValue>> substitute = pc.substitute(substitutionMap);
+			List<IValue> substitute = pc.substitute(substitutionMap);
 			result.addAll(substitute);
 		}
 		List<IValue> resultValues = new LinkedList<IValue>();
-		for (Result<IValue> pc : result) {
-			resultValues.add(pc.getValue());
+		for (IValue pc : result) {
+			resultValues.add(pc);
 		}
 		IValue[] setArr = resultValues.toArray(new IValue[resultValues.size()]);
 		ISet set = VF.set(setArr);
-		return Arrays.asList(ResultFactory.makeResult(set.getType(), set, ctx));
+		return Arrays.asList(set);
 	}
 }

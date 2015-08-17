@@ -31,7 +31,6 @@ import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
-import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.SymbolAdapter;
@@ -40,11 +39,9 @@ import org.rascalmpl.values.uptr.TreeAdapter;
 public class ConcreteListPattern extends AbstractMatchingResult {
 	private ListPattern pat;
 	private Expression callOrTree;
-	private List<IMatchingResult> list;
 
 	public ConcreteListPattern(IEvaluatorContext ctx, Expression x, List<IMatchingResult> list) {
 		super(ctx, x);
-		this.list = list;
 		
 		callOrTree = x;
 		initListPatternDelegate(list);
@@ -164,25 +161,19 @@ public class ConcreteListPattern extends AbstractMatchingResult {
 
 		return result.done();
 	}
-
-	private <T extends IValue> Result<T> makeResult(Type declaredType, IValue value) {
-		return ResultFactory.makeResult(declaredType, value, ctx);
-	}
 	
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		IConstructor production = ((ITree)subject.getValue()).getProduction();
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+		IConstructor production = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).getProduction();
 		IListWriter w = ctx.getValueFactory().listWriter();
-		for (IMatchingResult arg : list) {
-			w.append(arg.substitute(substitutionMap).get(0).getValue());
+		for (IValue arg : pat.substituteChildren(substitutionMap)) {
+			w.append(arg);
 		}
-		Map<String, IValue> annos = ((ITree)subject.getValue()).asAnnotatable().getAnnotations();
+		Map<String, IValue> annos = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).asAnnotatable().getAnnotations();
 		int delta = getDelta(production);
-		if (!annos.isEmpty()) {
-			return Arrays.asList(makeResult(subject.getType(), VF.appl(annos, production, flatten(w.done(), delta, production))));
+		if (annos.isEmpty()) {
+			return Arrays.asList(VF.appl(production, flatten(w.done(), delta, production)));
 		}
-		else {
-			return Arrays.asList(makeResult(subject.getType(), VF.appl(production, flatten(w.done(), delta, production))));
-		}
+		return Arrays.asList(VF.appl(annos, production, flatten(w.done(), delta, production)));
 	}
 }

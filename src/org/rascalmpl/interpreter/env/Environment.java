@@ -731,6 +731,17 @@ public class Environment {
 		}
 		return vars;
 	}
+	
+	public Map<String, Result<IValue>> getLocalFunctionVariables() {
+		Map<String, Result<IValue>> vars = new HashMap<String, Result<IValue>>();
+		if (parent != null && !parent.isRootScope()) {
+			vars.putAll(parent.getVariables());
+		}
+		if (variableEnvironment != null) {
+			vars.putAll(variableEnvironment);
+		}
+		return vars;
+	}
 
 	public List<Pair<String, List<AbstractFunction>>> getFunctions() {
 		ArrayList<Pair<String, List<AbstractFunction>>> functions = new ArrayList<Pair<String, List<AbstractFunction>>>();

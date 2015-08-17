@@ -56,7 +56,7 @@ import org.rascalmpl.interpreter.result.Result;
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		// As there is no next()-function, we just ignore this completely.
 		throw new ImplementationError("AbstractPatternMap.substitute not implemented");
 	}

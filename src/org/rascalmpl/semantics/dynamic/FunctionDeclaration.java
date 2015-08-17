@@ -152,6 +152,29 @@ public abstract class FunctionDeclaration extends
 
 	}
 	
+	static public class SugarExtra extends org.rascalmpl.ast.FunctionDeclaration.SugarExtra {
+		
+		public SugarExtra(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
+				org.rascalmpl.ast.Type typeRhs, Name name, org.rascalmpl.ast.Expression patternLhs,
+				List<org.rascalmpl.ast.Expression> extraParameters, org.rascalmpl.ast.Type typeLhs,
+				org.rascalmpl.ast.Expression patternRhs) {
+			super(src, node, tags, visibility, typeRhs, name, patternLhs, extraParameters, typeLhs, patternRhs);
+		}
+
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.setCurrentAST(this);
+			__eval.notifyAboutSuspension(this);
+			AbstractFunction lambda;
+			lambda = new ExpandFunction(__eval, this, false, __eval.getCurrentEnvt(), __eval.__getAccumulators());
+			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
+			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
+			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
+			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
+			return lambda;
+		}
+		
+	}
 
 	static public class Sugar extends
 		org.rascalmpl.ast.FunctionDeclaration.Sugar {
@@ -164,20 +187,14 @@ public abstract class FunctionDeclaration extends
 
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-			
 			__eval.setCurrentAST(this);
-			__eval.notifyAboutSuspension(this);			
-			
+			__eval.notifyAboutSuspension(this);
 			AbstractFunction lambda;
-			
 			lambda = new ExpandFunction(__eval, this, false, __eval.getCurrentEnvt(), __eval.__getAccumulators());
-		
 			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
 			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
 			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
-			
 			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
-			
 			return lambda;
 		}
 

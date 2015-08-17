@@ -19,12 +19,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.imp.pdb.facts.INumber;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
+import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.result.ResultFactory;
 
 public class NegativePattern extends AbstractMatchingResult {
 	private IMatchingResult pat;
@@ -61,12 +64,15 @@ public class NegativePattern extends AbstractMatchingResult {
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		List<Result<IValue>> substituted = pat.substitute(substitutionMap);
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+		// TODO Unsupported.
+		
+		List<IValue> substituted = pat.substitute(substitutionMap);
 		if (substituted.size() != 1) {
 			throw new RuntimeException("Substituted is not of length 1.");
 		}
+		
 		// IBool extends from IValue, but casting does not work directly, so we add @suppressWarning.
-		return Arrays.asList((Result) substituted.get(0).negate());
+		return Arrays.asList(((INumber) substituted.get(0)).negate());
 	}
 }

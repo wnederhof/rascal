@@ -770,7 +770,7 @@ syntax FunctionDeclaration
 	= abstract: Tags tags Visibility visibility Signature signature ";" 
 	| @Foldable @breakable{expression} expression: Tags tags Visibility visibility Signature signature "=" Expression expression ";"
 	| @Foldable @breakable{expression} sugar: Tags tags Visibility visibility Type typeRhs Name name "(" SymmetricPattern patternLhs ")" "=\>" "(" Type typeLhs ")" SymmetricPattern patternRhs ";"
-	| @Foldable @breakable{expression} sugarExtra: Tags tags Visibility visibility Type typeRhs Name name "(" SymmetricPattern patternLhs "," {Name ","}+ extraParameters ")" "=\>" "(" Type typeLhs ")" SymmetricPattern patternRhs ";"
+	| @Foldable @breakable{expression} sugarExtra: Tags tags Visibility visibility Type typeRhs Name name "(" SymmetricPattern patternLhs "," {Pattern ","}+ extraParameters ")" "=\>" "(" Type typeLhs ")" SymmetricPattern patternRhs ";"
 	| @Foldable @breakable{expression,conditions} conditional: Tags tags Visibility visibility Signature signature "=" Expression expression "when" {Expression ","}+ conditions ";"
 	| @Foldable \default: Tags tags Visibility visibility Signature signature FunctionBody body ;
 

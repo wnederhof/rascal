@@ -103,6 +103,8 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 						"unexpandFn", TF.valueType());
 				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
 						"unexpansionFailed", TF.valueType());
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						"desugarVariables", TF.listType(TF.mapType(TF.stringType(), TF.valueType())));
 			} else {
 				throw new UnsupportedOperation("Can only declare annotations on node and ADT types", onTypeAst);
 			}

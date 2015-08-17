@@ -150,11 +150,11 @@ public class TypedVariablePattern extends AbstractMatchingResult implements IVar
 	}
 	
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		// TO DO: Types.
 		if (substitutionMap.containsKey(name)) {
 			// Here we do the substitution.
-			return Arrays.asList(substitutionMap.get(name));
+			return Arrays.asList(substitutionMap.get(name).getValue());
 		}
 		// We know the context environment MUST be a STUB. THEREFORE:
 		throw new UndeclaredVariable(name, getAST());

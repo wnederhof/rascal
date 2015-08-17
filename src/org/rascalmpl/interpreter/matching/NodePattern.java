@@ -425,7 +425,7 @@ public class NodePattern extends AbstractMatchingResult {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		Map<String, IValue> subjectKeywords = null;
 		// Set original keyword parameters.
 		if (subject.mayHaveKeywordParameters()) {
@@ -434,24 +434,24 @@ public class NodePattern extends AbstractMatchingResult {
 		// We can completely ignore annotations atm as there is no matching for annotations.
 		// Now, override every matched keyword parameters.
 		for (String s : keywordParameters.keySet()) {
-			List<Result<IValue>> substituted = keywordParameters.get(s).substitute(substitutionMap);
+			List<IValue> substituted = keywordParameters.get(s).substitute(substitutionMap);
 			if (substituted.size() != 1) {
 				throw new RuntimeException("Substituted length != 1");
 			}
-			subjectKeywords.put(s, substituted.get(0).getValue());
+			subjectKeywords.put(s, substituted.get(0));
 		}
 		if (subjectKeywords == null || subjectKeywords.size() == 0) {
 			subjectKeywords = null;
 		}
 		// Reconstruct using the patterns.
-		List<Result<IValue>> result = new LinkedList<Result<IValue>>();
+		List<IValue> result = new LinkedList<IValue>();
 		for (IMatchingResult pc : patternChildren) {
-			List<Result<IValue>> substitute = pc.substitute(substitutionMap);
+			List<IValue> substitute = pc.substitute(substitutionMap);
 			result.addAll(substitute);
 		}
 		List<IValue> resultValues = new LinkedList<IValue>();
-		for (Result<IValue> pc : result) {
-			resultValues.add(pc.getValue());
+		for (IValue pc : result) {
+			resultValues.add(pc);
 		}		
 		IConstructor cons = (IConstructor) ((IEvaluator) ctx).call(qName, subjectKeywords, resultValues.toArray(new IValue[resultValues.size()]));
 		
@@ -460,7 +460,7 @@ public class NodePattern extends AbstractMatchingResult {
 			cons = cons.asAnnotatable().setAnnotations(annotations);
 		}
 		
-		return Arrays.asList(ResultFactory.makeResult(cons.getType(), cons, ctx));
+		return Arrays.asList(cons);
 	}
 
 }

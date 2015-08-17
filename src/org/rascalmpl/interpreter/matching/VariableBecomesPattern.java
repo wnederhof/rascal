@@ -39,6 +39,10 @@ public class VariableBecomesPattern extends AbstractMatchingResult {
 		this.var = var;
 	}
 	
+	public IMatchingResult getPattern() {
+		return pat;
+	}
+	
 	@Override
 	public void initMatch(Result<IValue> subject){
 		super.initMatch(subject);
@@ -97,7 +101,7 @@ public class VariableBecomesPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		throw new UnsupportedOperation("substitute", getAST());
 	}
 }

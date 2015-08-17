@@ -34,7 +34,7 @@ public interface IMatchingResult extends IBooleanResult {
 	  * @param substitutionMap the substitution map.
 	  * @return
 	  */
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap);
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap);
 	  
 	/**
 	 * @param patternVars TODO

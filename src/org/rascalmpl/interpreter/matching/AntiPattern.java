@@ -77,7 +77,7 @@ public class AntiPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		throw new UnsupportedOperation("substitute", getAST());
 	}
 }

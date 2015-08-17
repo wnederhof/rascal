@@ -93,6 +93,7 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.ArgumentsMismatch;
 import org.rascalmpl.interpreter.staticErrors.NonVoidTypeRequired;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
+import org.rascalmpl.interpreter.staticErrors.UndeclaredAnnotation;
 import org.rascalmpl.interpreter.staticErrors.UndeclaredVariable;
 import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 import org.rascalmpl.interpreter.staticErrors.UnguardedIt;
@@ -242,6 +243,8 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		
 		@Override
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
+			eval.setCurrentAST(this);
+			eval.notifyAboutSuspension(this);	
 			return SubstitutionEvaluator.substitute(getPattern(), getExpression().interpret(eval).getValue(), eval);
 		}
 		
@@ -262,10 +265,11 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			Result<AbstractFunction> lambda;
 			try {
 				lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
-			} catch (Throw e) {
+			} catch (UndeclaredAnnotation e) {
+				//System.out.println(e); // TODO REMOVE
 				return expressionValue;
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Throw e) {
+				// e.printStackTrace(); // TODO REMOVE
 				return expressionValue;
 			}
 			java.util.List<Type> mTypes = new LinkedList<Type>();
@@ -276,10 +280,13 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				return lambda.getValue().call(mTypes.toArray(new Type[mTypes.size()]),
 						mValues.toArray(new IValue[mValues.size()]), new HashMap<String, IValue>());
 			} catch (Throw e) {
+				//e.printStackTrace(); // TODO REMOVE
+				System.out.println("Unexpansion failed.");
 				return expressionValue.setAnnotation("unexpansionFailed", ResultFactory.bool(true, __eval),
 						__eval.getCurrentEnvt());
 			} catch (Exception e) {
 				e.printStackTrace();
+				//System.out.println("Unexpansion failed.");
 				return expressionValue.setAnnotation("unexpansionFailed", ResultFactory.bool(true, __eval),
 						__eval.getCurrentEnvt());
 			}

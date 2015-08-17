@@ -83,10 +83,10 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		// We don't get a list here.
-		Result<IValue> symbol = _symbol.substitute(substitutionMap).get(0);
-		Result<IValue> declarations = _definitions.substitute(substitutionMap).get(0);
+		IValue symbol = _symbol.substitute(substitutionMap).get(0);
+		IValue declarations = _definitions.substitute(substitutionMap).get(0);
 		
 		if (!symbol.getType().isSubtypeOf(RascalValueFactory.Symbol)) {
 			throw new UnexpectedType(RascalValueFactory.Symbol, symbol.getType(), _symbol.getAST());
@@ -97,13 +97,13 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 		}
 		
 		java.util.Map<Type,Type> bindings = new HashMap<Type,Type>();
-		bindings.put(RascalValueFactory.TypeParam, new TypeReifier(VF).symbolToType((IConstructor) symbol.getValue(), (IMap) declarations.getValue()));
+		bindings.put(RascalValueFactory.TypeParam, new TypeReifier(VF).symbolToType((IConstructor) symbol, (IMap) declarations));
 		
-		IValue val = VF.constructor(RascalValueFactory.Type_Reified.instantiate(bindings), symbol.getValue(), declarations.getValue());
+		IValue val = VF.constructor(RascalValueFactory.Type_Reified.instantiate(bindings), symbol, declarations);
 		
 		bindings.put(RascalValueFactory.TypeParam, TF.valueType());
 		Type typ = RascalValueFactory.Type.instantiate(bindings);
 		
-		return Arrays.asList(ResultFactory.makeResult(typ, val, ctx));
+		return Arrays.asList(val);
 	}
 }

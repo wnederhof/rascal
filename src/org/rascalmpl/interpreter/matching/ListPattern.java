@@ -28,6 +28,7 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.interpreter.BasicTypeEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
@@ -35,6 +36,7 @@ import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.types.NonTerminalType;
+import org.rascalmpl.interpreter.utils.TypeUtils;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 
 public class ListPattern extends AbstractMatchingResult  {
@@ -59,6 +61,10 @@ public class ListPattern extends AbstractMatchingResult  {
   private int [] listVarMinLength;    // Minimal length to be matched by list variable
   private int [] listVarMaxLength;    // Maximal length that can be matched by list variable
   private int [] listVarOccurrences;  // Number of occurrences of list variable in the pattern
+  
+  // This map returns the matching result at a pattern position, which is used for substitution.
+  // Note that we don't consider layouts and separators: these are taken from the subjects.
+  private Map<Integer, IMatchingResult> matchResultAtPosition;
 
   private int subjectCursor;          // Cursor in the subject
   private int patternCursor;          // Cursor in the pattern
@@ -71,27 +77,38 @@ public class ListPattern extends AbstractMatchingResult  {
   private Type staticListSubjectType;
 
   @Override
-  public List<Result<IValue>> substitute(Map<String, Result<IValue>> substitutionMap) {
-		List<Result<IValue>> result = new LinkedList<Result<IValue>>();
-		for (IMatchingResult pc : patternChildren) {
-			List<Result<IValue>> substitute = pc.substitute(substitutionMap);
-			result.addAll(substitute);
-		}
+  public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
 		List<IValue> resultValues = new LinkedList<IValue>();
-		for (Result<IValue> pc : result) {
-			resultValues.add(pc.getValue());
+		for (IValue arg : substituteChildren(substitutionMap)) {
+			resultValues.add(arg);
 		}
 		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
 		IList list = VF.list(listArr);
-		return Arrays.asList(ResultFactory.makeResult(list.getType(), list, ctx));
+		return Arrays.asList(list);
   }
 
   public ListPattern(IEvaluatorContext ctx, AbstractAST x, List<IMatchingResult> list){
     this(ctx, x, list, 1);  // Default delta=1; Set to 2 to run DeltaListPatternTests
   }
+  
+  // This function gets the patterns at the right location, while considering the deltas
+  // and the shifted positions of the patterns.
+  public  List<IValue> substituteChildren(Map<String, Result<IValue>> substitutionMap) {
+	  List<IValue> usedPatternChildren = new LinkedList<IValue>();
+	  for (int i = 0; i < patternChildren.size(); i ++) {
+		  if (i % delta == 0) {
+			  usedPatternChildren.addAll(matchResultAtPosition.get(i).substitute(substitutionMap));
+		  } else {
+			  usedPatternChildren.add(listSubject.get(i));
+		  }
+	  }
+	  return usedPatternChildren;
+  }
 
   ListPattern(IEvaluatorContext ctx, AbstractAST x, List<IMatchingResult> list, int delta){
     super(ctx, x);
+    
+    matchResultAtPosition = new HashMap<>();
 
     if(delta < 1)
       throw new ImplementationError("Wrong delta");
@@ -534,6 +551,7 @@ public class ListPattern extends AbstractMatchingResult  {
        */
 
       IMatchingResult child = patternChildren.get(patternCursor);
+      bindPatternToPosition(child);
       if(debug){
         System.err.println(this);
         System.err.println("loop: patternCursor=" + patternCursor + 
@@ -646,6 +664,10 @@ public class ListPattern extends AbstractMatchingResult  {
       }
 
     } while (true);
+  }
+
+  private void bindPatternToPosition(IMatchingResult child) {
+	  matchResultAtPosition.put(patternCursor, child);
   }
 
   @Override
