@@ -129,6 +129,7 @@ public class UnexpandFunction extends CustomNamedFunction {
 	@SuppressWarnings({ "deprecation" })
 	@Override
 	public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
+		try {
 		Result<IValue> result = getMemoizedResult(actuals, keyArgValues);
 		if (result != null) {
 			return result;
@@ -204,6 +205,10 @@ public class UnexpandFunction extends CustomNamedFunction {
 			ctx.setCurrentEnvt(old);
 			ctx.setAccumulators(oldAccus);
 			ctx.setCurrentAST(oldAST);
+		}
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw e;
 		}
 	}
 	

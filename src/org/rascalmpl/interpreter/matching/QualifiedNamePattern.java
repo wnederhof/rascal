@@ -195,7 +195,6 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 			// Here we do the substitution.
 			return Arrays.asList(substitutionMap.get(fullName).getValue());
 		}
-		// We know the context environment MUST be a STUB. THEREFORE:
-		throw new UndeclaredVariable(fullName, getAST());
+		return Arrays.asList(ctx.getCurrentEnvt().getVariable(fullName).getValue());
 	}
 }

@@ -137,50 +137,58 @@ public class ExpandFunction extends CustomNamedFunction {
 	@SuppressWarnings("deprecation")
 	@Override
 	Result<IValue> run() {
-		// Return the expanded tree annotated with unexpandFn, declared in the <i>CURRENT</i> environment (very important).
-		Result<IValue> patternRhsResult = func.getPatternRhs().interpret((IEvaluator<Result<IValue>>) ctx);
-		// For each variable on the RHS, tag it.
-		
-		IMatchingResult iResult = func.getPatternRhs().getMatcher(ctx);
-		iResult.initMatch(patternRhsResult);
-		
-		Map<String, Result<IValue>> uuidMap = new HashMap<String, Result<IValue>>();
-		Map<String, String> uuidMapStrs = new HashMap<String, String>();
-		
-		for (Entry<String, Result<IValue>> s : eval.getCurrentEnvt().getLocalFunctionVariables().entrySet()) {
-			System.out.println("Found Local Variable: " + s.getKey());
-			IValue v = s.getValue().getValue();
-			if (v.isAnnotatable()) {
-				
-				if (!v.getType().declaresAnnotation(ctx.getCurrentEnvt().getStore(), "__SUGAR_UUID")) {
-					eval.getCurrentEnvt().declareAnnotation(v.getType(), "__SUGAR_UUID", TF.stringType());
-				}
-				if (!v.asAnnotatable().hasAnnotation("__SUGAR_UUID") || v.asAnnotatable().getAnnotation("__SUGAR_UUID") == null) {
-					String uuid = String.valueOf(UUID.randomUUID());
-					v = v.asAnnotatable().setAnnotation("__SUGAR_UUID", VF.string(uuid));
-				}
-				
-				System.out.println("Getting annotation for: " + v);
-				IString anno = (IString) v.asAnnotatable().getAnnotation("__SUGAR_UUID");
-				System.out.println("It is set to: " + anno.getValue());
-				String stringVal = anno.getValue();
+		try {
+			// Return the expanded tree annotated with unexpandFn, declared in
+			// the <i>CURRENT</i> environment (very important).
+			Result<IValue> patternRhsResult = func.getPatternRhs().interpret((IEvaluator<Result<IValue>>) ctx);
+			// For each variable on the RHS, tag it.
 
-				uuidMap.put(s.getKey(), ResultFactory.makeResult(v.getType(), v, ctx));
-				uuidMapStrs.put(s.getKey(), stringVal);
-				// We store variables that are not on the RHS of the function.
-				eval.getCurrentEnvt().storeLocalVariable(s.getKey(), 
-						ResultFactory.makeResult(v.getType(), v, ctx));
+			IMatchingResult iResult = func.getPatternRhs().getMatcher(ctx);
+			iResult.initMatch(patternRhsResult);
+
+			Map<String, Result<IValue>> uuidMap = new HashMap<String, Result<IValue>>();
+			Map<String, String> uuidMapStrs = new HashMap<String, String>();
+
+			for (Entry<String, Result<IValue>> s : eval.getCurrentEnvt().getLocalFunctionVariables().entrySet()) {
+				System.out.println("Found Local Variable: " + s.getKey());
+				IValue v = s.getValue().getValue();
+				if (v.isAnnotatable()) {
+
+					if (!v.getType().declaresAnnotation(ctx.getCurrentEnvt().getStore(), "__SUGAR_UUID")) {
+						eval.getCurrentEnvt().declareAnnotation(v.getType(), "__SUGAR_UUID", TF.stringType());
+					}
+					if (!v.asAnnotatable().hasAnnotation("__SUGAR_UUID")
+							|| v.asAnnotatable().getAnnotation("__SUGAR_UUID") == null) {
+						String uuid = String.valueOf(UUID.randomUUID());
+						v = v.asAnnotatable().setAnnotation("__SUGAR_UUID", VF.string(uuid));
+					}
+
+					System.out.println("Getting annotation for: " + v);
+					IString anno = (IString) v.asAnnotatable().getAnnotation("__SUGAR_UUID");
+					System.out.println("It is set to: " + anno.getValue());
+					String stringVal = anno.getValue();
+
+					uuidMap.put(s.getKey(), ResultFactory.makeResult(v.getType(), v, ctx));
+					uuidMapStrs.put(s.getKey(), stringVal);
+					// We store variables that are not on the RHS of the
+					// function.
+					eval.getCurrentEnvt().storeLocalVariable(s.getKey(), ResultFactory.makeResult(v.getType(), v, ctx));
+				}
 			}
+
+			if (iResult.hasNext() && iResult.next()) {
+				UnexpandFunction unexpandFn = new UnexpandFunction(eval, func, varargs, eval.getCurrentEnvt(),
+						eval.__getAccumulators(), eval.getCurrentEnvt().getSimpleVariable("__DESUGAR_ORIGINAL_NODE"),
+						extraParameters, uuidMapStrs);
+				IValue resVal = iResult.substitute(uuidMap).get(0);
+				return ResultFactory.makeResult(resVal.getType(),
+						resVal.asAnnotatable().setAnnotation("unexpandFn", unexpandFn), ctx);
+			}
+			throw new RuntimeException("This should never happen.");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
 		}
-		
-		if (iResult.hasNext() && iResult.next()) {
-			UnexpandFunction unexpandFn = new UnexpandFunction(eval, func, varargs, eval.getCurrentEnvt(), eval.__getAccumulators(),
-					eval.getCurrentEnvt().getSimpleVariable("__DESUGAR_ORIGINAL_NODE"), extraParameters, uuidMapStrs);
-			IValue resVal = iResult.substitute(uuidMap).get(0);
-			return ResultFactory.makeResult(resVal.getType(),
-					resVal.asAnnotatable().setAnnotation("unexpandFn", unexpandFn), ctx);
-		}
-		throw new RuntimeException("This should never happen.");
 	}
 	
 	@Override

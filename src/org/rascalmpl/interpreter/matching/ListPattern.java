@@ -99,7 +99,10 @@ public class ListPattern extends AbstractMatchingResult  {
 		  if (i % delta == 0) {
 			  usedPatternChildren.addAll(matchResultAtPosition.get(i).substitute(substitutionMap));
 		  } else {
-			  usedPatternChildren.add(listSubject.get(i));
+			  // TODO: If the list being substituted is shorter than the original, we have a problem.
+			  //if (i < listSubject.length()) {
+				  usedPatternChildren.add(listSubject.get(i % listSubject.length()));
+				// }
 		  }
 	  }
 	  return usedPatternChildren;

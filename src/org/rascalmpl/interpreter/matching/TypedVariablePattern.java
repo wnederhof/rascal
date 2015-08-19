@@ -156,8 +156,7 @@ public class TypedVariablePattern extends AbstractMatchingResult implements IVar
 			// Here we do the substitution.
 			return Arrays.asList(substitutionMap.get(name).getValue());
 		}
-		// We know the context environment MUST be a STUB. THEREFORE:
-		throw new UndeclaredVariable(name, getAST());
+		return Arrays.asList(ctx.getCurrentEnvt().getVariable(name).getValue());
 	}
 	 
 }
