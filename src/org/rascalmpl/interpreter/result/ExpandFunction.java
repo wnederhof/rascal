@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Stack;
 import java.util.UUID;
 
@@ -22,17 +23,26 @@ import org.rascalmpl.ast.OptionalComma;
 import org.rascalmpl.ast.Signature;
 import org.rascalmpl.interpreter.Accumulator;
 import org.rascalmpl.interpreter.IEvaluator;
+import org.rascalmpl.interpreter.TraversalEvaluator;
+import org.rascalmpl.interpreter.TraversalEvaluator.CaseBlockList;
+import org.rascalmpl.interpreter.TraversalEvaluator.DIRECTION;
+import org.rascalmpl.interpreter.TraversalEvaluator.FIXEDPOINT;
+import org.rascalmpl.interpreter.TraversalEvaluator.PROGRESS;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
+import org.rascalmpl.interpreter.env.EmptyVariablesEnvironment;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
 import org.rascalmpl.interpreter.types.FunctionType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
+import org.rascalmpl.interpreter.utils.Cases.CaseBlock;
+import org.rascalmpl.interpreter.utils.Cases.SugarBlock;
 import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.parser.ASTBuilder;
 import org.rascalmpl.values.uptr.IRascalValueFactory;
+import org.rascalmpl.values.uptr.ITree;
 
 public class ExpandFunction extends CustomNamedFunction {
 	protected static final TypeFactory TF = TypeFactory.getInstance();
@@ -46,8 +56,7 @@ public class ExpandFunction extends CustomNamedFunction {
 	private static org.rascalmpl.ast.Parameters createParameters(ISourceLocation src, org.rascalmpl.ast.Expression signaturePattern, List<org.rascalmpl.ast.Expression> extraParameters) {
 		OptionalComma optionalComma = new OptionalComma.Lexical(src, null, ",");
 		List<org.rascalmpl.ast.Expression> listOfFormals = new LinkedList<>();
-		listOfFormals.add(
-				ASTBuilder.makeExp("VariableBecomes", src, Names.toName("__DESUGAR_ORIGINAL_NODE", src), signaturePattern));
+		listOfFormals.add(signaturePattern);
 		
 		if (extraParameters != null) {
 			listOfFormals.addAll(extraParameters);
@@ -133,62 +142,90 @@ public class ExpandFunction extends CustomNamedFunction {
 		rf.setPublic(isPublic()); // TODO: should be in constructors
 		return rf;
 	}
-
+	
 	@SuppressWarnings("deprecation")
+	private String sugarUUIDAsString(IValue v, String key) {
+		if (v.asAnnotatable().hasAnnotation("__SUGAR_UUID")) {
+			IValue sugarUuidValue = v.asAnnotatable().getAnnotation("__SUGAR_UUID");
+			return ((IString) sugarUuidValue).getValue();
+		}
+		return null;
+	}
+	
+	private void desugarAndStoreLocalVariableWithUUID(IVarPattern localVariable, Map<String, String> uuidMap) {
+		Environment old = eval.getCurrentEnvt();
+		IValue myVar = ctx.getCurrentEnvt().getVariable(localVariable.name()).getValue();
+		IValue resVal;
+		try {
+			eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
+			resVal = ctx.getEvaluator().call("desugar", myVar); // TODO get actual name.
+		} catch(MatchFailed e) {
+			visitAndDesugar(localVariable, uuidMap);
+			return;
+		} finally {
+			eval.unwind(old);
+		}
+		uuidMap.put(localVariable.name(), sugarUUIDAsString(resVal, localVariable.name()));
+		ctx.getCurrentEnvt().storeLocalVariable(localVariable.name(),
+				ResultFactory.makeResult(resVal.getType(), resVal, ctx));
+	}
+	
+	private UnexpandFunction createResugarFunction(Map<String, String> uuidMap) {
+		Environment old = eval.getCurrentEnvt();
+		//Result<IValue> originalNode = eval.getCurrentEnvt().getSimpleVariable("__DESUGAR_ORIGINAL_NODE");
+		try {
+			// eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
+			System.out.println("Created unexpand function.");
+			System.out.println(_actuals[0].getType());
+			UnexpandFunction unexpandFn = new UnexpandFunction(eval, func, varargs, eval.getCurrentEnvt(),
+					eval.__getAccumulators(), makeResult(_actuals[0]), // TODO
+					extraParameters, uuidMap);
+			System.out.println(unexpandFn);
+			return unexpandFn;
+		} finally {
+			eval.unwind(old);
+		}
+	}
+	
+	private Result<IValue> createSugarUUID() {
+		return ResultFactory.makeResult(TF.stringType(), VF.string(String.valueOf(UUID.randomUUID())), ctx);		
+	}
+	
+	private void visitAndDesugar(IVarPattern localVariable, Map<String, String> uuidMap) {
+		// TODO ...
+		/*List<CaseBlock> cb = new LinkedList<>();
+		
+		CaseBlock SugarBlock = new SugarBlock(c);
+		cb.add(SugarBlock);
+		
+		CaseBlockList caseBlockList = new CaseBlockList(cases);
+		
+		new TraversalEvaluator(eval).traverse(localVariable.getValue().getValue(),
+				new CaseBlockList(caseBlocks), DIRECTION.TopDown, PROGRESS.Breaking, FIXEDPOINT.No);*/
+	}
+	
+	Result<IValue> makeResult(IValue v) {
+		return ResultFactory.makeResult(v.getType(), v, ctx);
+	}
+	
 	@Override
 	Result<IValue> run() {
-		try {
-			// Return the expanded tree annotated with unexpandFn, declared in
-			// the <i>CURRENT</i> environment (very important).
-			Result<IValue> patternRhsResult = func.getPatternRhs().interpret((IEvaluator<Result<IValue>>) ctx);
-			// For each variable on the RHS, tag it.
-
-			IMatchingResult iResult = func.getPatternRhs().getMatcher(ctx);
-			iResult.initMatch(patternRhsResult);
-
-			Map<String, Result<IValue>> uuidMap = new HashMap<String, Result<IValue>>();
-			Map<String, String> uuidMapStrs = new HashMap<String, String>();
-
-			for (Entry<String, Result<IValue>> s : eval.getCurrentEnvt().getLocalFunctionVariables().entrySet()) {
-				System.out.println("Found Local Variable: " + s.getKey());
-				IValue v = s.getValue().getValue();
-				if (v.isAnnotatable()) {
-
-					if (!v.getType().declaresAnnotation(ctx.getCurrentEnvt().getStore(), "__SUGAR_UUID")) {
-						eval.getCurrentEnvt().declareAnnotation(v.getType(), "__SUGAR_UUID", TF.stringType());
-					}
-					if (!v.asAnnotatable().hasAnnotation("__SUGAR_UUID")
-							|| v.asAnnotatable().getAnnotation("__SUGAR_UUID") == null) {
-						String uuid = String.valueOf(UUID.randomUUID());
-						v = v.asAnnotatable().setAnnotation("__SUGAR_UUID", VF.string(uuid));
-					}
-
-					System.out.println("Getting annotation for: " + v);
-					IString anno = (IString) v.asAnnotatable().getAnnotation("__SUGAR_UUID");
-					System.out.println("It is set to: " + anno.getValue());
-					String stringVal = anno.getValue();
-
-					uuidMap.put(s.getKey(), ResultFactory.makeResult(v.getType(), v, ctx));
-					uuidMapStrs.put(s.getKey(), stringVal);
-					// We store variables that are not on the RHS of the
-					// function.
-					eval.getCurrentEnvt().storeLocalVariable(s.getKey(), ResultFactory.makeResult(v.getType(), v, ctx));
-				}
-			}
-
-			if (iResult.hasNext() && iResult.next()) {
-				UnexpandFunction unexpandFn = new UnexpandFunction(eval, func, varargs, eval.getCurrentEnvt(),
-						eval.__getAccumulators(), eval.getCurrentEnvt().getSimpleVariable("__DESUGAR_ORIGINAL_NODE"),
-						extraParameters, uuidMapStrs);
-				IValue resVal = iResult.substitute(uuidMap).get(0);
-				return ResultFactory.makeResult(resVal.getType(),
-						resVal.asAnnotatable().setAnnotation("unexpandFn", unexpandFn), ctx);
-			}
-			throw new RuntimeException("This should never happen.");
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
+		Map<String, String> uuidMap = new HashMap<String, String>();
+		// TODO: REMOVE THE ... FUNCTION LOCAL VARIABLES THINGY!!!!
+		List<IVarPattern> vars = func.getPatternLhs().buildMatcher(eval).getVariables();
+		for (IVarPattern localVariable : vars) {
+			desugarAndStoreLocalVariableWithUUID(localVariable, new HashMap<>());//uuidMap);
 		}
+		Result<IValue> desugaredValue = func.getPatternRhs().interpret(eval);
+		UnexpandFunction unexpandFn = createResugarFunction(uuidMap);
+		for (IVarPattern localVariable : vars) {
+			if (eval.getCurrentEnvt().getVariable(localVariable.name()).getValue().asAnnotatable().hasAnnotation("unexpandFn")) {
+				System.out.println("Has unexpansion function." + eval.getCurrentEnvt().getVariable(localVariable.name()).getValue().asAnnotatable().getAnnotation("unexpandFn"));
+			}
+		}
+		return desugaredValue
+				.setAnnotation("unexpandFn", unexpandFn, eval.getCurrentEnvt())
+				.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
 	}
 	
 	@Override

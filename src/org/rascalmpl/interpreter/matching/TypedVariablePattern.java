@@ -156,6 +156,7 @@ public class TypedVariablePattern extends AbstractMatchingResult implements IVar
 			// Here we do the substitution.
 			return Arrays.asList(substitutionMap.get(name).getValue());
 		}
+		System.out.println(name);
 		return Arrays.asList(ctx.getCurrentEnvt().getVariable(name).getValue());
 	}
 	 

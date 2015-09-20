@@ -179,7 +179,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			try {
 				__eval.__pushTraversalEvaluator(te);
 				IValue val = te.traverse(subject.getValue(),
-						blocks, DIRECTION.TopDown,
+						blocks, DIRECTION.BottomUp,
 						PROGRESS.Continuing, FIXEDPOINT.No);
 				if (!val.getType().isSubtypeOf(subject.getType())) {
 				  // this is not a static error but an extra run-time sanity check

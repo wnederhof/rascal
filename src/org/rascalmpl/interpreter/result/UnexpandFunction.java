@@ -2,6 +2,7 @@ package org.rascalmpl.interpreter.result;
 
 import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,12 @@ import org.rascalmpl.interpreter.control_exceptions.Failure;
 import org.rascalmpl.interpreter.control_exceptions.InterruptException;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
 import org.rascalmpl.interpreter.control_exceptions.Return;
+import org.rascalmpl.interpreter.env.EmptyVariablesEnvironment;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
+import org.rascalmpl.interpreter.matching.IVarPattern;
+import org.rascalmpl.interpreter.matching.QualifiedNamePattern;
+import org.rascalmpl.interpreter.matching.TypedVariablePattern;
 import org.rascalmpl.interpreter.staticErrors.UnguardedFail;
 import org.rascalmpl.interpreter.types.FunctionType;
 import org.rascalmpl.interpreter.types.NonTerminalType;
@@ -43,6 +48,7 @@ import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.parser.ASTBuilder;
 import org.rascalmpl.values.uptr.IRascalValueFactory;
 import org.rascalmpl.values.uptr.SymbolAdapter;
+import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class UnexpandFunction extends CustomNamedFunction {
 	protected static final TypeFactory TF = TypeFactory.getInstance();
@@ -54,6 +60,8 @@ public class UnexpandFunction extends CustomNamedFunction {
 	private Result<IValue> patternLhsResult;
 	private List<String> extraParameters;
 	private Map<String, String> uuidMap;
+	private IMatchingResult matcher;
+	private IValue[] actuals;
 	
 	private static org.rascalmpl.ast.Parameters createParameters(ISourceLocation src, org.rascalmpl.ast.Expression signaturePattern) {
 		OptionalComma optionalComma = new OptionalComma.Lexical(src, null, ",");
@@ -105,7 +113,6 @@ public class UnexpandFunction extends CustomNamedFunction {
 		this.patternLhsResult = patternLhsResult;
 		this.extraParameters = extraParameters;
 		this.uuidMap = uuidMap;
-		
 		assert (!(func instanceof FunctionDeclaration) &&
 			    !(func instanceof FunctionDeclaration.SugarExtra));
 	}
@@ -125,10 +132,18 @@ public class UnexpandFunction extends CustomNamedFunction {
 		rf.setPublic(isPublic()); // TODO: should be in constructors
 		return rf;
 	}
-
+	
+	@Override
+	List<Expression> cacheFormals() throws ImplementationError {
+		// This function is called before func has been initialized. Thus:
+		FunctionDeclaration func = (FunctionDeclaration) ast;
+		return cacheFormals(createParameters(ast.getLocation(), func.getPatternRhs()));
+	}
+	
 	@SuppressWarnings({ "deprecation" })
 	@Override
 	public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
+		this.actuals = actuals;
 		try {
 		Result<IValue> result = getMemoizedResult(actuals, keyArgValues);
 		if (result != null) {
@@ -148,7 +163,7 @@ public class UnexpandFunction extends CustomNamedFunction {
 			Environment environment = new Environment(declarationEnvironment, ctx.getCurrentEnvt(),
 					currentAST != null ? currentAST.getLocation() : null, ast.getLocation(), label);
 			ctx.setCurrentEnvt(environment);
-			IMatchingResult matcher = func.getPatternRhs().buildMatcher(ctx);
+			matcher = func.getPatternRhs().buildMatcher(ctx);
 			matcher.initMatch(ResultFactory.makeResult(actualTypes[0], actuals[0], ctx)); 
 			ctx.setAccumulators(accumulators);
 			ctx.pushEnv();
@@ -211,48 +226,28 @@ public class UnexpandFunction extends CustomNamedFunction {
 			throw e;
 		}
 	}
+
 	
-	
-	
-	
-	
-	
-	@Override @SuppressWarnings("deprecation")
-	Result<IValue> run() {
-		// Here comes the cool stuff.
-		// Alright, we got: TypeRHS name (patternLhsResult: PatLHS) => TypeLHS (PatRHS)
-		// We want to return PatRHS PatLHS <<< patternLhsResult
-		
-		Result<IValue> x = SubstitutionEvaluator.substitute(func.getPatternLhs(), patternLhsResult.getValue(), eval);
-		
-		// From the "mock" environment, we extract the variables used on the RHS, but not on the LHS' first parameter.
-		if (extraParameters == null) {
-			return x;
-		}
-		
-		if (!x.getValue().asAnnotatable().hasAnnotation("desugarVariables")) {
-			x = ResultFactory.makeResult(x.getType(), x.getValue().asAnnotatable().setAnnotation("desugarVariables", VF.list()), eval);
-		}
-		IList desugarVariables = (IList) x.getValue().asAnnotatable().getAnnotation("desugarVariables");
-		IMapWriter desugarVariablesMapWriter = VF.mapWriter();
-		for (String s : extraParameters) {
-			System.out.println("Extra parameter: " + s + ", value: " + getEnv().getVariable(s));
-			if (getEnv().getVariables().get(s) != null) {
-				System.out.println("This works.");
-				desugarVariablesMapWriter.put(VF.string(s), getEnv().getVariable(s).getValue());
-			}
-		}
-		desugarVariables = desugarVariables.append(desugarVariablesMapWriter.done());
-		return x.setAnnotation("desugarVariables",
-				ResultFactory.makeResult(desugarVariables.getType(), desugarVariables, eval),
-				eval.getCurrentEnvt());
+	/*************************/
+	@SuppressWarnings("deprecation")
+	private void resugar(String localVariableName) {
+
 	}
 	
+	private boolean calledBefore;
+	
+	Result<IValue> makeResult(IValue v) {
+		return ResultFactory.makeResult(v.getType(), v, ctx);
+	}
+	
+	@SuppressWarnings("deprecation")
 	@Override
-	List<Expression> cacheFormals() throws ImplementationError {
-		// This function is called before func has been initialized. Thus:
-		FunctionDeclaration func = (FunctionDeclaration) ast;
-		return cacheFormals(createParameters(ast.getLocation(), func.getPatternRhs()));
+	Result<IValue> run() {
+		//IMatchingResult m = func.getPatternLhs().buildMatcher(eval);
+		//m.initMatch(patternLhsResult);
+		//m.next();
+		//return m.substitute(substitutionMap)
+		return patternLhsResult;
 	}
 	
 }

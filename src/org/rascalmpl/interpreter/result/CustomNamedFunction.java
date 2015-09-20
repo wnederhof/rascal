@@ -183,9 +183,12 @@ public abstract class CustomNamedFunction extends NamedFunction {
 	public boolean isAnonymous() {
 		return getName() == null;
 	}
+	
+	protected IValue[] _actuals;
 
 	@Override
   public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
+		_actuals = actuals;
 	  Result<IValue> result = getMemoizedResult(actuals, keyArgValues);
 	  if (result != null) { 
 	    return result;
