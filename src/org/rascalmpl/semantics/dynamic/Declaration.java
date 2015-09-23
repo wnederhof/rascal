@@ -102,6 +102,8 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
 						"unexpandFn", TF.valueType());
 				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
+						"hiddenUnexpandFn", TF.valueType());
+				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
 						"unexpansionFailed", TF.valueType());
 				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
 						"desugarVariables", TF.listType(TF.mapType(TF.stringType(), TF.valueType())));

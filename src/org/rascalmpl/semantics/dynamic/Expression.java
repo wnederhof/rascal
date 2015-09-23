@@ -31,6 +31,7 @@ import org.eclipse.imp.pdb.facts.IMapWriter;
 import org.eclipse.imp.pdb.facts.ISetWriter;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
+import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
@@ -265,6 +266,10 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			Result<AbstractFunction> lambda;
 			try {
 				lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
+				if (lambda.getValue() instanceof ITuple) {
+					IValue lambdaValue = ((ITuple) lambda.getValue()).get(0);
+					lambda = ResultFactory.makeResult(lambdaValue.getType(), lambdaValue, __eval);
+				}
 			} catch (UndeclaredAnnotation e) {
 				//System.out.println(e); // TODO REMOVE
 				return expressionValue;

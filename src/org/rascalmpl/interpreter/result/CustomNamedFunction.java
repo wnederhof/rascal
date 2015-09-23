@@ -186,6 +186,8 @@ public abstract class CustomNamedFunction extends NamedFunction {
 	
 	protected IValue[] _actuals;
 
+	protected IMatchingResult[] _matchers;
+
 	@Override
   public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
 		_actuals = actuals;
@@ -209,6 +211,7 @@ public abstract class CustomNamedFunction extends NamedFunction {
       ctx.setCurrentEnvt(environment);
       
       IMatchingResult[] matchers = prepareFormals(ctx);
+      _matchers = matchers;
       ctx.setAccumulators(accumulators);
       ctx.pushEnv();
 

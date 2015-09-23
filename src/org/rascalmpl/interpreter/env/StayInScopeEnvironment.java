@@ -36,11 +36,18 @@ public class StayInScopeEnvironment extends Environment {
 	public StayInScopeEnvironment(Environment parent, Environment callerScope, ISourceLocation callerLocation, ISourceLocation loc, String name) {
 		super(parent, callerScope, callerLocation, loc, name);
 		if (parent.variableEnvironment != null)
-		this.variableEnvironment = new HashMap<>(parent.getVariables());
+			this.variableEnvironment = new HashMap<>(parent.getVariables());
+		else
+			this.variableEnvironment = new HashMap<>();
+	}
+	
+	public StayInScopeEnvironment(Environment e) {
+		this(e, e.callerScope, e.callerLocation, e.loc, e.name);
 	}
 
 	@Override
 	protected Map<String, Result<IValue>> getVariableDefiningEnvironment(String name) {
+		System.out.println("jkhakhjadhahaahjkhja");
 		return null;
 	}
 	

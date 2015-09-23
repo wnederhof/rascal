@@ -15,6 +15,7 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IMapWriter;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
+import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.type.Type;
@@ -36,6 +37,7 @@ import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
 import org.rascalmpl.interpreter.control_exceptions.Return;
 import org.rascalmpl.interpreter.env.EmptyVariablesEnvironment;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.matching.QualifiedNamePattern;
@@ -60,8 +62,7 @@ public class UnexpandFunction extends CustomNamedFunction {
 	private Result<IValue> patternLhsResult;
 	private List<String> extraParameters;
 	private Map<String, String> uuidMap;
-	private IMatchingResult matcher;
-	private IValue[] actuals;
+	private IMatchingResult _matcher;
 	
 	private static org.rascalmpl.ast.Parameters createParameters(ISourceLocation src, org.rascalmpl.ast.Expression signaturePattern) {
 		OptionalComma optionalComma = new OptionalComma.Lexical(src, null, ",");
@@ -143,7 +144,7 @@ public class UnexpandFunction extends CustomNamedFunction {
 	@SuppressWarnings({ "deprecation" })
 	@Override
 	public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
-		this.actuals = actuals;
+		_actuals = actuals;
 		try {
 		Result<IValue> result = getMemoizedResult(actuals, keyArgValues);
 		if (result != null) {
@@ -163,7 +164,9 @@ public class UnexpandFunction extends CustomNamedFunction {
 			Environment environment = new Environment(declarationEnvironment, ctx.getCurrentEnvt(),
 					currentAST != null ? currentAST.getLocation() : null, ast.getLocation(), label);
 			ctx.setCurrentEnvt(environment);
-			matcher = func.getPatternRhs().buildMatcher(ctx);
+			IMatchingResult matcher = func.getPatternRhs().buildMatcher(ctx);
+			
+			_matcher = matcher;
 			matcher.initMatch(ResultFactory.makeResult(actualTypes[0], actuals[0], ctx)); 
 			ctx.setAccumulators(accumulators);
 			ctx.pushEnv();
@@ -212,6 +215,11 @@ public class UnexpandFunction extends CustomNamedFunction {
 					return run();
 				}
 			}
+			if (actuals[0] instanceof IConstructor) {
+				System.out.println("Matcher: " + matcher);
+				System.out.println("Failed to match: " + TreeAdapter.yield((IConstructor) actuals[0]));
+				System.out.println("Type: " + actualTypes[0]);
+			}
 			throw new MatchFailed();
 		} finally {
 			if (callTracing) {
@@ -241,13 +249,138 @@ public class UnexpandFunction extends CustomNamedFunction {
 	}
 	
 	@SuppressWarnings("deprecation")
+	private Result<IValue> callFunctionOnUnexpandFnAnno(IValue variable) {
+		Environment old = eval.getCurrentEnvt();
+		final String annotation = "unexpandFn";
+		try {
+			eval.setCurrentEnvt(new StayInScopeEnvironment(old));
+			if (variable.asAnnotatable().hasAnnotation(annotation)) {
+				if (variable.asAnnotatable().getAnnotation(annotation) instanceof ITuple) {
+					return makeResult(((ITuple) variable.asAnnotatable().getAnnotation(annotation)).get(0)).call(
+							new Type[] {variable.getType()}, new IValue[] {variable}, new HashMap<>());
+				}
+				return makeResult(variable.asAnnotatable().getAnnotation(annotation)).call(
+						new Type[] {variable.getType()}, new IValue[] {variable}, new HashMap<>());
+			}
+		} finally {
+			eval.unwind(old);
+		}
+		return null;
+	}
+	
+	private IValue popTuple(ITuple tuple) {
+		List<IValue> result = new LinkedList<IValue>();
+		boolean first = true;
+		for (IValue v : tuple) {
+			if (first) {
+				first = false;
+			} else {
+				result.add(v);
+			}
+		}
+		return VF.tuple(result.toArray(new IValue[result.size()]));
+	}
+	
+	@SuppressWarnings("deprecation")
+	private IValue transformHiddenUnexpandFnToUnexpandFn(IValue val) {
+		Map<String, IValue> annotations = new HashMap<>(val.asAnnotatable().getAnnotations());
+		
+		if (annotations.get("unexpandFn") instanceof ITuple) {
+			if (((ITuple) annotations.get("unexpandFn")).arity() == 2) {
+				annotations.put("unexpandFn", ((ITuple) annotations.get("unexpandFn")).get(1));
+			} else {
+				annotations.put("unexpandFn", 
+						VF.tuple(((ITuple) annotations.get("unexpandFn")).get(1),
+						popTuple((ITuple) annotations.get("unexpandFn"))));
+			}
+		}
+		return val.asAnnotatable().setAnnotations(annotations);
+	}
+	
+	private boolean hasHiddenUnexpandFn(IValue v) {
+		return v.asAnnotatable().hasAnnotation("unexpandFn") &&
+				v.asAnnotatable().getAnnotation("unexpandFn") instanceof ITuple;
+	}
+	
+	private String getOnlyArgumentName(IMatchingResult matcher) {
+		return matcher.getVariables().get(0).name();
+	}
+	
+	private boolean resugarVariable(String name, Environment oldEnvironment, Result<IValue> variable) {
+		Result<IValue> calledResult;
+		Environment originalEnvironment = eval.getCurrentEnvt();
+		try {
+			eval.setCurrentEnvt(oldEnvironment);
+			variable = eval.getCurrentEnvt().getSimpleVariable(name);
+			calledResult = callFunctionOnUnexpandFnAnno(variable.getValue());
+		} finally {
+			eval.unwind(originalEnvironment);
+		}
+		if (calledResult != null) {
+			storeLocalVariable(name, calledResult);
+			return true;
+		}
+		return false;
+	}
+	
+	@SuppressWarnings("deprecation")
 	@Override
 	Result<IValue> run() {
-		//IMatchingResult m = func.getPatternLhs().buildMatcher(eval);
-		//m.initMatch(patternLhsResult);
-		//m.next();
-		//return m.substitute(substitutionMap)
-		return patternLhsResult;
+		if (calledBefore) {
+			return makeResult(_actuals[0]);
+		}
+		calledBefore = true;
+		Environment old = eval.getCurrentEnvt();
+		FunctionDeclaration func = this.func;
+		try {
+			IMatchingResult matcher = _matcher;
+			IValue[] myActuals = _actuals;
+			eval.setCurrentEnvt(new StayInScopeEnvironment(old));
+			if (myActuals[0] instanceof IConstructor) {
+				System.out.println(TreeAdapter.yield((IConstructor) myActuals[0]));
+			}
+			if (hasHiddenUnexpandFn(myActuals[0])) {
+				storeLocalVariable(getOnlyArgumentName(matcher),
+						makeResult(transformHiddenUnexpandFnToUnexpandFn(myActuals[0])));
+			}
+			
+			StayInScopeEnvironment originalOld = new StayInScopeEnvironment(eval.getCurrentEnvt());
+			for (IVarPattern p : matcher.getVariables()) {
+				System.out.println(p.name());
+				resugarVariable(p.name(), new StayInScopeEnvironment(originalOld), null);
+			}
+			Map<String, Result<IValue>> myVariables = new HashMap<>(eval.getCurrentEnvt().getVariables());
+	
+			Environment oldEnvironment = eval.getCurrentEnvt();
+			Result<IValue> finalResult;
+			try {
+				eval.setCurrentEnvt(new EmptyVariablesEnvironment(oldEnvironment));
+				IMatchingResult resugarResult = func.getPatternLhs().buildMatcher(eval);
+				resugarResult.initMatch(patternLhsResult);
+				if (resugarResult.hasNext() && resugarResult.next()) {
+					finalResult = makeResult(resugarResult.substitute(myVariables).get(0));
+				} else {
+					throw new RuntimeException("Has no next.");
+				}
+			} finally {
+				eval.unwind(oldEnvironment);
+			}
+			if (finalResult.getValue().asAnnotatable().hasAnnotation("unexpandFn")) {
+				// ...
+				return callFunctionOnUnexpandFnAnno(finalResult.getValue());
+			}
+			return finalResult;
+		} finally {
+			eval.setCurrentEnvt(old);
+		}
+	}
+
+	private void storeLocalVariable(String variableName, Result<IValue> result) {
+		eval.getCurrentEnvt().storeLocalVariable(variableName, result);
+	}
+
+	private IValue getVariableFromEnvt(String variableName) {
+		return eval.getCurrentEnvt().getVariable(variableName).getValue();
 	}
 	
 }

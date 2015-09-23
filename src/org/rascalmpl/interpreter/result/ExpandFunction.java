@@ -1,5 +1,6 @@
 package org.rascalmpl.interpreter.result;
 
+// TODO: REMOVE THE ... FUNCTION LOCAL VARIABLES THINGY!!!!
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
 import org.rascalmpl.interpreter.env.EmptyVariablesEnvironment;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
@@ -157,7 +159,7 @@ public class ExpandFunction extends CustomNamedFunction {
 		IValue myVar = ctx.getCurrentEnvt().getVariable(localVariable.name()).getValue();
 		IValue resVal;
 		try {
-			eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
+			eval.setCurrentEnvt(new StayInScopeEnvironment(old));
 			resVal = ctx.getEvaluator().call("desugar", myVar); // TODO get actual name.
 		} catch(MatchFailed e) {
 			visitAndDesugar(localVariable, uuidMap);
@@ -170,15 +172,12 @@ public class ExpandFunction extends CustomNamedFunction {
 				ResultFactory.makeResult(resVal.getType(), resVal, ctx));
 	}
 	
-	private UnexpandFunction createResugarFunction(Map<String, String> uuidMap) {
+	private UnexpandFunction createResugarFunction(Map<String, String> uuidMap, IValue[] currentActuals) {
 		Environment old = eval.getCurrentEnvt();
-		//Result<IValue> originalNode = eval.getCurrentEnvt().getSimpleVariable("__DESUGAR_ORIGINAL_NODE");
 		try {
-			// eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
-			System.out.println("Created unexpand function.");
-			System.out.println(_actuals[0].getType());
+			//eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
 			UnexpandFunction unexpandFn = new UnexpandFunction(eval, func, varargs, eval.getCurrentEnvt(),
-					eval.__getAccumulators(), makeResult(_actuals[0]), // TODO
+					eval.__getAccumulators(), makeResult(currentActuals[0]),
 					extraParameters, uuidMap);
 			System.out.println(unexpandFn);
 			return unexpandFn;
@@ -193,39 +192,34 @@ public class ExpandFunction extends CustomNamedFunction {
 	
 	private void visitAndDesugar(IVarPattern localVariable, Map<String, String> uuidMap) {
 		// TODO ...
-		/*List<CaseBlock> cb = new LinkedList<>();
-		
-		CaseBlock SugarBlock = new SugarBlock(c);
-		cb.add(SugarBlock);
-		
-		CaseBlockList caseBlockList = new CaseBlockList(cases);
-		
-		new TraversalEvaluator(eval).traverse(localVariable.getValue().getValue(),
-				new CaseBlockList(caseBlocks), DIRECTION.TopDown, PROGRESS.Breaking, FIXEDPOINT.No);*/
 	}
 	
 	Result<IValue> makeResult(IValue v) {
 		return ResultFactory.makeResult(v.getType(), v, ctx);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	Result<IValue> run() {
+		IValue[] currentActuals = _actuals; // _ACTUALS ARE OVERWRITTEN!!!!!!!
 		Map<String, String> uuidMap = new HashMap<String, String>();
-		// TODO: REMOVE THE ... FUNCTION LOCAL VARIABLES THINGY!!!!
 		List<IVarPattern> vars = func.getPatternLhs().buildMatcher(eval).getVariables();
 		for (IVarPattern localVariable : vars) {
 			desugarAndStoreLocalVariableWithUUID(localVariable, new HashMap<>());//uuidMap);
 		}
+		UnexpandFunction unexpandFn = createResugarFunction(uuidMap, currentActuals);
 		Result<IValue> desugaredValue = func.getPatternRhs().interpret(eval);
-		UnexpandFunction unexpandFn = createResugarFunction(uuidMap);
-		for (IVarPattern localVariable : vars) {
-			if (eval.getCurrentEnvt().getVariable(localVariable.name()).getValue().asAnnotatable().hasAnnotation("unexpandFn")) {
-				System.out.println("Has unexpansion function." + eval.getCurrentEnvt().getVariable(localVariable.name()).getValue().asAnnotatable().getAnnotation("unexpandFn"));
-			}
+		boolean variableEqualToRoot = desugaredValue.getValue().asAnnotatable().hasAnnotation("unexpandFn");
+		if (variableEqualToRoot) {
+			return desugaredValue.setAnnotation("unexpandFn",
+					makeResult(VF.tuple(unexpandFn,
+							desugaredValue.getAnnotation("unexpandFn", eval.getCurrentEnvt()).getValue())), eval.getCurrentEnvt());
+					// TODO hidden sugar id.
+					//.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
 		}
 		return desugaredValue
-				.setAnnotation("unexpandFn", unexpandFn, eval.getCurrentEnvt())
-				.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
+				.setAnnotation("unexpandFn", unexpandFn, eval.getCurrentEnvt());
+				//.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
 	}
 	
 	@Override
