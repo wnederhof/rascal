@@ -16,6 +16,7 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -28,17 +29,20 @@ import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
 import org.rascalmpl.ast.Name;
 import org.rascalmpl.ast.Signature;
+import org.rascalmpl.ast.Tag;
 import org.rascalmpl.ast.Tags;
 import org.rascalmpl.ast.Visibility;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.AbstractFunction;
-import org.rascalmpl.interpreter.result.ExpandFunction;
 import org.rascalmpl.interpreter.result.JavaMethod;
 import org.rascalmpl.interpreter.result.RascalFunction;
 import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.result.sugar.ExpandFunction;
+import org.rascalmpl.interpreter.result.sugar.UnexpandFunction;
 import org.rascalmpl.interpreter.staticErrors.MissingModifier;
 import org.rascalmpl.interpreter.staticErrors.NonAbstractJavaFunction;
+import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.parser.ASTBuilder;
 
 public abstract class FunctionDeclaration extends
@@ -152,6 +156,7 @@ public abstract class FunctionDeclaration extends
 
 	}
 	
+	// TODO Remove or keep??? Keep -> alter to meet Sugar's new features.
 	static public class SugarExtra extends org.rascalmpl.ast.FunctionDeclaration.SugarExtra {
 		
 		public SugarExtra(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
@@ -195,9 +200,23 @@ public abstract class FunctionDeclaration extends
 			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
 			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
 			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
+			
+			for (Tag t : getTags().getTags()) {
+				if (Names.name(t.getName()).equals("sugarType")) {
+					String s = "" + t.getContents();
+					String fallbackType = s.replaceAll(" ", "").substring(1, s.length() - 1);
+					UnexpandFunction unexpandFn = new UnexpandFunction(__eval, this, false, __eval.getCurrentEnvt(),
+							__eval.__getAccumulators(), null, null, new HashMap<>(), fallbackType);
+					unexpandFn.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());					
+					__eval.getCurrentEnvt().markNameFinal(unexpandFn.getName());
+					__eval.getCurrentEnvt().markNameOverloadable(unexpandFn.getName());
+					__eval.getCurrentEnvt().storeFunction(unexpandFn.getName(), unexpandFn);
+					System.out.println("Registered: " + unexpandFn.getName() + ", " + unexpandFn.getType());
+				}
+			}
+			
 			return lambda;
 		}
-
 	}
 	
 	static public class Conditional extends

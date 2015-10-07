@@ -45,7 +45,7 @@ import org.rascalmpl.semantics.dynamic.Tree.Appl;
 
 public abstract class CustomNamedFunction extends NamedFunction {
 	// private final List<Statement> body;
-	final Stack<Accumulator> accumulators;
+	protected final Stack<Accumulator> accumulators;
 	private final List<Expression> formals;
 	private final String firstOutermostLabel;
 	private final IConstructor firstOutermostProduction;
@@ -131,7 +131,7 @@ public abstract class CustomNamedFunction extends NamedFunction {
 		return firstOutermostProduction;
 	}
 	
-	final static List<Expression> cacheFormals(Parameters params) throws ImplementationError {
+	protected final static List<Expression> cacheFormals(Parameters params) throws ImplementationError {
 		List<Expression> formals;
 		formals = params.getFormals().getFormals();
 		
@@ -159,7 +159,7 @@ public abstract class CustomNamedFunction extends NamedFunction {
 		return formals;
 	}
 	
-	List<Expression> cacheFormals() throws ImplementationError {
+	protected List<Expression> cacheFormals() throws ImplementationError {
 		if (ast instanceof FunctionDeclaration) {
 			return cacheFormals( ((FunctionDeclaration) ast).getSignature().getParameters() );
 		}
@@ -320,7 +320,7 @@ public abstract class CustomNamedFunction extends NamedFunction {
     }
   }
 
-	abstract Result<IValue> run();
+	protected abstract Result<IValue> run();
 
 
 	private Result<IValue> computeReturn(Return e) {

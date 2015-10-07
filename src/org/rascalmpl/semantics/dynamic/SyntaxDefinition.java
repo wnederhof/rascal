@@ -49,6 +49,8 @@ public abstract class SyntaxDefinition extends
 
 		@Override
 		public IConstructor getTree() {
+//			System.out.println("Node: " + node.getClass());
+//			System.out.println("Node: " + node);
 			return node;
 		}
 		

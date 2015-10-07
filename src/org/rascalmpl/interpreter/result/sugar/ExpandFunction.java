@@ -1,4 +1,4 @@
-package org.rascalmpl.interpreter.result;
+package org.rascalmpl.interpreter.result.sugar;
 
 // TODO: REMOVE THE ... FUNCTION LOCAL VARIABLES THINGY!!!!
 import java.util.HashMap;
@@ -15,6 +15,7 @@ import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.eclipse.imp.pdb.facts.visitors.IdentityVisitor;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.ast.FunctionDeclaration;
@@ -22,6 +23,7 @@ import org.rascalmpl.ast.KeywordFormal;
 import org.rascalmpl.ast.Name;
 import org.rascalmpl.ast.OptionalComma;
 import org.rascalmpl.ast.Signature;
+import org.rascalmpl.ast.Tag;
 import org.rascalmpl.interpreter.Accumulator;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.TraversalEvaluator;
@@ -36,7 +38,11 @@ import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
+import org.rascalmpl.interpreter.result.CustomNamedFunction;
+import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
+import org.rascalmpl.interpreter.sugar.DesugarTransformer;
 import org.rascalmpl.interpreter.types.FunctionType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
 import org.rascalmpl.interpreter.utils.Cases.CaseBlock;
@@ -46,6 +52,7 @@ import org.rascalmpl.parser.ASTBuilder;
 import org.rascalmpl.values.uptr.IRascalValueFactory;
 import org.rascalmpl.values.uptr.ITree;
 
+@Deprecated
 public class ExpandFunction extends CustomNamedFunction {
 	protected static final TypeFactory TF = TypeFactory.getInstance();
 	protected static final RascalTypeFactory RTF = RascalTypeFactory.getInstance();
@@ -86,12 +93,25 @@ public class ExpandFunction extends CustomNamedFunction {
 	}
 	
 	private static FunctionType createFunctionType(FunctionDeclaration func, IEvaluator<Result<IValue>> eval, Environment env, Name name, List<Expression> extraParameters) {
-		return (FunctionType) createExpandSignature(func.getLocation(), func.getTypeRhs(), func.getPatternLhs(), name, extraParameters).typeOf(env, true, eval);
+		return (FunctionType) createExpandSignature(func.getLocation(), func.getTypeRhs(), func.getPatternLhs(), name,
+				extraParameters).typeOf(env, true, eval);
 	}
 	
 	// We don't use keyword formals.
 	private static List<KeywordFormal> createFormals(FunctionDeclaration func) {
 		return new LinkedList<KeywordFormal>();
+	}
+	
+	// TODO Remove
+	private void registerExtraFunctionsByTags() {
+//		for (Tag t : func.getTags().getTags()) {
+//			if (Names.name(t.getName()).equals("sugarType")) {
+//				String s = t.getContents().toString();
+//				String fallbackType = s.replaceAll(" ", "").substring(1, s.length() - 1);
+//				UnexpandFunction u = createResugarFunction(new HashMap<>(), null);
+//			}
+//		}
+		
 	}
 	
 	public ExpandFunction(IEvaluator<Result<IValue>> eval, FunctionDeclaration func, boolean varargs, Environment env,
@@ -128,6 +148,7 @@ public class ExpandFunction extends CustomNamedFunction {
 				extraParameters.add(Names.fullName(e.getQualifiedName()));
 			}
 		}
+		registerExtraFunctionsByTags();
 	}
 
 	ExpandFunction(AbstractAST ast, IEvaluator<Result<IValue>> eval, String name, FunctionType functionType,
@@ -160,9 +181,11 @@ public class ExpandFunction extends CustomNamedFunction {
 		IValue resVal;
 		try {
 			eval.setCurrentEnvt(new StayInScopeEnvironment(old));
-			resVal = ctx.getEvaluator().call("desugar", myVar); // TODO get actual name.
-		} catch(MatchFailed e) {
-			visitAndDesugar(localVariable, uuidMap);
+			resVal = ctx.getEvaluator().call(name, myVar); // TODO get actual name.
+		} catch(MatchFailed m) {
+			resVal = desugarAll(myVar).getValue();
+			ctx.getCurrentEnvt().storeLocalVariable(localVariable.name(),
+					ResultFactory.makeResult(resVal.getType(), resVal, ctx));
 			return;
 		} finally {
 			eval.unwind(old);
@@ -178,7 +201,7 @@ public class ExpandFunction extends CustomNamedFunction {
 			//eval.setCurrentEnvt(new EmptyVariablesEnvironment(old));
 			UnexpandFunction unexpandFn = new UnexpandFunction(eval, func, varargs, eval.getCurrentEnvt(),
 					eval.__getAccumulators(), makeResult(currentActuals[0]),
-					extraParameters, uuidMap);
+					extraParameters, uuidMap, null);
 			System.out.println(unexpandFn);
 			return unexpandFn;
 		} finally {
@@ -198,32 +221,55 @@ public class ExpandFunction extends CustomNamedFunction {
 		return ResultFactory.makeResult(v.getType(), v, ctx);
 	}
 	
+	private Result<IValue> desugarAll(IValue v) {
+		try {
+			return makeResult(v.accept(
+					new DesugarTransformer<Throwable>
+				(new IdentityVisitor<Throwable>() {},
+						VF, eval, Names.toQualifiedName(name, getAst().getLocation()))));
+		} catch(Throwable e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	@SuppressWarnings("deprecation")
 	@Override
-	Result<IValue> run() {
+	protected Result<IValue> run() {
+		System.out.println("bla");
+		boolean repeat = tags.containsKey("repeat");
+		
 		IValue[] currentActuals = _actuals; // _ACTUALS ARE OVERWRITTEN!!!!!!!
 		Map<String, String> uuidMap = new HashMap<String, String>();
 		List<IVarPattern> vars = func.getPatternLhs().buildMatcher(eval).getVariables();
+		
 		for (IVarPattern localVariable : vars) {
 			desugarAndStoreLocalVariableWithUUID(localVariable, new HashMap<>());//uuidMap);
 		}
+		
 		UnexpandFunction unexpandFn = createResugarFunction(uuidMap, currentActuals);
 		Result<IValue> desugaredValue = func.getPatternRhs().interpret(eval);
 		boolean variableEqualToRoot = desugaredValue.getValue().asAnnotatable().hasAnnotation("unexpandFn");
+		
+		Result<IValue> returnValue;
 		if (variableEqualToRoot) {
-			return desugaredValue.setAnnotation("unexpandFn",
+			returnValue = desugaredValue.setAnnotation("unexpandFn",
 					makeResult(VF.tuple(unexpandFn,
 							desugaredValue.getAnnotation("unexpandFn", eval.getCurrentEnvt()).getValue())), eval.getCurrentEnvt());
 					// TODO hidden sugar id.
 					//.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
+		} else {
+			returnValue = desugaredValue
+					.setAnnotation("unexpandFn", unexpandFn, eval.getCurrentEnvt());
+					//.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
 		}
-		return desugaredValue
-				.setAnnotation("unexpandFn", unexpandFn, eval.getCurrentEnvt());
-				//.setAnnotation("__SUGAR_UUID", createSugarUUID(), eval.getCurrentEnvt());
+		if (repeat) {
+			return desugarAll(returnValue.getValue());
+		}
+		return returnValue;
 	}
 	
 	@Override
-	List<Expression> cacheFormals() throws ImplementationError {
+	protected List<Expression> cacheFormals() throws ImplementationError {
 		// This function is called before func has been initialized. Thus:
 		FunctionDeclaration func = (FunctionDeclaration) ast;
 		return cacheFormals(createParameters(ast.getLocation(), func.getPatternLhs(), func.hasExtraParameters() ? func.getExtraParameters() : null));

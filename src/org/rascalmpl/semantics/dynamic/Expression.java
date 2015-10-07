@@ -18,7 +18,6 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,11 +30,9 @@ import org.eclipse.imp.pdb.facts.IMapWriter;
 import org.eclipse.imp.pdb.facts.ISetWriter;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
-import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
-import org.rascalmpl.ast.Case;
 import org.rascalmpl.ast.Field;
 import org.rascalmpl.ast.KeywordArgument_Expression;
 import org.rascalmpl.ast.KeywordArguments_Expression;
@@ -48,11 +45,6 @@ import org.rascalmpl.ast.Statement;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.SubstitutionEvaluator;
-import org.rascalmpl.interpreter.TraversalEvaluator;
-import org.rascalmpl.interpreter.TraversalEvaluator.CaseBlockList;
-import org.rascalmpl.interpreter.TraversalEvaluator.DIRECTION;
-import org.rascalmpl.interpreter.TraversalEvaluator.FIXEDPOINT;
-import org.rascalmpl.interpreter.TraversalEvaluator.PROGRESS;
 import org.rascalmpl.interpreter.TypeDeclarationEvaluator;
 import org.rascalmpl.interpreter.TypeReifier;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
@@ -94,18 +86,18 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.ArgumentsMismatch;
 import org.rascalmpl.interpreter.staticErrors.NonVoidTypeRequired;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
-import org.rascalmpl.interpreter.staticErrors.UndeclaredAnnotation;
 import org.rascalmpl.interpreter.staticErrors.UndeclaredVariable;
 import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 import org.rascalmpl.interpreter.staticErrors.UnguardedIt;
 import org.rascalmpl.interpreter.staticErrors.UninitializedPatternMatch;
 import org.rascalmpl.interpreter.staticErrors.UninitializedVariable;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
+import org.rascalmpl.interpreter.sugar.DesugarTransformer;
+import org.rascalmpl.interpreter.sugar.ResugarTransformer;
 import org.rascalmpl.interpreter.types.FunctionType;
 import org.rascalmpl.interpreter.types.NonTerminalType;
 import org.rascalmpl.interpreter.types.OverloadedFunctionType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
-import org.rascalmpl.interpreter.utils.Cases;
 import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.interpreter.utils.RuntimeExceptionFactory;
 import org.rascalmpl.parser.ASTBuilder;
@@ -113,23 +105,10 @@ import org.rascalmpl.parser.gtd.exception.ParseError;
 import org.rascalmpl.semantics.dynamic.QualifiedName.Default;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.SymbolAdapter;
+import org.rascalmpl.values.uptr.visitors.IdentityTreeVisitor;
 
 public abstract class Expression extends org.rascalmpl.ast.Expression {
   private static final Name IT = ASTBuilder.makeLex("Name", null, "<it>");
-  
-  	/**
-  	 * This function creates the CaseBlockList for desugaring and resugaring.
-  	 */
-	private static CaseBlockList createSugarMatchingBlockList(ISourceLocation src, org.rascalmpl.ast.QualifiedName qualifiedName, org.rascalmpl.ast.Expression replacementFn) {
-		org.rascalmpl.ast.Expression pattern = 
-				ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src));
-		org.rascalmpl.ast.Replacement replacement = ASTBuilder.make("Replacement", "Unconditional", src,
-				replacementFn);
-		Case c = ASTBuilder.make("Case", "PatternWithAction", src, 
-				ASTBuilder.make("PatternWithAction", "Replacing", src, pattern, replacement));
-		return new CaseBlockList(Arrays.asList(new Cases.SugarBlock(c)));
-	}
-	
 	static public class Addition extends org.rascalmpl.ast.Expression.Addition {
 
 		public Addition(ISourceLocation __param1, IConstructor tree, org.rascalmpl.ast.Expression __param2,
@@ -170,28 +149,12 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			__eval.setCurrentAST(this);
 			__eval.notifyAboutSuspension(this);
 			
-			ISourceLocation src = this.getLocation();
-			CaseBlockList blocks = createSugarMatchingBlockList(src, Names.toQualifiedName("_ANY", src), 
-					ASTBuilder.makeExp("Unexpand", src,
-							ASTBuilder.makeExp("QualifiedName", src,
-									Names.toQualifiedName("_ANY", src))));
-			Result<IValue> subject = this.getExpression().interpret(__eval);
-			TraversalEvaluator te = new TraversalEvaluator(__eval);
-			try {
-				__eval.__pushTraversalEvaluator(te);
-				IValue val = te.traverse(subject.getValue(),
-						blocks, DIRECTION.BottomUp,
-						PROGRESS.Continuing, FIXEDPOINT.No);
-				if (!val.getType().isSubtypeOf(subject.getType())) {
-				  // this is not a static error but an extra run-time sanity check
-				  throw new ImplementationError("this should really never happen",
-				      new UnexpectedType(subject.getType(), val.getType(), this));
-				}
-				return org.rascalmpl.interpreter.result.ResultFactory.makeResult(subject.getType(),
-						val, __eval);
-			} finally {
-				__eval.__popTraversalEvaluator();
-			}
+			ResugarTransformer<RuntimeException> i = new ResugarTransformer<>(
+					new IdentityTreeVisitor<RuntimeException>() {},
+					VF, __eval);
+			Result<IValue> result = this.getExpression().interpret(__eval);
+			IValue v = result.getValue().accept(i);
+			return ResultFactory.makeResult(v.getType(), v, __eval);
 		}
 		
 	}
@@ -208,30 +171,12 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			__eval.setCurrentAST(this);
 			__eval.notifyAboutSuspension(this);
 			
-			ISourceLocation src = this.getLocation();
-			CaseBlockList blocks = createSugarMatchingBlockList(src, Names.toQualifiedName("_ANY", src), 
-				ASTBuilder.makeExp("CallOrTree", src,
-						ASTBuilder.makeExp("QualifiedName", src, getUnexpandFn()),
-						Arrays.asList(ASTBuilder.makeExp("QualifiedName", src, Names.toQualifiedName("_ANY", src))),
-						ASTBuilder.make("KeywordArguments_Expression", src, null, Arrays.asList())));
-						
-			Result<IValue> subject = this.getExpression().interpret(__eval);
-			TraversalEvaluator te = new TraversalEvaluator(__eval);
-			try {
-				__eval.__pushTraversalEvaluator(te);
-				IValue val = te.traverse(subject.getValue(),
-						blocks, DIRECTION.BottomUp,
-						PROGRESS.Continuing, FIXEDPOINT.No);
-				if (!val.getType().isSubtypeOf(subject.getType())) {
-				  // this is not a static error but an extra run-time sanity check
-				  throw new ImplementationError("this should really never happen",
-				      new UnexpectedType(subject.getType(), val.getType(), this));
-				}
-				return org.rascalmpl.interpreter.result.ResultFactory.makeResult(subject.getType(),
-						val, __eval);
-			} finally {
-				__eval.__popTraversalEvaluator();
-			}
+			DesugarTransformer<RuntimeException> i = new DesugarTransformer<>(
+					new IdentityTreeVisitor<RuntimeException>() {},
+					VF, __eval, getUnexpandFn());
+			Result<IValue> result = this.getExpression().interpret(__eval);
+			IValue v = result.getValue().accept(i);
+			return ResultFactory.makeResult(v.getType(), v, __eval);
 		}
 	}
 	
@@ -249,53 +194,6 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			return SubstitutionEvaluator.substitute(getPattern(), getExpression().interpret(eval).getValue(), eval);
 		}
 		
-	}
-	
-	static public class Unexpand extends org.rascalmpl.ast.Expression.Unexpand {
-
-		public Unexpand(ISourceLocation src, IConstructor node, org.rascalmpl.ast.Expression expression) {
-			super(src, node, expression);
-		}
-
-		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-			__eval.setCurrentAST(this);
-			__eval.notifyAboutSuspension(this);
-
-			Result<IValue> expressionValue = getExpression().interpret(__eval);
-			Result<AbstractFunction> lambda;
-			try {
-				lambda = expressionValue.getAnnotation("unexpandFn", __eval.getCurrentEnvt());
-				if (lambda.getValue() instanceof ITuple) {
-					IValue lambdaValue = ((ITuple) lambda.getValue()).get(0);
-					lambda = ResultFactory.makeResult(lambdaValue.getType(), lambdaValue, __eval);
-				}
-			} catch (UndeclaredAnnotation e) {
-				//System.out.println(e); // TODO REMOVE
-				return expressionValue;
-			} catch (Throw e) {
-				// e.printStackTrace(); // TODO REMOVE
-				return expressionValue;
-			}
-			java.util.List<Type> mTypes = new LinkedList<Type>();
-			java.util.List<IValue> mValues = new LinkedList<IValue>();
-			mTypes.add(expressionValue.getValue().getType());
-			mValues.add(expressionValue.getValue());
-			try {
-				return lambda.getValue().call(mTypes.toArray(new Type[mTypes.size()]),
-						mValues.toArray(new IValue[mValues.size()]), new HashMap<String, IValue>());
-			} catch (Throw e) {
-				//e.printStackTrace(); // TODO REMOVE
-				System.out.println("Unexpansion failed.");
-				return expressionValue.setAnnotation("unexpansionFailed", ResultFactory.bool(true, __eval),
-						__eval.getCurrentEnvt());
-			} catch (Exception e) {
-				e.printStackTrace();
-				//System.out.println("Unexpansion failed.");
-				return expressionValue.setAnnotation("unexpansionFailed", ResultFactory.bool(true, __eval),
-						__eval.getCurrentEnvt());
-			}
-		}
 	}
 
 	static public class All extends org.rascalmpl.ast.Expression.All {

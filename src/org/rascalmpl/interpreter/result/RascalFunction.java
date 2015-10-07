@@ -95,7 +95,7 @@ public class RascalFunction extends CustomNamedFunction {
 
 
 	@Override
-	Result<IValue> run() {
+	protected Result<IValue> run() {
 		for (Statement stat: body) {
 			eval.setCurrentAST(stat);
 			stat.interpret(eval);
