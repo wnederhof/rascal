@@ -1,10 +1,15 @@
 package org.rascalmpl.interpreter.sugar;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.imp.pdb.facts.IValue;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluator;
+import org.rascalmpl.interpreter.SubstitutionEvaluator;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
+import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
@@ -36,23 +41,26 @@ public class Resugar {
 		eval.setCurrentEnvt(new StayInScopeEnvironment(old));
 	}
 	
-	private Result<IValue> resugarTerm() {
-		// TODO substitution.
-		Result<IValue> surfaceTerm = surfacePattern.interpret(eval);
-		return surfaceTerm;
+	private IValue peelSugarKeywordsLayer(IValue value) {
+		return SugarParameters.peelSugarKeywordsLayer(value);
 	}
 	
-	private IValue stripSugarKeywordsLayer(IValue value) {
-		return SugarParameters.stripSugarKeywordsLayer(value);
+	// (j, T) σ = (σ · (T'/P'_j ))P_j
+	private Result<IValue> unexp(IValue subject, Map<String, Result<IValue>> sigma, IValue original) {
+		Map<String, Result<IValue>> T_acc_P_acc_j = SubstitutionEvaluator.getPatternVariableMap(corePattern, makeResult(subject), eval);
+		HashMap<String, Result<IValue>> union = new HashMap<String, Result<IValue>>();
+		union.putAll(sigma);
+		union.putAll(T_acc_P_acc_j);
+		return SubstitutionEvaluator.substitute(surfacePattern, original, eval, union);
+	}
+	
+	// R'rs (Tag (Head i σ) T') = unexp_rs (i, R'rs(T')) σ
+	private Result<IValue> transformAndResugarTerm(Result<IValue> toResugar, IValue original) {
+		IValue T_acc = peelSugarKeywordsLayer(toResugar.getValue());
+		IValue R_rs_T_acc = resugarTransform(T_acc);
+		return unexp(R_rs_T_acc, eval.getCurrentEnvt().getVariables(), original); 
 	}
 
-	// unexp rs (i, R'rs T') σ
-	private Result<IValue> transformAndResugarTerm(Result<IValue> toResugar) {
-		IValue toResugarStripped = stripSugarKeywordsLayer(toResugar.getValue());
-		toResugarStripped = toResugarStripped.accept(resugarTransformer);
-		return resugarTerm();
-	}
-	
 	private IValue resugarTransform(IValue subject) {
 		return subject.accept(resugarTransformer);
 	}
@@ -63,6 +71,13 @@ public class Resugar {
 			setVariable(varPattern.name(), resugarTransform(getVariable(varPattern)));
 		}
 	}
+	
+	/* Test for expression in which the only argument is equal to the interpretation, e.g.
+	 * (Exp)`<Exp e>`. */
+	private boolean coreIsEqualToArgument() {
+		IMatchingResult m = corePattern.buildMatcher(eval);
+		return m instanceof IVarPattern;
+	}
 
 	public Result<IValue> resugar(Result<IValue> toResugar, IValue original) {
 		Environment old = eval.getCurrentEnvt();
@@ -71,17 +86,26 @@ public class Resugar {
 			/* In repeat mode, variables are not resugared,
 			 * but ResugarTransformer is used to desugar top-down,
 			 * similar to Confection's resugaring technique. */
-			if (repeatMode) {
-				resugarPatternVariables();
-				return resugarTerm();
+			if (!repeatMode) {
+				if (coreIsEqualToArgument()) {
+					for (IVarPattern varPattern : corePattern.buildMatcher(eval).getVariables()) {
+						setVariable(varPattern.name(),
+								resugarTransform(peelSugarKeywordsLayer(getVariable(varPattern))));
+					}
+				} else {
+					resugarPatternVariables();
+				}
+				return SubstitutionEvaluator.substitute(surfacePattern, original, eval);
 			}
-			return transformAndResugarTerm(toResugar);
+			return transformAndResugarTerm(toResugar, original);
 		} finally {
 			eval.unwind(old);
 		}
 	}
 
-	public Resugar(Expression surfacePattern, Expression corePattern, ResugarTransformer<RuntimeException> resugarTransformer, IEvaluator<Result<IValue>> eval, boolean repeatMode) {
+	public Resugar(Expression surfacePattern, Expression corePattern,
+			ResugarTransformer<RuntimeException> resugarTransformer, IEvaluator<Result<IValue>> eval,
+			boolean repeatMode) {
 		this.resugarTransformer = resugarTransformer;
 		this.surfacePattern = surfacePattern;
 		this.corePattern = corePattern;

@@ -50,14 +50,25 @@ public class SugarParameters {
 		if (getParameter(keyword, attachTo) == null) {
 			return setParameter(attachTo, keyword, value);
 		}
+		System.out.println("Size > 1");
 		return setParameter(attachTo, keyword, VF.tuple(value, getParameter(keyword, attachTo)));
 	}
+	
+	@SuppressWarnings("deprecation")
+	private static IValue unsetParameter(IValue value, String name) {
+		if (value.isAnnotatable()) {
+			return value.asAnnotatable().removeAnnotation(name);
+		} else if (value.mayHaveKeywordParameters()) {
+			return value.asWithKeywordParameters().unsetParameter(name);
+		}
+		throw new RuntimeException("Cannot unset keyword parameter or annotation.");
+	}
 
-	private static IValue stripSugarKeywordLayer(String keyword, IValue stripFrom) {
+	private static IValue peelSugarKeywordLayer(String keyword, IValue stripFrom) {
 		if (getParameter(keyword, stripFrom) instanceof ITuple) {
 			return setParameter(stripFrom, keyword, ((ITuple) getParameter(keyword, stripFrom)).get(1));
 		}
-		return stripFrom;
+		return unsetParameter(stripFrom, keyword);
 	}
 
 	public static void declareSugarParameters(Environment env, Type onType, TypeFactory TF) {
@@ -87,8 +98,22 @@ public class SugarParameters {
 		return attachSugarKeywordLayer(RESUGAR_FUNCTION, attachTo, resugarFunction, VF);
 	}
 
-	public static IValue stripSugarKeywordsLayer(IValue stripFrom) {
-		return stripSugarKeywordLayer(RESUGAR_FUNCTION, stripFrom);
+	public static IValue peelSugarKeywordsLayer(IValue stripFrom) {
+		return peelSugarKeywordLayer(RESUGAR_FUNCTION, stripFrom);
+	}
+
+	public static int sugarKeywordsThickness(IValue value) {
+		IValue par = getParameter(RESUGAR_FUNCTION, value);
+		if (par instanceof ITuple) {
+			return sugarKeywordsThickness(((ITuple) par).get(1)) + 1;
+		} else if (par == null) {
+			return 0;
+		}
+		return 1;
+	}
+
+	public static boolean hasMultipleLayers(IValue termToDesugar) {
+		return termToDesugar != null && getParameter(RESUGAR_FUNCTION, termToDesugar) instanceof ITuple;
 	}
 
 }

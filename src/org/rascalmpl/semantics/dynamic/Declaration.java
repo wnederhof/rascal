@@ -35,6 +35,7 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
+import org.rascalmpl.interpreter.sugar.SugarParameters;
 import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.parser.ASTBuilder;
 
@@ -98,20 +99,7 @@ public abstract class Declaration extends org.rascalmpl.ast.Declaration {
 		
 		public static void declareSugarAnnotations(IEvaluator<Result<IValue>> __eval, org.rascalmpl.ast.Type onTypeAst, ISourceLocation loc) {
 			Type onType = onTypeAst.typeOf(__eval.getCurrentEnvt(), true, __eval);
-			if (onType.isAbstractData() || onType.isConstructor() || onType.isNode()) {
-				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-						"unexpandFn", TF.valueType());
-				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-						"hiddenUnexpandFn", TF.valueType());
-				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-						"unexpansionFailed", TF.valueType());
-				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-						"desugarVariables", TF.listType(TF.mapType(TF.stringType(), TF.valueType())));
-				__eval.getCurrentModuleEnvironment().declareAnnotation(onType,
-						"__SUGAR_UUID", TF.stringType());
-			} else {
-				throw new UnsupportedOperation("Can only declare annotations on node and ADT types", onTypeAst);
-			}
+			SugarParameters.declareSugarParameters(__eval.getCurrentEnvt(), onType, TF);
 		}
 
 		@Override

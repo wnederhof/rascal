@@ -1,6 +1,7 @@
 package org.rascalmpl.interpreter.sugar;
 
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.ast.FunctionDeclaration;
 import org.rascalmpl.interpreter.IEvaluator;
@@ -36,9 +37,10 @@ public class Desugar {
 	}
 	
 	private Result<IValue> attachResugarFunction(Result<IValue> coreTerm, IValue originalTerm) {
-		new ResugarFunction(eval.getCurrentAST(), eval, functionDeclaration,
-				Names.name(functionDeclaration.getName()), eval.getCurrentEnvt(), originalTerm);
-		return coreTerm;
+		return makeResult(SugarParameters.attachSugarKeywordsLayer(coreTerm.getValue(),
+				new ResugarFunction(eval.getCurrentAST(), eval, functionDeclaration,
+						Names.name(functionDeclaration.getName()), eval.getCurrentEnvt(), originalTerm),
+				ValueFactory.getInstance()));
 	}
 
 	private IValue desugarTransform(Result<IValue> subject) {
@@ -58,13 +60,13 @@ public class Desugar {
 
 	private Result<IValue> desugarTerm(IValue originalTerm) {
 		Result<IValue> coreTerm = corePattern.interpret(eval);
-		return attachResugarFunction(coreTerm, originalTerm);
+		return coreTerm;
 	}
 
 	private Result<IValue> desugarTermAndTransform(IValue originalTerm) {
 		Result<IValue> desugaredTerm = desugarTerm(originalTerm);
 		IValue transformedTerm = desugarTransform(desugaredTerm);
-		return makeResult(transformedTerm);
+		return attachResugarFunction(makeResult(transformedTerm), originalTerm);
 	}
 	
 	private void ensureNoVariablesLeak(Environment old) {
@@ -80,7 +82,7 @@ public class Desugar {
 			 * similar to Confection's desugaring technique. */
 			if (!repeatMode) {
 				desugarPatternVariables();
-				return desugarTerm(toDesugar.getValue());
+				return attachResugarFunction(desugarTerm(toDesugar.getValue()), toDesugar.getValue());
 			}
 			return desugarTermAndTransform(toDesugar.getValue());
 		} finally {

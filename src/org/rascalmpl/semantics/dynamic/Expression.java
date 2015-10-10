@@ -148,13 +148,20 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
 			__eval.setCurrentAST(this);
 			__eval.notifyAboutSuspension(this);
-			
 			ResugarTransformer<RuntimeException> i = new ResugarTransformer<>(
 					new IdentityTreeVisitor<RuntimeException>() {},
 					VF, __eval);
 			Result<IValue> result = this.getExpression().interpret(__eval);
-			IValue v = result.getValue().accept(i);
-			return ResultFactory.makeResult(v.getType(), v, __eval);
+			Result<IValue> finalResult = null;
+			long t1 = System.nanoTime();
+			long totalIterations = 1;
+			for (int ctr = 0; ctr < 1; ctr++) {
+				IValue v = result.getValue().accept(i);
+				finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
+			}
+			long t2 = System.nanoTime();
+			System.out.println(" & " + ((t2 - t1)/(totalIterations * 1000)));
+			return finalResult;
 		}
 		
 	}
@@ -170,13 +177,21 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
 			__eval.setCurrentAST(this);
 			__eval.notifyAboutSuspension(this);
-			
+			Result<IValue> finalResult = null;
+			IValue v;
 			DesugarTransformer<RuntimeException> i = new DesugarTransformer<>(
 					new IdentityTreeVisitor<RuntimeException>() {},
 					VF, __eval, getUnexpandFn());
 			Result<IValue> result = this.getExpression().interpret(__eval);
-			IValue v = result.getValue().accept(i);
-			return ResultFactory.makeResult(v.getType(), v, __eval);
+			long t1 = System.nanoTime();
+			long totalIterations = 1;
+			for (int ctr = 0; ctr < totalIterations; ctr++) {
+				v = result.getValue().accept(i);
+				finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
+			}
+			long t2 = System.nanoTime();
+			System.out.print("" + ((t2 - t1)/(totalIterations * 1000)));
+			return finalResult;
 		}
 	}
 	

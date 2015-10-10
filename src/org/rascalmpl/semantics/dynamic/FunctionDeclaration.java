@@ -16,7 +16,6 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -24,12 +23,10 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
-import org.rascalmpl.ast.Formals;
 import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
 import org.rascalmpl.ast.Name;
 import org.rascalmpl.ast.Signature;
-import org.rascalmpl.ast.Tag;
 import org.rascalmpl.ast.Tags;
 import org.rascalmpl.ast.Visibility;
 import org.rascalmpl.interpreter.IEvaluator;
@@ -38,8 +35,7 @@ import org.rascalmpl.interpreter.result.AbstractFunction;
 import org.rascalmpl.interpreter.result.JavaMethod;
 import org.rascalmpl.interpreter.result.RascalFunction;
 import org.rascalmpl.interpreter.result.Result;
-import org.rascalmpl.interpreter.result.sugar.ExpandFunction;
-import org.rascalmpl.interpreter.result.sugar.UnexpandFunction;
+import org.rascalmpl.interpreter.result.sugar.DesugarFunction;
 import org.rascalmpl.interpreter.staticErrors.MissingModifier;
 import org.rascalmpl.interpreter.staticErrors.NonAbstractJavaFunction;
 import org.rascalmpl.interpreter.utils.Names;
@@ -155,31 +151,6 @@ public abstract class FunctionDeclaration extends
 		}
 
 	}
-	
-	// TODO Remove or keep??? Keep -> alter to meet Sugar's new features.
-	static public class SugarExtra extends org.rascalmpl.ast.FunctionDeclaration.SugarExtra {
-		
-		public SugarExtra(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
-				org.rascalmpl.ast.Type typeRhs, Name name, org.rascalmpl.ast.Expression patternLhs,
-				List<org.rascalmpl.ast.Expression> extraParameters, org.rascalmpl.ast.Type typeLhs,
-				org.rascalmpl.ast.Expression patternRhs) {
-			super(src, node, tags, visibility, typeRhs, name, patternLhs, extraParameters, typeLhs, patternRhs);
-		}
-
-		@Override
-		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
-			__eval.setCurrentAST(this);
-			__eval.notifyAboutSuspension(this);
-			AbstractFunction lambda;
-			lambda = new ExpandFunction(__eval, this, false, __eval.getCurrentEnvt(), __eval.__getAccumulators());
-			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
-			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
-			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
-			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
-			return lambda;
-		}
-		
-	}
 
 	static public class Sugar extends
 		org.rascalmpl.ast.FunctionDeclaration.Sugar {
@@ -195,26 +166,12 @@ public abstract class FunctionDeclaration extends
 			__eval.setCurrentAST(this);
 			__eval.notifyAboutSuspension(this);
 			AbstractFunction lambda;
-			lambda = new ExpandFunction(__eval, this, false, __eval.getCurrentEnvt(), __eval.__getAccumulators());
+			lambda = new DesugarFunction(
+					__eval.getCurrentAST(), __eval, this, Names.name(getName()), false, __eval.getCurrentEnvt());
 			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
 			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
 			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
 			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
-			
-			for (Tag t : getTags().getTags()) {
-				if (Names.name(t.getName()).equals("sugarType")) {
-					String s = "" + t.getContents();
-					String fallbackType = s.replaceAll(" ", "").substring(1, s.length() - 1);
-					UnexpandFunction unexpandFn = new UnexpandFunction(__eval, this, false, __eval.getCurrentEnvt(),
-							__eval.__getAccumulators(), null, null, new HashMap<>(), fallbackType);
-					unexpandFn.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());					
-					__eval.getCurrentEnvt().markNameFinal(unexpandFn.getName());
-					__eval.getCurrentEnvt().markNameOverloadable(unexpandFn.getName());
-					__eval.getCurrentEnvt().storeFunction(unexpandFn.getName(), unexpandFn);
-					System.out.println("Registered: " + unexpandFn.getName() + ", " + unexpandFn.getType());
-				}
-			}
-			
 			return lambda;
 		}
 	}

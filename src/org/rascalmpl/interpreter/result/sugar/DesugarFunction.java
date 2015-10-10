@@ -60,6 +60,10 @@ public class DesugarFunction extends NamedFunction {
 		eval.setCurrentEnvt(new StayInScopeEnvironment(old));
 	}
 	
+	private boolean repeatMode() {
+		return tags.containsKey("repeatMode");
+	}
+	
 	private Result<IValue> desugar(ISourceLocation src, Result<IValue> resultToDesugar) {
 		IValueVisitor<IValue, RuntimeException> identityVisitor = new IdentityVisitor<RuntimeException>() {};
 		DesugarTransformer<RuntimeException> desugarTransformer = new DesugarTransformer<RuntimeException>(
@@ -67,14 +71,14 @@ public class DesugarFunction extends NamedFunction {
 		Desugar desugar = new Desugar(
 				desugarTransformer,
 				eval,
-				tags.containsKey("repeatMode"),
+				repeatMode(),
 				functionDeclaration);
 		return desugar.desugar(resultToDesugar);
 	}
 
 	@Override
 	public Result<IValue> call(Type[] actualTypes, IValue[] actuals, Map<String, IValue> keyArgValues) {
-		if (!keyArgValues.isEmpty() || actualTypes.length != 1 || actuals.length != 1)
+		if (keyArgValues != null && (!keyArgValues.isEmpty() || actualTypes.length != 1 || actuals.length != 1))
 			throw new MatchFailed();
 		IValue termToDesugar = actuals[0];
 		Type termToDesugarType = actualTypes[0];
@@ -83,6 +87,7 @@ public class DesugarFunction extends NamedFunction {
 		try {
 			ensureNoVariablesLeak(declarationEnvironment);
 			IMatchingResult matcher = functionDeclaration.getPatternLhs().buildMatcher(eval);
+			matcher.initMatch(resultToDesugar);
 			ISourceLocation src = eval.getCurrentAST().getLocation();
 			if (matcher.next()) {
 				return desugar(src, resultToDesugar);
