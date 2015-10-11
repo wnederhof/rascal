@@ -19,24 +19,17 @@ package org.rascalmpl.ast;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 
-public abstract class StructuredType extends AbstractAST {
-  public StructuredType(ISourceLocation src, IConstructor node) {
+public abstract class OptionalFallbackSugar extends AbstractAST {
+  public OptionalFallbackSugar(ISourceLocation src, IConstructor node) {
     super(src /* we forget node on purpose */);
   }
 
   
-  public boolean hasArguments() {
+  public boolean hasNames() {
     return false;
   }
 
-  public java.util.List<org.rascalmpl.ast.TypeArg> getArguments() {
-    throw new UnsupportedOperationException();
-  }
-  public boolean hasBasicType() {
-    return false;
-  }
-
-  public org.rascalmpl.ast.BasicType getBasicType() {
+  public java.util.List<org.rascalmpl.ast.Name> getNames() {
     throw new UnsupportedOperationException();
   }
 
@@ -47,18 +40,16 @@ public abstract class StructuredType extends AbstractAST {
     return false;
   }
 
-  static public class Default extends StructuredType {
-    // Production: sig("Default",[arg("org.rascalmpl.ast.BasicType","basicType"),arg("java.util.List\<org.rascalmpl.ast.TypeArg\>","arguments")],breakable=false)
+  static public class Default extends OptionalFallbackSugar {
+    // Production: sig("Default",[arg("java.util.List\<org.rascalmpl.ast.Name\>","names")],breakable=false)
   
     
-    private final org.rascalmpl.ast.BasicType basicType;
-    private final java.util.List<org.rascalmpl.ast.TypeArg> arguments;
+    private final java.util.List<org.rascalmpl.ast.Name> names;
   
-    public Default(ISourceLocation src, IConstructor node , org.rascalmpl.ast.BasicType basicType,  java.util.List<org.rascalmpl.ast.TypeArg> arguments) {
+    public Default(ISourceLocation src, IConstructor node , java.util.List<org.rascalmpl.ast.Name> names) {
       super(src, node);
       
-      this.basicType = basicType;
-      this.arguments = arguments;
+      this.names = names;
     }
   
     @Override
@@ -68,7 +59,7 @@ public abstract class StructuredType extends AbstractAST {
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitStructuredTypeDefault(this);
+      return visitor.visitOptionalFallbackSugarDefault(this);
     }
   
     @Override
@@ -78,15 +69,7 @@ public abstract class StructuredType extends AbstractAST {
       }
       ISourceLocation $l;
       
-      $l = basicType.getLocation();
-      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        basicType.addForLineNumber($line, $result);
-      }
-      if ($l.getBeginLine() > $line) {
-        return;
-      }
-      
-      for (AbstractAST $elem : arguments) {
+      for (AbstractAST $elem : names) {
         $l = $elem.getLocation();
         if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
           $elem.addForLineNumber($line, $result);
@@ -104,37 +87,83 @@ public abstract class StructuredType extends AbstractAST {
         return false;
       }        
       Default tmp = (Default) o;
-      return true && tmp.basicType.equals(this.basicType) && tmp.arguments.equals(this.arguments) ; 
+      return true && tmp.names.equals(this.names) ; 
     }
    
     @Override
     public int hashCode() {
-      return 599 + 29 * basicType.hashCode() + 941 * arguments.hashCode() ; 
+      return 23 + 23 * names.hashCode() ; 
     } 
   
     
     @Override
-    public org.rascalmpl.ast.BasicType getBasicType() {
-      return this.basicType;
+    public java.util.List<org.rascalmpl.ast.Name> getNames() {
+      return this.names;
     }
   
     @Override
-    public boolean hasBasicType() {
-      return true;
-    }
-    @Override
-    public java.util.List<org.rascalmpl.ast.TypeArg> getArguments() {
-      return this.arguments;
-    }
-  
-    @Override
-    public boolean hasArguments() {
+    public boolean hasNames() {
       return true;
     }	
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(basicType), clone(arguments));
+      return newInstance(getClass(), src, (IConstructor) null , clone(names));
+    }
+            
+  }
+  public boolean isNone() {
+    return false;
+  }
+
+  static public class None extends OptionalFallbackSugar {
+    // Production: sig("None",[],breakable=false)
+  
+    
+  
+    public None(ISourceLocation src, IConstructor node ) {
+      super(src, node);
+      
+    }
+  
+    @Override
+    public boolean isNone() { 
+      return true; 
+    }
+  
+    @Override
+    public <T> T accept(IASTVisitor<T> visitor) {
+      return visitor.visitOptionalFallbackSugarNone(this);
+    }
+  
+    @Override
+    protected void addForLineNumber(int $line, java.util.List<AbstractAST> $result) {
+      if (getLocation().getBeginLine() == $line) {
+        $result.add(this);
+      }
+      ISourceLocation $l;
+      
+    }
+  
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof None)) {
+        return false;
+      }        
+      None tmp = (None) o;
+      return true ; 
+    }
+   
+    @Override
+    public int hashCode() {
+      return 491 ; 
+    } 
+  
+    	
+  
+    @Override
+    public Object clone()  {
+      return newInstance(getClass(), src, (IConstructor) null );
     }
             
   }

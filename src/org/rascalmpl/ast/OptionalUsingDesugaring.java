@@ -19,17 +19,17 @@ package org.rascalmpl.ast;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 
-public abstract class Label extends AbstractAST {
-  public Label(ISourceLocation src, IConstructor node) {
+public abstract class OptionalUsingDesugaring extends AbstractAST {
+  public OptionalUsingDesugaring(ISourceLocation src, IConstructor node) {
     super(src /* we forget node on purpose */);
   }
 
   
-  public boolean hasName() {
+  public boolean hasSugarFunctionMapping() {
     return false;
   }
 
-  public org.rascalmpl.ast.Name getName() {
+  public java.util.List<org.rascalmpl.ast.SugarFunctionMapping> getSugarFunctionMapping() {
     throw new UnsupportedOperationException();
   }
 
@@ -40,16 +40,16 @@ public abstract class Label extends AbstractAST {
     return false;
   }
 
-  static public class Default extends Label {
-    // Production: sig("Default",[arg("org.rascalmpl.ast.Name","name")],breakable=false)
+  static public class Default extends OptionalUsingDesugaring {
+    // Production: sig("Default",[arg("java.util.List\<org.rascalmpl.ast.SugarFunctionMapping\>","sugarFunctionMapping")],breakable=false)
   
     
-    private final org.rascalmpl.ast.Name name;
+    private final java.util.List<org.rascalmpl.ast.SugarFunctionMapping> sugarFunctionMapping;
   
-    public Default(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Name name) {
+    public Default(ISourceLocation src, IConstructor node , java.util.List<org.rascalmpl.ast.SugarFunctionMapping> sugarFunctionMapping) {
       super(src, node);
       
-      this.name = name;
+      this.sugarFunctionMapping = sugarFunctionMapping;
     }
   
     @Override
@@ -59,7 +59,7 @@ public abstract class Label extends AbstractAST {
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitLabelDefault(this);
+      return visitor.visitOptionalUsingDesugaringDefault(this);
     }
   
     @Override
@@ -69,14 +69,16 @@ public abstract class Label extends AbstractAST {
       }
       ISourceLocation $l;
       
-      $l = name.getLocation();
-      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        name.addForLineNumber($line, $result);
+      for (AbstractAST $elem : sugarFunctionMapping) {
+        $l = $elem.getLocation();
+        if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+          $elem.addForLineNumber($line, $result);
+        }
+        if ($l.getBeginLine() > $line) {
+          return;
+        }
+  
       }
-      if ($l.getBeginLine() > $line) {
-        return;
-      }
-      
     }
   
     @Override
@@ -85,53 +87,53 @@ public abstract class Label extends AbstractAST {
         return false;
       }        
       Default tmp = (Default) o;
-      return true && tmp.name.equals(this.name) ; 
+      return true && tmp.sugarFunctionMapping.equals(this.sugarFunctionMapping) ; 
     }
    
     @Override
     public int hashCode() {
-      return 229 + 211 * name.hashCode() ; 
+      return 5 + 19 * sugarFunctionMapping.hashCode() ; 
     } 
   
     
     @Override
-    public org.rascalmpl.ast.Name getName() {
-      return this.name;
+    public java.util.List<org.rascalmpl.ast.SugarFunctionMapping> getSugarFunctionMapping() {
+      return this.sugarFunctionMapping;
     }
   
     @Override
-    public boolean hasName() {
+    public boolean hasSugarFunctionMapping() {
       return true;
     }	
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(name));
+      return newInstance(getClass(), src, (IConstructor) null , clone(sugarFunctionMapping));
     }
             
   }
-  public boolean isEmpty() {
+  public boolean isNone() {
     return false;
   }
 
-  static public class Empty extends Label {
-    // Production: sig("Empty",[],breakable=false)
+  static public class None extends OptionalUsingDesugaring {
+    // Production: sig("None",[],breakable=false)
   
     
   
-    public Empty(ISourceLocation src, IConstructor node ) {
+    public None(ISourceLocation src, IConstructor node ) {
       super(src, node);
       
     }
   
     @Override
-    public boolean isEmpty() { 
+    public boolean isNone() { 
       return true; 
     }
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitLabelEmpty(this);
+      return visitor.visitOptionalUsingDesugaringNone(this);
     }
   
     @Override
@@ -145,16 +147,16 @@ public abstract class Label extends AbstractAST {
   
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof Empty)) {
+      if (!(o instanceof None)) {
         return false;
       }        
-      Empty tmp = (Empty) o;
+      None tmp = (None) o;
       return true ; 
     }
    
     @Override
     public int hashCode() {
-      return 83 ; 
+      return 19 ; 
     } 
   
     	

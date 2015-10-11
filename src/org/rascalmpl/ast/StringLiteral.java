@@ -138,7 +138,7 @@ public abstract class StringLiteral extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 347 + 73 * pre.hashCode() + 181 * expression.hashCode() + 499 * tail.hashCode() ; 
+      return 11 + 691 * pre.hashCode() + 71 * expression.hashCode() + 181 * tail.hashCode() ; 
     } 
   
     
@@ -230,7 +230,7 @@ public abstract class StringLiteral extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 227 + 389 * constant.hashCode() ; 
+      return 199 + 787 * constant.hashCode() ; 
     } 
   
     
@@ -324,7 +324,7 @@ public abstract class StringLiteral extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 479 + 103 * pre.hashCode() + 859 * template.hashCode() + 163 * tail.hashCode() ; 
+      return 193 + 199 * pre.hashCode() + 389 * template.hashCode() + 281 * tail.hashCode() ; 
     } 
   
     

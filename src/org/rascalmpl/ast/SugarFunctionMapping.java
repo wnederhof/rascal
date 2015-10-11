@@ -19,24 +19,24 @@ package org.rascalmpl.ast;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 
-public abstract class StructuredType extends AbstractAST {
-  public StructuredType(ISourceLocation src, IConstructor node) {
+public abstract class SugarFunctionMapping extends AbstractAST {
+  public SugarFunctionMapping(ISourceLocation src, IConstructor node) {
     super(src /* we forget node on purpose */);
   }
 
   
-  public boolean hasArguments() {
+  public boolean hasFrom() {
     return false;
   }
 
-  public java.util.List<org.rascalmpl.ast.TypeArg> getArguments() {
+  public org.rascalmpl.ast.Name getFrom() {
     throw new UnsupportedOperationException();
   }
-  public boolean hasBasicType() {
+  public boolean hasTo() {
     return false;
   }
 
-  public org.rascalmpl.ast.BasicType getBasicType() {
+  public org.rascalmpl.ast.QualifiedName getTo() {
     throw new UnsupportedOperationException();
   }
 
@@ -47,18 +47,18 @@ public abstract class StructuredType extends AbstractAST {
     return false;
   }
 
-  static public class Default extends StructuredType {
-    // Production: sig("Default",[arg("org.rascalmpl.ast.BasicType","basicType"),arg("java.util.List\<org.rascalmpl.ast.TypeArg\>","arguments")],breakable=false)
+  static public class Default extends SugarFunctionMapping {
+    // Production: sig("Default",[arg("org.rascalmpl.ast.Name","from"),arg("org.rascalmpl.ast.QualifiedName","to")],breakable=false)
   
     
-    private final org.rascalmpl.ast.BasicType basicType;
-    private final java.util.List<org.rascalmpl.ast.TypeArg> arguments;
+    private final org.rascalmpl.ast.Name from;
+    private final org.rascalmpl.ast.QualifiedName to;
   
-    public Default(ISourceLocation src, IConstructor node , org.rascalmpl.ast.BasicType basicType,  java.util.List<org.rascalmpl.ast.TypeArg> arguments) {
+    public Default(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Name from,  org.rascalmpl.ast.QualifiedName to) {
       super(src, node);
       
-      this.basicType = basicType;
-      this.arguments = arguments;
+      this.from = from;
+      this.to = to;
     }
   
     @Override
@@ -68,7 +68,7 @@ public abstract class StructuredType extends AbstractAST {
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitStructuredTypeDefault(this);
+      return visitor.visitSugarFunctionMappingDefault(this);
     }
   
     @Override
@@ -78,24 +78,22 @@ public abstract class StructuredType extends AbstractAST {
       }
       ISourceLocation $l;
       
-      $l = basicType.getLocation();
+      $l = from.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        basicType.addForLineNumber($line, $result);
+        from.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
       }
       
-      for (AbstractAST $elem : arguments) {
-        $l = $elem.getLocation();
-        if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-          $elem.addForLineNumber($line, $result);
-        }
-        if ($l.getBeginLine() > $line) {
-          return;
-        }
-  
+      $l = to.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        to.addForLineNumber($line, $result);
       }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
     }
   
     @Override
@@ -104,37 +102,37 @@ public abstract class StructuredType extends AbstractAST {
         return false;
       }        
       Default tmp = (Default) o;
-      return true && tmp.basicType.equals(this.basicType) && tmp.arguments.equals(this.arguments) ; 
+      return true && tmp.from.equals(this.from) && tmp.to.equals(this.to) ; 
     }
    
     @Override
     public int hashCode() {
-      return 599 + 29 * basicType.hashCode() + 941 * arguments.hashCode() ; 
+      return 103 + 67 * from.hashCode() + 769 * to.hashCode() ; 
     } 
   
     
     @Override
-    public org.rascalmpl.ast.BasicType getBasicType() {
-      return this.basicType;
+    public org.rascalmpl.ast.Name getFrom() {
+      return this.from;
     }
   
     @Override
-    public boolean hasBasicType() {
+    public boolean hasFrom() {
       return true;
     }
     @Override
-    public java.util.List<org.rascalmpl.ast.TypeArg> getArguments() {
-      return this.arguments;
+    public org.rascalmpl.ast.QualifiedName getTo() {
+      return this.to;
     }
   
     @Override
-    public boolean hasArguments() {
+    public boolean hasTo() {
       return true;
     }	
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(basicType), clone(arguments));
+      return newInstance(getClass(), src, (IConstructor) null , clone(from), clone(to));
     }
             
   }

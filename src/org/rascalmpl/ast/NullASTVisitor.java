@@ -649,10 +649,6 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
-  public T visitExpressionUnexpand(Expression.Unexpand x) { 
-    return null; 
-  }
-
   public T visitExpressionVariableBecomes(Expression.VariableBecomes x) { 
     return null; 
   }
@@ -697,11 +693,11 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
-  public T visitFunctionDeclarationSugar(FunctionDeclaration.Sugar x) { 
+  public T visitFunctionDeclarationSugarCICDR(FunctionDeclaration.SugarCICDR x) { 
     return null; 
   }
 
-  public T visitFunctionDeclarationSugarExtra(FunctionDeclaration.SugarExtra x) { 
+  public T visitFunctionDeclarationSugarConfection(FunctionDeclaration.SugarConfection x) { 
     return null; 
   }
 
@@ -910,6 +906,38 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
   }
 
   public T visitOptionalExpressionNoExpression(OptionalExpression.NoExpression x) { 
+    return null; 
+  }
+
+  public T visitOptionalFallbackSugarDefault(OptionalFallbackSugar.Default x) { 
+    return null; 
+  }
+
+  public T visitOptionalFallbackSugarNone(OptionalFallbackSugar.None x) { 
+    return null; 
+  }
+
+  public T visitOptionalSugarTypeDefault(OptionalSugarType.Default x) { 
+    return null; 
+  }
+
+  public T visitOptionalSugarTypeNone(OptionalSugarType.None x) { 
+    return null; 
+  }
+
+  public T visitOptionalUsingDesugaringDefault(OptionalUsingDesugaring.Default x) { 
+    return null; 
+  }
+
+  public T visitOptionalUsingDesugaringNone(OptionalUsingDesugaring.None x) { 
+    return null; 
+  }
+
+  public T visitOptionalWhenDefault(OptionalWhen.Default x) { 
+    return null; 
+  }
+
+  public T visitOptionalWhenNone(OptionalWhen.None x) { 
     return null; 
   }
 
@@ -1278,6 +1306,10 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
   }
 
   public T visitStructuredTypeDefault(StructuredType.Default x) { 
+    return null; 
+  }
+
+  public T visitSugarFunctionMappingDefault(SugarFunctionMapping.Default x) { 
     return null; 
   }
 

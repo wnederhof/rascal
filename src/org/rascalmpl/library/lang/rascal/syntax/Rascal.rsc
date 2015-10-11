@@ -30,7 +30,7 @@ syntax Literal
 
 syntax Expression = concrete: Concrete concrete;
 syntax Pattern    = concrete: Concrete concrete;
-syntax SymmetricPattern = concrete: Concrete concrete;
+syntax ExpressionAndPattern = concrete: Concrete concrete;
 
 lexical Concrete
   = typed: "(" LAYOUTLIST l1 Sym symbol LAYOUTLIST l2 ")" LAYOUTLIST l3 "`" ConcretePart* parts "`";
@@ -205,8 +205,7 @@ syntax Expression
 	| literal        : Literal literal 
 	| \any            : "any" "(" {Expression ","}+ generators ")" 
 	| \all            : "all" "(" {Expression ","}+ generators ")"
-	| \unexpand 	 : "unexpand-one" "\<" Expression expression "\>"
-	| \desugar 	 : "desugar-all" "\<" QualifiedName unexpandFn "," Expression expression "\>"
+	| \desugar 	 : "desugar-all" "\<" QualifiedName sugarFn "," Expression expression "\>"
 	| \resugar 	 : "resugar-all" "\<" Expression expression "\>"
 	| comprehension  : Comprehension comprehension 
 	| \set            : "{" {Expression ","}* elements0 "}" 
@@ -717,7 +716,6 @@ keyword RascalKeywords
 	| "start"
 	| "datetime" 
 	| "value"
-	| "unexpand-one"
 	| "desugar-all"
 	| "resugar-all"
 	;
@@ -765,12 +763,30 @@ syntax Comprehension
 
 syntax Variant
 	= nAryConstructor: Name name "(" {TypeArg ","}* arguments  KeywordFormals keywordArguments ")" ;
+	
+syntax OptionalWhen
+	= \default: "when" {Expression ","}+ conditions
+	| none: ();
+
+syntax OptionalUsingDesugaring
+	= \default: "|" {SugarFunctionMapping ","}+ sugarFunctionMapping
+	| none: ();
+
+syntax OptionalFallbackSugar
+	= \default: "throws" {Name ","}+ names
+	| none: ();
+
+syntax OptionalSugarType
+	= \default: "catch" ":" {Name ","}+ names
+	| none: ();
 
 syntax FunctionDeclaration
 	= abstract: Tags tags Visibility visibility Signature signature ";" 
 	| @Foldable @breakable{expression} expression: Tags tags Visibility visibility Signature signature "=" Expression expression ";"
-	| @Foldable @breakable{expression} sugar: Tags tags Visibility visibility Type typeRhs Name name "(" SymmetricPattern patternLhs ")" "=\>" "(" Type typeLhs ")" SymmetricPattern patternRhs ";"
-	| @Foldable @breakable{expression} sugarExtra: Tags tags Visibility visibility Type typeRhs Name name "(" SymmetricPattern patternLhs "," {Pattern ","}+ extraParameters ")" "=\>" "(" Type typeLhs ")" SymmetricPattern patternRhs ";"
+	| @Foldable @breakable{expression} sugarCICDR: Tags tags Visibility visibility Type typeCore Name name "(" ExpressionAndPattern patternSurface OptionalUsingDesugaring optionalUsing ")" "=\>" ExpressionAndPattern patternCore
+		OptionalFallbackSugar optionalFallbackSugar OptionalSugarType optionalSugarType OptionalWhen optionalWhen ";"
+	| @Foldable @breakable{expression} sugarConfection: Tags tags Visibility visibility Type typeCore Name name "(" ExpressionAndPattern patternSurface ")" "=\>*" ExpressionAndPattern patternCore
+		OptionalFallbackSugar optionalFallbackSugar OptionalSugarType optionalSugarType OptionalWhen optionalWhen ";"
 	| @Foldable @breakable{expression,conditions} conditional: Tags tags Visibility visibility Signature signature "=" Expression expression "when" {Expression ","}+ conditions ";"
 	| @Foldable \default: Tags tags Visibility visibility Signature signature FunctionBody body ;
 
@@ -853,6 +869,10 @@ lexical PrePathChars
 syntax Mapping[&T]
 	= \default: &T!ifDefinedOtherwise from ":" &T to 
 	;
+	
+syntax SugarFunctionMapping
+	= \default: Name from "-\>" QualifiedName to 
+	;
 
 lexical MidPathChars
 	= "\>" URLChars "\<" ;
@@ -883,22 +903,22 @@ syntax Pattern
     ;
     
 /*
-  Note that SymmetricPattern must closely follow the definitions of Expression and Pattern because eventually
+  Note that ExpressionAndPattern must closely follow the definitions of Expression and Pattern because eventually
   these two non-terminals will be fused just before AST generation.
 */
-syntax SymmetricPattern
-	= \set                 : "{" {SymmetricPattern ","}* elements0 "}" 
-	| \list                : "[" {SymmetricPattern ","}* elements0 "]" 
+syntax ExpressionAndPattern
+	= \set                 : "{" {ExpressionAndPattern ","}* elements0 "}" 
+	| \list                : "[" {ExpressionAndPattern ","}* elements0 "]" 
 	| qualifiedName       : QualifiedName qualifiedName 
-	| splice              : "*" SymmetricPattern argument
-	| negative            : "-" SymmetricPattern argument
+	| splice              : "*" ExpressionAndPattern argument
+	| negative            : "-" ExpressionAndPattern argument
 	| literal             : Literal literal 
-	| \tuple               : "\<" {SymmetricPattern ","}+ elements "\>"
+	| \tuple               : "\<" {ExpressionAndPattern ","}+ elements "\>"
 	| typedVariable       : Type type Name name 
-	| \map                 : "(" {Mapping[SymmetricPattern] ","}* mappings ")" 
-	| reifiedType         : "type" "(" SymmetricPattern symbol "," SymmetricPattern definitions ")" 
-	| callOrTree          : SymmetricPattern expression "(" {SymmetricPattern ","}* arguments KeywordArguments[SymmetricPattern] keywordArguments ")" 
-	> asType              : "[" Type type "]" SymmetricPattern argument 
+	| \map                 : "(" {Mapping[ExpressionAndPattern] ","}* mappings ")" 
+	| reifiedType         : "type" "(" ExpressionAndPattern symbol "," ExpressionAndPattern definitions ")" 
+	| callOrTree          : ExpressionAndPattern expression "(" {ExpressionAndPattern ","}* arguments KeywordArguments[ExpressionAndPattern] keywordArguments ")" 
+	> asType              : "[" Type type "]" ExpressionAndPattern argument 
     ;
     
 syntax Tag

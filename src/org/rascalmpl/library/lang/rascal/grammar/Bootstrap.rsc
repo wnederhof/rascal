@@ -50,7 +50,7 @@ public void bootAST(Grammar g, loc rascalHome) {
   g = expandParameterizedSymbols(g);
   
   patterns = g.rules[sort("Pattern")];
-  symmetricPatterns = g.rules[sort("SymmetricPattern")];
+  expressionAndPatterns = g.rules[sort("ExpressionAndPattern")];
   //patterns = visit(patterns) { case sort("Pattern") => sort("Expression") }
   
   // extend Expression with the Patterns
@@ -60,12 +60,12 @@ public void bootAST(Grammar g, loc rascalHome) {
   // make sure all uses of Pattern have been replaced by Expression
   g = visit(g) { case sort("Pattern") => sort("Expression") }
   
-  // extend Expression with the SymmetricPatterns
-  g.rules[sort("Expression")] = choice(sort("Expression"), {symmetricPatterns, g.rules[sort("Expression")]}); 
-  g.rules -= (sort("SymmetricPattern"): choice(sort("SymmetricPattern"), {}));
+  // extend Expression with the ExpressionAndPatterns
+  g.rules[sort("Expression")] = choice(sort("Expression"), {expressionAndPatterns, g.rules[sort("Expression")]}); 
+  g.rules -= (sort("ExpressionAndPattern"): choice(sort("ExpressionAndPattern"), {}));
   
-  // make sure all uses of SymmetricPattern have been replaced by Expression
-  g = visit(g) { case sort("SymmetricPattern") => sort("Expression") }
+  // make sure all uses of ExpressionAndPattern have been replaced by Expression
+  g = visit(g) { case sort("ExpressionAndPattern") => sort("Expression") }
   
   grammarToJavaAPI(rascalHome + "src/org/rascalmpl/ast", "org.rascalmpl.ast", g);
 }

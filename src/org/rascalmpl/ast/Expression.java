@@ -291,11 +291,11 @@ public abstract class Expression extends AbstractAST {
   public org.rascalmpl.ast.QualifiedName getQualifiedName() {
     throw new UnsupportedOperationException();
   }
-  public boolean hasUnexpandFn() {
+  public boolean hasSugarFn() {
     return false;
   }
 
-  public org.rascalmpl.ast.QualifiedName getUnexpandFn() {
+  public org.rascalmpl.ast.QualifiedName getSugarFn() {
     throw new UnsupportedOperationException();
   }
   public boolean hasType() {
@@ -1536,16 +1536,16 @@ public abstract class Expression extends AbstractAST {
   }
 
   static public class Desugar extends Expression {
-    // Production: sig("Desugar",[arg("org.rascalmpl.ast.QualifiedName","unexpandFn"),arg("org.rascalmpl.ast.Expression","expression")],breakable=false)
+    // Production: sig("Desugar",[arg("org.rascalmpl.ast.QualifiedName","sugarFn"),arg("org.rascalmpl.ast.Expression","expression")],breakable=false)
   
     
-    private final org.rascalmpl.ast.QualifiedName unexpandFn;
+    private final org.rascalmpl.ast.QualifiedName sugarFn;
     private final org.rascalmpl.ast.Expression expression;
   
-    public Desugar(ISourceLocation src, IConstructor node , org.rascalmpl.ast.QualifiedName unexpandFn,  org.rascalmpl.ast.Expression expression) {
+    public Desugar(ISourceLocation src, IConstructor node , org.rascalmpl.ast.QualifiedName sugarFn,  org.rascalmpl.ast.Expression expression) {
       super(src, node);
       
-      this.unexpandFn = unexpandFn;
+      this.sugarFn = sugarFn;
       this.expression = expression;
     }
   
@@ -1566,9 +1566,9 @@ public abstract class Expression extends AbstractAST {
       }
       ISourceLocation $l;
       
-      $l = unexpandFn.getLocation();
+      $l = sugarFn.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        unexpandFn.addForLineNumber($line, $result);
+        sugarFn.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -1590,22 +1590,22 @@ public abstract class Expression extends AbstractAST {
         return false;
       }        
       Desugar tmp = (Desugar) o;
-      return true && tmp.unexpandFn.equals(this.unexpandFn) && tmp.expression.equals(this.expression) ; 
+      return true && tmp.sugarFn.equals(this.sugarFn) && tmp.expression.equals(this.expression) ; 
     }
    
     @Override
     public int hashCode() {
-      return 229 + 659 * unexpandFn.hashCode() + 743 * expression.hashCode() ; 
+      return 229 + 659 * sugarFn.hashCode() + 743 * expression.hashCode() ; 
     } 
   
     
     @Override
-    public org.rascalmpl.ast.QualifiedName getUnexpandFn() {
-      return this.unexpandFn;
+    public org.rascalmpl.ast.QualifiedName getSugarFn() {
+      return this.sugarFn;
     }
   
     @Override
-    public boolean hasUnexpandFn() {
+    public boolean hasSugarFn() {
       return true;
     }
     @Override
@@ -1620,7 +1620,7 @@ public abstract class Expression extends AbstractAST {
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(unexpandFn), clone(expression));
+      return newInstance(getClass(), src, (IConstructor) null , clone(sugarFn), clone(expression));
     }
             
   }
@@ -6937,80 +6937,6 @@ public abstract class Expression extends AbstractAST {
     }
             
   }
-  public boolean isUnexpand() {
-    return false;
-  }
-
-  static public class Unexpand extends Expression {
-    // Production: sig("Unexpand",[arg("org.rascalmpl.ast.Expression","expression")],breakable=false)
-  
-    
-    private final org.rascalmpl.ast.Expression expression;
-  
-    public Unexpand(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Expression expression) {
-      super(src, node);
-      
-      this.expression = expression;
-    }
-  
-    @Override
-    public boolean isUnexpand() { 
-      return true; 
-    }
-  
-    @Override
-    public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitExpressionUnexpand(this);
-    }
-  
-    @Override
-    protected void addForLineNumber(int $line, java.util.List<AbstractAST> $result) {
-      if (getLocation().getBeginLine() == $line) {
-        $result.add(this);
-      }
-      ISourceLocation $l;
-      
-      $l = expression.getLocation();
-      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        expression.addForLineNumber($line, $result);
-      }
-      if ($l.getBeginLine() > $line) {
-        return;
-      }
-      
-    }
-  
-    @Override
-    public boolean equals(Object o) {
-      if (!(o instanceof Unexpand)) {
-        return false;
-      }        
-      Unexpand tmp = (Unexpand) o;
-      return true && tmp.expression.equals(this.expression) ; 
-    }
-   
-    @Override
-    public int hashCode() {
-      return 89 + 727 * expression.hashCode() ; 
-    } 
-  
-    
-    @Override
-    public org.rascalmpl.ast.Expression getExpression() {
-      return this.expression;
-    }
-  
-    @Override
-    public boolean hasExpression() {
-      return true;
-    }	
-  
-    @Override
-    public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(expression));
-    }
-            
-  }
   public boolean isVariableBecomes() {
     return false;
   }
@@ -7075,7 +7001,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 673 + 743 * name.hashCode() + 29 * pattern.hashCode() ; 
+      return 89 + 727 * name.hashCode() + 673 * pattern.hashCode() ; 
     } 
   
     
@@ -7168,7 +7094,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 571 + 211 * label.hashCode() + 727 * visit.hashCode() ; 
+      return 743 + 29 * label.hashCode() + 571 * visit.hashCode() ; 
     } 
   
     
@@ -7263,7 +7189,7 @@ public abstract class Expression extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 251 + 131 * parameters.hashCode() + 811 * statements0.hashCode() ; 
+      return 211 + 727 * parameters.hashCode() + 251 * statements0.hashCode() ; 
     } 
   
     

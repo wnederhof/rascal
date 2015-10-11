@@ -32,13 +32,6 @@ public abstract class FunctionDeclaration extends AbstractAST {
   public java.util.List<org.rascalmpl.ast.Expression> getConditions() {
     throw new UnsupportedOperationException();
   }
-  public boolean hasExtraParameters() {
-    return false;
-  }
-
-  public java.util.List<org.rascalmpl.ast.Expression> getExtraParameters() {
-    throw new UnsupportedOperationException();
-  }
   public boolean hasExpression() {
     return false;
   }
@@ -46,18 +39,18 @@ public abstract class FunctionDeclaration extends AbstractAST {
   public org.rascalmpl.ast.Expression getExpression() {
     throw new UnsupportedOperationException();
   }
-  public boolean hasPatternLhs() {
+  public boolean hasPatternCore() {
     return false;
   }
 
-  public org.rascalmpl.ast.Expression getPatternLhs() {
+  public org.rascalmpl.ast.Expression getPatternCore() {
     throw new UnsupportedOperationException();
   }
-  public boolean hasPatternRhs() {
+  public boolean hasPatternSurface() {
     return false;
   }
 
-  public org.rascalmpl.ast.Expression getPatternRhs() {
+  public org.rascalmpl.ast.Expression getPatternSurface() {
     throw new UnsupportedOperationException();
   }
   public boolean hasBody() {
@@ -74,6 +67,34 @@ public abstract class FunctionDeclaration extends AbstractAST {
   public org.rascalmpl.ast.Name getName() {
     throw new UnsupportedOperationException();
   }
+  public boolean hasOptionalFallbackSugar() {
+    return false;
+  }
+
+  public org.rascalmpl.ast.OptionalFallbackSugar getOptionalFallbackSugar() {
+    throw new UnsupportedOperationException();
+  }
+  public boolean hasOptionalSugarType() {
+    return false;
+  }
+
+  public org.rascalmpl.ast.OptionalSugarType getOptionalSugarType() {
+    throw new UnsupportedOperationException();
+  }
+  public boolean hasOptionalUsing() {
+    return false;
+  }
+
+  public org.rascalmpl.ast.OptionalUsingDesugaring getOptionalUsing() {
+    throw new UnsupportedOperationException();
+  }
+  public boolean hasOptionalWhen() {
+    return false;
+  }
+
+  public org.rascalmpl.ast.OptionalWhen getOptionalWhen() {
+    throw new UnsupportedOperationException();
+  }
   public boolean hasSignature() {
     return false;
   }
@@ -88,18 +109,11 @@ public abstract class FunctionDeclaration extends AbstractAST {
   public org.rascalmpl.ast.Tags getTags() {
     throw new UnsupportedOperationException();
   }
-  public boolean hasTypeLhs() {
+  public boolean hasTypeCore() {
     return false;
   }
 
-  public org.rascalmpl.ast.Type getTypeLhs() {
-    throw new UnsupportedOperationException();
-  }
-  public boolean hasTypeRhs() {
-    return false;
-  }
-
-  public org.rascalmpl.ast.Type getTypeRhs() {
+  public org.rascalmpl.ast.Type getTypeCore() {
     throw new UnsupportedOperationException();
   }
   public boolean hasVisibility() {
@@ -187,7 +201,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 31 + 181 * tags.hashCode() + 313 * visibility.hashCode() + 463 * signature.hashCode() ; 
+      return 71 + 503 * tags.hashCode() + 31 * visibility.hashCode() + 181 * signature.hashCode() ; 
     } 
   
     
@@ -321,7 +335,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 257 + 211 * tags.hashCode() + 179 * visibility.hashCode() + 457 * signature.hashCode() + 839 * expression.hashCode() + 2 * conditions.hashCode() ; 
+      return 313 + 463 * tags.hashCode() + 257 * visibility.hashCode() + 211 * signature.hashCode() + 179 * expression.hashCode() + 457 * conditions.hashCode() ; 
     } 
   
     
@@ -461,7 +475,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 461 + 877 * tags.hashCode() + 599 * visibility.hashCode() + 281 * signature.hashCode() + 43 * body.hashCode() ; 
+      return 839 + 2 * tags.hashCode() + 461 * visibility.hashCode() + 877 * signature.hashCode() + 599 * body.hashCode() ; 
     } 
   
     
@@ -592,7 +606,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 103 + 673 * tags.hashCode() + 509 * visibility.hashCode() + 61 * signature.hashCode() + 173 * expression.hashCode() ; 
+      return 281 + 43 * tags.hashCode() + 103 * visibility.hashCode() + 673 * signature.hashCode() + 509 * expression.hashCode() ; 
     } 
   
     
@@ -639,42 +653,48 @@ public abstract class FunctionDeclaration extends AbstractAST {
     }
             
   }
-  public boolean isSugar() {
+  public boolean isSugarCICDR() {
     return false;
   }
 
-  static public class Sugar extends FunctionDeclaration {
-    // Production: sig("Sugar",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
+  static public class SugarCICDR extends FunctionDeclaration {
+    // Production: sig("SugarCICDR",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.OptionalUsingDesugaring","optionalUsing"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
     private final org.rascalmpl.ast.Visibility visibility;
-    private final org.rascalmpl.ast.Type typeRhs;
+    private final org.rascalmpl.ast.Type typeCore;
     private final org.rascalmpl.ast.Name name;
-    private final org.rascalmpl.ast.Expression patternLhs;
-    private final org.rascalmpl.ast.Type typeLhs;
-    private final org.rascalmpl.ast.Expression patternRhs;
+    private final org.rascalmpl.ast.Expression patternSurface;
+    private final org.rascalmpl.ast.OptionalUsingDesugaring optionalUsing;
+    private final org.rascalmpl.ast.Expression patternCore;
+    private final org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar;
+    private final org.rascalmpl.ast.OptionalSugarType optionalSugarType;
+    private final org.rascalmpl.ast.OptionalWhen optionalWhen;
   
-    public Sugar(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternLhs,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternRhs) {
+    public SugarCICDR(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.OptionalUsingDesugaring optionalUsing,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
       super(src, node);
       
       this.tags = tags;
       this.visibility = visibility;
-      this.typeRhs = typeRhs;
+      this.typeCore = typeCore;
       this.name = name;
-      this.patternLhs = patternLhs;
-      this.typeLhs = typeLhs;
-      this.patternRhs = patternRhs;
+      this.patternSurface = patternSurface;
+      this.optionalUsing = optionalUsing;
+      this.patternCore = patternCore;
+      this.optionalFallbackSugar = optionalFallbackSugar;
+      this.optionalSugarType = optionalSugarType;
+      this.optionalWhen = optionalWhen;
     }
   
     @Override
-    public boolean isSugar() { 
+    public boolean isSugarCICDR() { 
       return true; 
     }
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitFunctionDeclarationSugar(this);
+      return visitor.visitFunctionDeclarationSugarCICDR(this);
     }
   
     @Override
@@ -700,9 +720,9 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = typeRhs.getLocation();
+      $l = typeCore.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        typeRhs.addForLineNumber($line, $result);
+        typeCore.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -716,25 +736,49 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = patternLhs.getLocation();
+      $l = patternSurface.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        patternLhs.addForLineNumber($line, $result);
+        patternSurface.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
       }
       
-      $l = typeLhs.getLocation();
+      $l = optionalUsing.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        typeLhs.addForLineNumber($line, $result);
+        optionalUsing.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
       }
       
-      $l = patternRhs.getLocation();
+      $l = patternCore.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        patternRhs.addForLineNumber($line, $result);
+        patternCore.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = optionalFallbackSugar.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        optionalFallbackSugar.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = optionalSugarType.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        optionalSugarType.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = optionalWhen.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        optionalWhen.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -744,16 +788,16 @@ public abstract class FunctionDeclaration extends AbstractAST {
   
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof Sugar)) {
+      if (!(o instanceof SugarCICDR)) {
         return false;
       }        
-      Sugar tmp = (Sugar) o;
-      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeRhs.equals(this.typeRhs) && tmp.name.equals(this.name) && tmp.patternLhs.equals(this.patternLhs) && tmp.typeLhs.equals(this.typeLhs) && tmp.patternRhs.equals(this.patternRhs) ; 
+      SugarCICDR tmp = (SugarCICDR) o;
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.optionalUsing.equals(this.optionalUsing) && tmp.patternCore.equals(this.patternCore) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.optionalWhen.equals(this.optionalWhen) ; 
     }
    
     @Override
     public int hashCode() {
-      return 761 + 409 * tags.hashCode() + 997 * visibility.hashCode() + 367 * typeRhs.hashCode() + 401 * name.hashCode() + 139 * patternLhs.hashCode() + 937 * typeLhs.hashCode() + 521 * patternRhs.hashCode() ; 
+      return 61 + 173 * tags.hashCode() + 761 * visibility.hashCode() + 409 * typeCore.hashCode() + 997 * name.hashCode() + 367 * patternSurface.hashCode() + 401 * optionalUsing.hashCode() + 139 * patternCore.hashCode() + 937 * optionalFallbackSugar.hashCode() + 521 * optionalSugarType.hashCode() + 719 * optionalWhen.hashCode() ; 
     } 
   
     
@@ -776,12 +820,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Type getTypeRhs() {
-      return this.typeRhs;
+    public org.rascalmpl.ast.Type getTypeCore() {
+      return this.typeCore;
     }
   
     @Override
-    public boolean hasTypeRhs() {
+    public boolean hasTypeCore() {
       return true;
     }
     @Override
@@ -794,77 +838,106 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Expression getPatternLhs() {
-      return this.patternLhs;
+    public org.rascalmpl.ast.Expression getPatternSurface() {
+      return this.patternSurface;
     }
   
     @Override
-    public boolean hasPatternLhs() {
+    public boolean hasPatternSurface() {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Type getTypeLhs() {
-      return this.typeLhs;
+    public org.rascalmpl.ast.OptionalUsingDesugaring getOptionalUsing() {
+      return this.optionalUsing;
     }
   
     @Override
-    public boolean hasTypeLhs() {
+    public boolean hasOptionalUsing() {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Expression getPatternRhs() {
-      return this.patternRhs;
+    public org.rascalmpl.ast.Expression getPatternCore() {
+      return this.patternCore;
     }
   
     @Override
-    public boolean hasPatternRhs() {
+    public boolean hasPatternCore() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.OptionalFallbackSugar getOptionalFallbackSugar() {
+      return this.optionalFallbackSugar;
+    }
+  
+    @Override
+    public boolean hasOptionalFallbackSugar() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.OptionalSugarType getOptionalSugarType() {
+      return this.optionalSugarType;
+    }
+  
+    @Override
+    public boolean hasOptionalSugarType() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.OptionalWhen getOptionalWhen() {
+      return this.optionalWhen;
+    }
+  
+    @Override
+    public boolean hasOptionalWhen() {
       return true;
     }	
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeRhs), clone(name), clone(patternLhs), clone(typeLhs), clone(patternRhs));
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(optionalUsing), clone(patternCore), clone(optionalFallbackSugar), clone(optionalSugarType), clone(optionalWhen));
     }
             
   }
-  public boolean isSugarExtra() {
+  public boolean isSugarConfection() {
     return false;
   }
 
-  static public class SugarExtra extends FunctionDeclaration {
-    // Production: sig("SugarExtra",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeRhs"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternLhs"),arg("java.util.List\<org.rascalmpl.ast.Expression\>","extraParameters"),arg("org.rascalmpl.ast.Type","typeLhs"),arg("org.rascalmpl.ast.Expression","patternRhs")],breakable=false)
+  static public class SugarConfection extends FunctionDeclaration {
+    // Production: sig("SugarConfection",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
     private final org.rascalmpl.ast.Visibility visibility;
-    private final org.rascalmpl.ast.Type typeRhs;
+    private final org.rascalmpl.ast.Type typeCore;
     private final org.rascalmpl.ast.Name name;
-    private final org.rascalmpl.ast.Expression patternLhs;
-    private final java.util.List<org.rascalmpl.ast.Expression> extraParameters;
-    private final org.rascalmpl.ast.Type typeLhs;
-    private final org.rascalmpl.ast.Expression patternRhs;
+    private final org.rascalmpl.ast.Expression patternSurface;
+    private final org.rascalmpl.ast.Expression patternCore;
+    private final org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar;
+    private final org.rascalmpl.ast.OptionalSugarType optionalSugarType;
+    private final org.rascalmpl.ast.OptionalWhen optionalWhen;
   
-    public SugarExtra(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeRhs,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternLhs,  java.util.List<org.rascalmpl.ast.Expression> extraParameters,  org.rascalmpl.ast.Type typeLhs,  org.rascalmpl.ast.Expression patternRhs) {
+    public SugarConfection(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
       super(src, node);
       
       this.tags = tags;
       this.visibility = visibility;
-      this.typeRhs = typeRhs;
+      this.typeCore = typeCore;
       this.name = name;
-      this.patternLhs = patternLhs;
-      this.extraParameters = extraParameters;
-      this.typeLhs = typeLhs;
-      this.patternRhs = patternRhs;
+      this.patternSurface = patternSurface;
+      this.patternCore = patternCore;
+      this.optionalFallbackSugar = optionalFallbackSugar;
+      this.optionalSugarType = optionalSugarType;
+      this.optionalWhen = optionalWhen;
     }
   
     @Override
-    public boolean isSugarExtra() { 
+    public boolean isSugarConfection() { 
       return true; 
     }
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitFunctionDeclarationSugarExtra(this);
+      return visitor.visitFunctionDeclarationSugarConfection(this);
     }
   
     @Override
@@ -890,9 +963,9 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = typeRhs.getLocation();
+      $l = typeCore.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        typeRhs.addForLineNumber($line, $result);
+        typeCore.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -906,35 +979,41 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = patternLhs.getLocation();
+      $l = patternSurface.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        patternLhs.addForLineNumber($line, $result);
+        patternSurface.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
       }
       
-      for (AbstractAST $elem : extraParameters) {
-        $l = $elem.getLocation();
-        if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-          $elem.addForLineNumber($line, $result);
-        }
-        if ($l.getBeginLine() > $line) {
-          return;
-        }
-  
-      }
-      $l = typeLhs.getLocation();
+      $l = patternCore.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        typeLhs.addForLineNumber($line, $result);
+        patternCore.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
       }
       
-      $l = patternRhs.getLocation();
+      $l = optionalFallbackSugar.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        patternRhs.addForLineNumber($line, $result);
+        optionalFallbackSugar.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = optionalSugarType.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        optionalSugarType.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = optionalWhen.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        optionalWhen.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -944,16 +1023,16 @@ public abstract class FunctionDeclaration extends AbstractAST {
   
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof SugarExtra)) {
+      if (!(o instanceof SugarConfection)) {
         return false;
       }        
-      SugarExtra tmp = (SugarExtra) o;
-      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeRhs.equals(this.typeRhs) && tmp.name.equals(this.name) && tmp.patternLhs.equals(this.patternLhs) && tmp.extraParameters.equals(this.extraParameters) && tmp.typeLhs.equals(this.typeLhs) && tmp.patternRhs.equals(this.patternRhs) ; 
+      SugarConfection tmp = (SugarConfection) o;
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.patternCore.equals(this.patternCore) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.optionalWhen.equals(this.optionalWhen) ; 
     }
    
     @Override
     public int hashCode() {
-      return 719 + 773 * tags.hashCode() + 277 * visibility.hashCode() + 239 * typeRhs.hashCode() + 151 * name.hashCode() + 397 * patternLhs.hashCode() + 137 * extraParameters.hashCode() + 811 * typeLhs.hashCode() + 709 * patternRhs.hashCode() ; 
+      return 773 + 277 * tags.hashCode() + 239 * visibility.hashCode() + 151 * typeCore.hashCode() + 397 * name.hashCode() + 137 * patternSurface.hashCode() + 811 * patternCore.hashCode() + 709 * optionalFallbackSugar.hashCode() + 167 * optionalSugarType.hashCode() + 53 * optionalWhen.hashCode() ; 
     } 
   
     
@@ -976,12 +1055,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Type getTypeRhs() {
-      return this.typeRhs;
+    public org.rascalmpl.ast.Type getTypeCore() {
+      return this.typeCore;
     }
   
     @Override
-    public boolean hasTypeRhs() {
+    public boolean hasTypeCore() {
       return true;
     }
     @Override
@@ -994,45 +1073,54 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Expression getPatternLhs() {
-      return this.patternLhs;
+    public org.rascalmpl.ast.Expression getPatternSurface() {
+      return this.patternSurface;
     }
   
     @Override
-    public boolean hasPatternLhs() {
+    public boolean hasPatternSurface() {
       return true;
     }
     @Override
-    public java.util.List<org.rascalmpl.ast.Expression> getExtraParameters() {
-      return this.extraParameters;
+    public org.rascalmpl.ast.Expression getPatternCore() {
+      return this.patternCore;
     }
   
     @Override
-    public boolean hasExtraParameters() {
+    public boolean hasPatternCore() {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Type getTypeLhs() {
-      return this.typeLhs;
+    public org.rascalmpl.ast.OptionalFallbackSugar getOptionalFallbackSugar() {
+      return this.optionalFallbackSugar;
     }
   
     @Override
-    public boolean hasTypeLhs() {
+    public boolean hasOptionalFallbackSugar() {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Expression getPatternRhs() {
-      return this.patternRhs;
+    public org.rascalmpl.ast.OptionalSugarType getOptionalSugarType() {
+      return this.optionalSugarType;
     }
   
     @Override
-    public boolean hasPatternRhs() {
+    public boolean hasOptionalSugarType() {
+      return true;
+    }
+    @Override
+    public org.rascalmpl.ast.OptionalWhen getOptionalWhen() {
+      return this.optionalWhen;
+    }
+  
+    @Override
+    public boolean hasOptionalWhen() {
       return true;
     }	
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeRhs), clone(name), clone(patternLhs), clone(extraParameters), clone(typeLhs), clone(patternRhs));
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(patternCore), clone(optionalFallbackSugar), clone(optionalSugarType), clone(optionalWhen));
     }
             
   }

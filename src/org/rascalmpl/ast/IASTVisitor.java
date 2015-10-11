@@ -333,8 +333,6 @@ public interface IASTVisitor<T> {
 
   public T visitExpressionTypedVariableBecomes(Expression.TypedVariableBecomes x);
 
-  public T visitExpressionUnexpand(Expression.Unexpand x);
-
   public T visitExpressionVariableBecomes(Expression.VariableBecomes x);
 
   public T visitExpressionVisit(Expression.Visit x);
@@ -357,9 +355,9 @@ public interface IASTVisitor<T> {
 
   public T visitFunctionDeclarationExpression(FunctionDeclaration.Expression x);
 
-  public T visitFunctionDeclarationSugar(FunctionDeclaration.Sugar x);
+  public T visitFunctionDeclarationSugarCICDR(FunctionDeclaration.SugarCICDR x);
 
-  public T visitFunctionDeclarationSugarExtra(FunctionDeclaration.SugarExtra x);
+  public T visitFunctionDeclarationSugarConfection(FunctionDeclaration.SugarConfection x);
 
   public T visitFunctionModifierDefault(FunctionModifier.Default x);
 
@@ -464,6 +462,22 @@ public interface IASTVisitor<T> {
   public T visitOptionalExpressionExpression(OptionalExpression.Expression x);
 
   public T visitOptionalExpressionNoExpression(OptionalExpression.NoExpression x);
+
+  public T visitOptionalFallbackSugarDefault(OptionalFallbackSugar.Default x);
+
+  public T visitOptionalFallbackSugarNone(OptionalFallbackSugar.None x);
+
+  public T visitOptionalSugarTypeDefault(OptionalSugarType.Default x);
+
+  public T visitOptionalSugarTypeNone(OptionalSugarType.None x);
+
+  public T visitOptionalUsingDesugaringDefault(OptionalUsingDesugaring.Default x);
+
+  public T visitOptionalUsingDesugaringNone(OptionalUsingDesugaring.None x);
+
+  public T visitOptionalWhenDefault(OptionalWhen.Default x);
+
+  public T visitOptionalWhenNone(OptionalWhen.None x);
 
   public T visitParametersDefault(Parameters.Default x);
 
@@ -648,6 +662,8 @@ public interface IASTVisitor<T> {
   public T visitStringTemplateWhile(StringTemplate.While x);
 
   public T visitStructuredTypeDefault(StructuredType.Default x);
+
+  public T visitSugarFunctionMappingDefault(SugarFunctionMapping.Default x);
 
   public T visitSymAlternative(Sym.Alternative x);
 
