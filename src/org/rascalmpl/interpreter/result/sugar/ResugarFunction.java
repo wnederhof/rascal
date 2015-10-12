@@ -4,13 +4,17 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.IdentityVisitor;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.ast.FunctionDeclaration;
+import org.rascalmpl.ast.Name;
+import org.rascalmpl.ast.OptionalFallbackSugar;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
 import org.rascalmpl.interpreter.env.Environment;
@@ -26,6 +30,7 @@ import org.rascalmpl.interpreter.sugar.ResugarTransformer;
 import org.rascalmpl.interpreter.sugar.SugarParameters;
 import org.rascalmpl.interpreter.types.FunctionType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
+import org.rascalmpl.interpreter.utils.Names;
 
 // TODO: compute outermost label, production and implement cacheFormals for improved efficiency.
 public class ResugarFunction extends NamedFunction {
@@ -35,16 +40,15 @@ public class ResugarFunction extends NamedFunction {
 	private static FunctionType createResugarFunctionType(FunctionDeclaration functionDeclaration,
 			IEvaluator<Result<IValue>> eval, Environment env) {
 		RascalTypeFactory RTF = org.rascalmpl.interpreter.types.RascalTypeFactory.getInstance();
-		Type returnType = functionDeclaration.getTypeLhs().typeOf(env, true, eval);
-		Type argType = functionDeclaration.getPatternRhs().typeOf(env, true, eval);
+		Type returnType = TF.valueType(); // TODO
+		Type argType = functionDeclaration.getPatternCore().typeOf(env, true, eval);
 		Type argTypes = TypeFactory.getInstance().tupleType(argType);
 		return (FunctionType) RTF.functionType(returnType, argTypes, TF.voidType());
 	}
 
 	public ResugarFunction(AbstractAST ast, IEvaluator<Result<IValue>> eval, FunctionDeclaration functionDeclaration,
 			String name, Environment env, IValue originalTerm) {
-		// TODO functionDeclaration used instead of ast (... because of the tags).
-		super(functionDeclaration, eval, createResugarFunctionType(functionDeclaration, eval, env), new LinkedList<>(), name, false,
+		super(ast, eval, createResugarFunctionType(functionDeclaration, eval, env), new LinkedList<>(), name, false,
 				false, false, env);
 		this.functionDeclaration = functionDeclaration;
 		this.originalTerm = originalTerm;
@@ -65,8 +69,8 @@ public class ResugarFunction extends NamedFunction {
 		ResugarTransformer<RuntimeException> desugarTransformer = new ResugarTransformer<RuntimeException>(
 				identityVisitor, vf, eval);
 		Resugar resugar = new Resugar(
-				functionDeclaration.getPatternLhs(), // surface
-				functionDeclaration.getPatternRhs(), // core
+				functionDeclaration.getPatternSurface(),
+				functionDeclaration.getPatternCore(),
 				desugarTransformer,
 				eval,
 				repeatMode());
@@ -96,12 +100,12 @@ public class ResugarFunction extends NamedFunction {
 	 * @return core is equal to its only argument.
 	 */
 	private boolean coreIsEqualToArgument() {
-		IMatchingResult m = functionDeclaration.getPatternRhs().buildMatcher(eval);
+		IMatchingResult m = functionDeclaration.getPatternCore().buildMatcher(eval);
 		return m instanceof IVarPattern;
 	}
 	
 	private void resugarOnlyArgument() {
-		IMatchingResult m = functionDeclaration.getPatternRhs().buildMatcher(eval);
+		IMatchingResult m = functionDeclaration.getPatternCore().buildMatcher(eval);
 		String onlyVariable = m.getVariables().get(0).name();
 		Result<IValue> onlyVariableResult = eval.getCurrentEnvt().getVariable(onlyVariable);
 		onlyVariableResult = makeResult(callInnerSugarsFirst(onlyVariableResult.getType(), onlyVariableResult.getValue()));
@@ -109,7 +113,7 @@ public class ResugarFunction extends NamedFunction {
 	}
 	
 	private boolean repeatMode() {
-		return tags.containsKey("repeatMode");
+		return functionDeclaration.isSugarConfection();
 	}
 	
 	/**
@@ -132,18 +136,33 @@ public class ResugarFunction extends NamedFunction {
 		Result<IValue> resultToDesugar = makeResult(termToResugar);
 		IMatchingResult matcher;
 		if (!repeatMode() && coreIsEqualToArgument()) {
-			matcher = functionDeclaration.getPatternRhs().buildMatcher(eval);
+			matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
 			matcher.initMatch(resultToDesugar);
 			resugarOnlyArgument();
 		} else {
 			termToResugar = callInnerSugarsFirst(termToResugar.getType(), termToResugar);
-			matcher = functionDeclaration.getPatternRhs().buildMatcher(eval);
+			matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
 			matcher.initMatch(resultToDesugar);
 		}
 		ISourceLocation src = eval.getCurrentAST().getLocation();
 		if (matcher.next()) {
 			Result<IValue> r = resugar(src, resultToDesugar);
 			return r;
+		}
+		throw new MatchFailed();
+	}
+
+	private Result<IValue> fallbackSugar(IValue termToResugar) {
+		if (functionDeclaration.getOptionalFallbackSugar() instanceof OptionalFallbackSugar.Default) {
+			for (Name n : functionDeclaration.getOptionalFallbackSugar().getNames()) {
+				try {
+					String sugarType = Names.name(n);
+					IString sugarTypeRascalString = ValueFactory.getInstance().string(sugarType);
+					return makeResult(eval.call(getName(), new IValue[] { sugarTypeRascalString, termToResugar }));
+				} catch(MatchFailed e) {
+					continue;
+				}
+			}
 		}
 		throw new MatchFailed();
 	}
@@ -156,7 +175,11 @@ public class ResugarFunction extends NamedFunction {
 		try {
 			IValue termToResugar = actuals[0];
 			ensureNoVariablesLeak(declarationEnvironment);
-			return disassembleSugarParametersAndResugar(termToResugar);
+			try {
+				return disassembleSugarParametersAndResugar(termToResugar);
+			} catch(MatchFailed e) {
+				return fallbackSugar(termToResugar);
+			}
 		} finally {
 			eval.unwind(old);
 		}

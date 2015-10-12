@@ -181,7 +181,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			IValue v;
 			DesugarTransformer<RuntimeException> i = new DesugarTransformer<>(
 					new IdentityTreeVisitor<RuntimeException>() {},
-					VF, __eval, getUnexpandFn());
+					VF, __eval, getSugarFn());
 			Result<IValue> result = this.getExpression().interpret(__eval);
 			long t1 = System.nanoTime();
 			long totalIterations = 1;

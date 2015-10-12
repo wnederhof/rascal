@@ -777,7 +777,7 @@ syntax OptionalFallbackSugar
 	| none: ();
 
 syntax OptionalSugarType
-	= \default: "catch" ":" {Name ","}+ names
+	= \default: "catch" {Name ","}+ names
 	| none: ();
 
 syntax FunctionDeclaration
@@ -785,7 +785,7 @@ syntax FunctionDeclaration
 	| @Foldable @breakable{expression} expression: Tags tags Visibility visibility Signature signature "=" Expression expression ";"
 	| @Foldable @breakable{expression} sugarCICDR: Tags tags Visibility visibility Type typeCore Name name "(" ExpressionAndPattern patternSurface OptionalUsingDesugaring optionalUsing ")" "=\>" ExpressionAndPattern patternCore
 		OptionalFallbackSugar optionalFallbackSugar OptionalSugarType optionalSugarType OptionalWhen optionalWhen ";"
-	| @Foldable @breakable{expression} sugarConfection: Tags tags Visibility visibility Type typeCore Name name "(" ExpressionAndPattern patternSurface ")" "=\>*" ExpressionAndPattern patternCore
+	| @Foldable @breakable{expression} sugarConfection: Tags tags Visibility visibility Type typeCore Name name "(" ExpressionAndPattern patternSurface ")" "*=\>" ExpressionAndPattern patternCore
 		OptionalFallbackSugar optionalFallbackSugar OptionalSugarType optionalSugarType OptionalWhen optionalWhen ";"
 	| @Foldable @breakable{expression,conditions} conditional: Tags tags Visibility visibility Signature signature "=" Expression expression "when" {Expression ","}+ conditions ";"
 	| @Foldable \default: Tags tags Visibility visibility Signature signature FunctionBody body ;

@@ -92,7 +92,7 @@ public class Desugar {
 
 	public Desugar(DesugarTransformer<RuntimeException> desugarTransformer,
 			IEvaluator<Result<IValue>> eval, boolean repeatMode, FunctionDeclaration functionDeclaration) {
-		this.corePattern = functionDeclaration.getPatternRhs();
+		this.corePattern = functionDeclaration.getPatternCore();
 		this.desugarTransformer = desugarTransformer;
 		this.eval = eval;
 		this.repeatMode = repeatMode;

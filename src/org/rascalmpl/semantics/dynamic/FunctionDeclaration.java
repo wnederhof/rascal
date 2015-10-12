@@ -26,6 +26,10 @@ import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.ast.FunctionBody;
 import org.rascalmpl.ast.FunctionModifier;
 import org.rascalmpl.ast.Name;
+import org.rascalmpl.ast.OptionalFallbackSugar;
+import org.rascalmpl.ast.OptionalSugarType;
+import org.rascalmpl.ast.OptionalUsingDesugaring;
+import org.rascalmpl.ast.OptionalWhen;
 import org.rascalmpl.ast.Signature;
 import org.rascalmpl.ast.Tags;
 import org.rascalmpl.ast.Visibility;
@@ -36,6 +40,7 @@ import org.rascalmpl.interpreter.result.JavaMethod;
 import org.rascalmpl.interpreter.result.RascalFunction;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.sugar.DesugarFunction;
+import org.rascalmpl.interpreter.result.sugar.FallbackSugarFunction;
 import org.rascalmpl.interpreter.staticErrors.MissingModifier;
 import org.rascalmpl.interpreter.staticErrors.NonAbstractJavaFunction;
 import org.rascalmpl.interpreter.utils.Names;
@@ -152,13 +157,24 @@ public abstract class FunctionDeclaration extends
 
 	}
 
-	static public class Sugar extends
-		org.rascalmpl.ast.FunctionDeclaration.Sugar {
+	static public class SugarCICDR extends org.rascalmpl.ast.FunctionDeclaration.SugarCICDR {
 
-		public Sugar(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
-				org.rascalmpl.ast.Type typeRhs, Name name, org.rascalmpl.ast.Expression patternLhs,
-				org.rascalmpl.ast.Type typeLhs, org.rascalmpl.ast.Expression patternRhs) {
-			super(src, node, tags, visibility, typeRhs, name, patternLhs, typeLhs, patternRhs);
+		public SugarCICDR(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
+				org.rascalmpl.ast.Type typeCore, Name name, org.rascalmpl.ast.Expression patternSurface,
+				OptionalUsingDesugaring optionalUsing, org.rascalmpl.ast.Expression patternCore,
+				OptionalFallbackSugar optionalFallbackSugar, OptionalSugarType optionalSugarType,
+				OptionalWhen optionalWhen) {
+			super(src, node, tags, visibility, typeCore, name, patternSurface, optionalUsing, patternCore, optionalFallbackSugar,
+					optionalSugarType, optionalWhen);
+		}
+		
+		private void createFallbackSugar(IEvaluator<Result<IValue>> __eval) {
+			AbstractFunction lambda = new FallbackSugarFunction(
+					__eval.getCurrentAST(), __eval, this, Names.name(getName()), __eval.getCurrentEnvt());
+			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
+			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
+			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
+			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
 		}
 
 		@Override
@@ -167,11 +183,50 @@ public abstract class FunctionDeclaration extends
 			__eval.notifyAboutSuspension(this);
 			AbstractFunction lambda;
 			lambda = new DesugarFunction(
-					__eval.getCurrentAST(), __eval, this, Names.name(getName()), false, __eval.getCurrentEnvt());
+					__eval.getCurrentAST(), __eval, this, Names.name(getName()), __eval.getCurrentEnvt());
 			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
 			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
 			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
 			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
+			if (getOptionalSugarType() instanceof OptionalSugarType.Default) {
+				createFallbackSugar(__eval);
+			}
+			return lambda;
+		}
+	}
+	
+	static public class SugarConfection extends org.rascalmpl.ast.FunctionDeclaration.SugarConfection {
+		public SugarConfection(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
+				org.rascalmpl.ast.Type typeCore, Name name, org.rascalmpl.ast.Expression patternSurface,
+				org.rascalmpl.ast.Expression patternCore, OptionalFallbackSugar optionalFallbackSugar,
+				OptionalSugarType optionalSugarType, OptionalWhen optionalWhen) {
+			super(src, node, tags, visibility, typeCore, name, patternSurface, patternCore, optionalFallbackSugar,
+					optionalSugarType, optionalWhen);
+		}
+
+		private void createFallbackSugar(IEvaluator<Result<IValue>> __eval) {
+			AbstractFunction lambda = new FallbackSugarFunction(
+					__eval.getCurrentAST(), __eval, this, Names.name(getName()), __eval.getCurrentEnvt());
+			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
+			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
+			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
+			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
+		}
+
+		@Override
+		public Result<IValue> interpret(IEvaluator<Result<IValue>> __eval) {
+			__eval.setCurrentAST(this);
+			__eval.notifyAboutSuspension(this);
+			AbstractFunction lambda;
+			lambda = new DesugarFunction(
+					__eval.getCurrentAST(), __eval, this, Names.name(getName()), __eval.getCurrentEnvt());
+			lambda.setPublic(this.getVisibility().isPublic() || this.getVisibility().isDefault());
+			__eval.getCurrentEnvt().markNameFinal(lambda.getName());
+			__eval.getCurrentEnvt().markNameOverloadable(lambda.getName());
+			__eval.getCurrentEnvt().storeFunction(lambda.getName(), lambda);
+			if (getOptionalSugarType() instanceof OptionalSugarType.Default) {
+				createFallbackSugar(__eval);
+			}
 			return lambda;
 		}
 	}

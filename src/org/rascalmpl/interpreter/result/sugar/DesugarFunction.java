@@ -33,22 +33,22 @@ public class DesugarFunction extends NamedFunction {
 	private static FunctionType createDesugarFunctionType(FunctionDeclaration functionDeclaration,
 			IEvaluator<Result<IValue>> eval, Environment env) {
 		RascalTypeFactory RTF = org.rascalmpl.interpreter.types.RascalTypeFactory.getInstance();
-		Type returnType = functionDeclaration.getTypeRhs().typeOf(env, true, eval);
-		Type argType = functionDeclaration.getPatternLhs().typeOf(env, true, eval);
+		Type returnType = functionDeclaration.getTypeCore().typeOf(env, true, eval);
+		Type argType = functionDeclaration.getPatternSurface().typeOf(env, true, eval);
 		Type argTypes = TypeFactory.getInstance().tupleType(argType);
 		return (FunctionType) RTF.functionType(returnType, argTypes, TF.voidType());
 	}
 
 	public DesugarFunction(AbstractAST ast, IEvaluator<Result<IValue>> eval, FunctionDeclaration functionDeclaration,
-			String name, boolean isDefault, Environment env) {
+			String name, Environment env) {
 		super(ast, eval, createDesugarFunctionType(functionDeclaration, eval, env), new LinkedList<>(), name, false,
-				isDefault, false, env);
+				false, false, env); // TODO Default.
 		this.functionDeclaration = functionDeclaration;
 	}
 
 	@Override
 	public ICallableValue cloneInto(Environment env) {
-		return new DesugarFunction(ast, eval, functionDeclaration, name, isDefault, env);
+		return new DesugarFunction(ast, eval, functionDeclaration, name, env);
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public class DesugarFunction extends NamedFunction {
 	}
 	
 	private boolean repeatMode() {
-		return tags.containsKey("repeatMode");
+		return functionDeclaration.isSugarConfection();
 	}
 	
 	private Result<IValue> desugar(ISourceLocation src, Result<IValue> resultToDesugar) {
@@ -86,7 +86,7 @@ public class DesugarFunction extends NamedFunction {
 		Environment old = ctx.getCurrentEnvt();
 		try {
 			ensureNoVariablesLeak(declarationEnvironment);
-			IMatchingResult matcher = functionDeclaration.getPatternLhs().buildMatcher(eval);
+			IMatchingResult matcher = functionDeclaration.getPatternSurface().buildMatcher(eval);
 			matcher.initMatch(resultToDesugar);
 			ISourceLocation src = eval.getCurrentAST().getLocation();
 			if (matcher.next()) {
