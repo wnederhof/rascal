@@ -2,8 +2,11 @@ package org.rascalmpl.interpreter.sugar;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
+import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.imp.pdb.facts.visitors.IdentityVisitor;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.ast.FunctionDeclaration;
+import org.rascalmpl.ast.SugarFunctionMapping;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
@@ -43,18 +46,28 @@ public class Desugar {
 				ValueFactory.getInstance()));
 	}
 
-	private IValue desugarTransform(Result<IValue> subject) {
-		return desugarTransform(subject.getValue());
+	private IValue desugarTransform(IValueVisitor<IValue,RuntimeException> transformer, Result<IValue> subject) {
+		return desugarTransform(transformer, subject.getValue());
 	}
 	
-	private IValue desugarTransform(IValue subject) {
-		return subject.accept(desugarTransformer);
+	private IValue desugarTransform(IValueVisitor<IValue,RuntimeException> transformer, IValue subject) {
+		return subject.accept(transformer);
 	}
 
 	private void desugarPatternVariables() {
 		// We only need to desugar the variables in the core pattern.
 		for (IVarPattern varPattern : corePattern.buildMatcher(eval).getVariables()) {
-			setVariable(varPattern.name(), desugarTransform(getVariable(varPattern)));
+			if (functionDeclaration.hasOptionalUsing() && functionDeclaration.getOptionalUsing().isDefault()) {
+				for (SugarFunctionMapping sfm : functionDeclaration.getOptionalUsing().getSugarFunctionMapping()) {
+					if (Names.name(sfm.getFrom()).equals(varPattern.name())) {
+						DesugarTransformer<RuntimeException> customDesugarTransformer = new DesugarTransformer<RuntimeException>(
+								new IdentityVisitor<RuntimeException>() {}, ValueFactory.getInstance(), eval, sfm.getTo());
+						setVariable(varPattern.name(), desugarTransform(customDesugarTransformer, getVariable(varPattern)));
+						continue;
+					}
+				}
+			}
+			setVariable(varPattern.name(), desugarTransform(desugarTransformer, getVariable(varPattern)));
 		}
 	}
 
@@ -65,7 +78,7 @@ public class Desugar {
 
 	private Result<IValue> desugarTermAndTransform(IValue originalTerm) {
 		Result<IValue> desugaredTerm = desugarTerm(originalTerm);
-		IValue transformedTerm = desugarTransform(desugaredTerm);
+		IValue transformedTerm = desugarTransform(desugarTransformer, desugaredTerm);
 		return attachResugarFunction(makeResult(transformedTerm), originalTerm);
 	}
 	

@@ -47,7 +47,6 @@ public class StayInScopeEnvironment extends Environment {
 
 	@Override
 	protected Map<String, Result<IValue>> getVariableDefiningEnvironment(String name) {
-		System.out.println("jkhakhjadhahaahjkhja");
 		return null;
 	}
 	

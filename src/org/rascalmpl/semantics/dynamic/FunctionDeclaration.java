@@ -161,13 +161,13 @@ public abstract class FunctionDeclaration extends
 
 		public SugarCICDR(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
 				org.rascalmpl.ast.Type typeCore, Name name, org.rascalmpl.ast.Expression patternSurface,
-				OptionalUsingDesugaring optionalUsing, org.rascalmpl.ast.Expression patternCore,
-				OptionalFallbackSugar optionalFallbackSugar, OptionalSugarType optionalSugarType,
+				OptionalUsingDesugaring optionalUsing, OptionalFallbackSugar optionalFallbackSugar,
+				OptionalSugarType optionalSugarType, org.rascalmpl.ast.Expression patternCore,
 				OptionalWhen optionalWhen) {
-			super(src, node, tags, visibility, typeCore, name, patternSurface, optionalUsing, patternCore, optionalFallbackSugar,
-					optionalSugarType, optionalWhen);
+			super(src, node, tags, visibility, typeCore, name, patternSurface, optionalUsing, optionalFallbackSugar,
+					optionalSugarType, patternCore, optionalWhen);
 		}
-		
+
 		private void createFallbackSugar(IEvaluator<Result<IValue>> __eval) {
 			AbstractFunction lambda = new FallbackSugarFunction(
 					__eval.getCurrentAST(), __eval, this, Names.name(getName()), __eval.getCurrentEnvt());
@@ -196,12 +196,13 @@ public abstract class FunctionDeclaration extends
 	}
 	
 	static public class SugarConfection extends org.rascalmpl.ast.FunctionDeclaration.SugarConfection {
+
 		public SugarConfection(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
 				org.rascalmpl.ast.Type typeCore, Name name, org.rascalmpl.ast.Expression patternSurface,
-				org.rascalmpl.ast.Expression patternCore, OptionalFallbackSugar optionalFallbackSugar,
-				OptionalSugarType optionalSugarType, OptionalWhen optionalWhen) {
-			super(src, node, tags, visibility, typeCore, name, patternSurface, patternCore, optionalFallbackSugar,
-					optionalSugarType, optionalWhen);
+				OptionalFallbackSugar optionalFallbackSugar, OptionalSugarType optionalSugarType,
+				org.rascalmpl.ast.Expression patternCore, OptionalWhen optionalWhen) {
+			super(src, node, tags, visibility, typeCore, name, patternSurface, optionalFallbackSugar, optionalSugarType,
+					patternCore, optionalWhen);
 		}
 
 		private void createFallbackSugar(IEvaluator<Result<IValue>> __eval) {

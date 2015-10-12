@@ -10,12 +10,15 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.eclipse.imp.pdb.facts.visitors.IdentityVisitor;
 import org.rascalmpl.ast.AbstractAST;
+import org.rascalmpl.ast.Expression;
 import org.rascalmpl.ast.FunctionDeclaration;
 import org.rascalmpl.interpreter.IEvaluator;
+import org.rascalmpl.interpreter.control_exceptions.ControlException;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
+import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.NamedFunction;
 import org.rascalmpl.interpreter.result.Result;
@@ -89,7 +92,19 @@ public class DesugarFunction extends NamedFunction {
 			IMatchingResult matcher = functionDeclaration.getPatternSurface().buildMatcher(eval);
 			matcher.initMatch(resultToDesugar);
 			ISourceLocation src = eval.getCurrentAST().getLocation();
+			if (matcher instanceof IVarPattern) {
+				throw new ControlException("Cannot desugar identity variables.");
+			}
 			if (matcher.next()) {
+				if (functionDeclaration.hasOptionalWhen()) {
+					if (functionDeclaration.getOptionalWhen().hasConditions()) {
+						for (Expression e : functionDeclaration.getOptionalWhen().getConditions()) {
+							if (e.interpret(eval).getValue().isEqual(vf.bool(false)) ) {
+								throw new MatchFailed();
+							}
+						}
+					}
+				}
 				return desugar(src, resultToDesugar);
 			}
 			throw new MatchFailed();

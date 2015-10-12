@@ -658,7 +658,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   }
 
   static public class SugarCICDR extends FunctionDeclaration {
-    // Production: sig("SugarCICDR",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.OptionalUsingDesugaring","optionalUsing"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
+    // Production: sig("SugarCICDR",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.OptionalUsingDesugaring","optionalUsing"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
@@ -667,12 +667,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
     private final org.rascalmpl.ast.Name name;
     private final org.rascalmpl.ast.Expression patternSurface;
     private final org.rascalmpl.ast.OptionalUsingDesugaring optionalUsing;
-    private final org.rascalmpl.ast.Expression patternCore;
     private final org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar;
     private final org.rascalmpl.ast.OptionalSugarType optionalSugarType;
+    private final org.rascalmpl.ast.Expression patternCore;
     private final org.rascalmpl.ast.OptionalWhen optionalWhen;
   
-    public SugarCICDR(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.OptionalUsingDesugaring optionalUsing,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
+    public SugarCICDR(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.OptionalUsingDesugaring optionalUsing,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
       super(src, node);
       
       this.tags = tags;
@@ -681,9 +681,9 @@ public abstract class FunctionDeclaration extends AbstractAST {
       this.name = name;
       this.patternSurface = patternSurface;
       this.optionalUsing = optionalUsing;
-      this.patternCore = patternCore;
       this.optionalFallbackSugar = optionalFallbackSugar;
       this.optionalSugarType = optionalSugarType;
+      this.patternCore = patternCore;
       this.optionalWhen = optionalWhen;
     }
   
@@ -752,14 +752,6 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = patternCore.getLocation();
-      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        patternCore.addForLineNumber($line, $result);
-      }
-      if ($l.getBeginLine() > $line) {
-        return;
-      }
-      
       $l = optionalFallbackSugar.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
         optionalFallbackSugar.addForLineNumber($line, $result);
@@ -771,6 +763,14 @@ public abstract class FunctionDeclaration extends AbstractAST {
       $l = optionalSugarType.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
         optionalSugarType.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = patternCore.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        patternCore.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -792,12 +792,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return false;
       }        
       SugarCICDR tmp = (SugarCICDR) o;
-      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.optionalUsing.equals(this.optionalUsing) && tmp.patternCore.equals(this.patternCore) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.optionalWhen.equals(this.optionalWhen) ; 
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.optionalUsing.equals(this.optionalUsing) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.patternCore.equals(this.patternCore) && tmp.optionalWhen.equals(this.optionalWhen) ; 
     }
    
     @Override
     public int hashCode() {
-      return 61 + 173 * tags.hashCode() + 761 * visibility.hashCode() + 409 * typeCore.hashCode() + 997 * name.hashCode() + 367 * patternSurface.hashCode() + 401 * optionalUsing.hashCode() + 139 * patternCore.hashCode() + 937 * optionalFallbackSugar.hashCode() + 521 * optionalSugarType.hashCode() + 719 * optionalWhen.hashCode() ; 
+      return 61 + 173 * tags.hashCode() + 761 * visibility.hashCode() + 409 * typeCore.hashCode() + 997 * name.hashCode() + 367 * patternSurface.hashCode() + 401 * optionalUsing.hashCode() + 139 * optionalFallbackSugar.hashCode() + 937 * optionalSugarType.hashCode() + 521 * patternCore.hashCode() + 719 * optionalWhen.hashCode() ; 
     } 
   
     
@@ -856,15 +856,6 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Expression getPatternCore() {
-      return this.patternCore;
-    }
-  
-    @Override
-    public boolean hasPatternCore() {
-      return true;
-    }
-    @Override
     public org.rascalmpl.ast.OptionalFallbackSugar getOptionalFallbackSugar() {
       return this.optionalFallbackSugar;
     }
@@ -883,6 +874,15 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
+    public org.rascalmpl.ast.Expression getPatternCore() {
+      return this.patternCore;
+    }
+  
+    @Override
+    public boolean hasPatternCore() {
+      return true;
+    }
+    @Override
     public org.rascalmpl.ast.OptionalWhen getOptionalWhen() {
       return this.optionalWhen;
     }
@@ -894,7 +894,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(optionalUsing), clone(patternCore), clone(optionalFallbackSugar), clone(optionalSugarType), clone(optionalWhen));
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(optionalUsing), clone(optionalFallbackSugar), clone(optionalSugarType), clone(patternCore), clone(optionalWhen));
     }
             
   }
@@ -903,7 +903,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   }
 
   static public class SugarConfection extends FunctionDeclaration {
-    // Production: sig("SugarConfection",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
+    // Production: sig("SugarConfection",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
@@ -911,12 +911,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
     private final org.rascalmpl.ast.Type typeCore;
     private final org.rascalmpl.ast.Name name;
     private final org.rascalmpl.ast.Expression patternSurface;
-    private final org.rascalmpl.ast.Expression patternCore;
     private final org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar;
     private final org.rascalmpl.ast.OptionalSugarType optionalSugarType;
+    private final org.rascalmpl.ast.Expression patternCore;
     private final org.rascalmpl.ast.OptionalWhen optionalWhen;
   
-    public SugarConfection(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
+    public SugarConfection(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
       super(src, node);
       
       this.tags = tags;
@@ -924,9 +924,9 @@ public abstract class FunctionDeclaration extends AbstractAST {
       this.typeCore = typeCore;
       this.name = name;
       this.patternSurface = patternSurface;
-      this.patternCore = patternCore;
       this.optionalFallbackSugar = optionalFallbackSugar;
       this.optionalSugarType = optionalSugarType;
+      this.patternCore = patternCore;
       this.optionalWhen = optionalWhen;
     }
   
@@ -987,14 +987,6 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
-      $l = patternCore.getLocation();
-      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-        patternCore.addForLineNumber($line, $result);
-      }
-      if ($l.getBeginLine() > $line) {
-        return;
-      }
-      
       $l = optionalFallbackSugar.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
         optionalFallbackSugar.addForLineNumber($line, $result);
@@ -1006,6 +998,14 @@ public abstract class FunctionDeclaration extends AbstractAST {
       $l = optionalSugarType.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
         optionalSugarType.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
+      $l = patternCore.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        patternCore.addForLineNumber($line, $result);
       }
       if ($l.getBeginLine() > $line) {
         return;
@@ -1027,12 +1027,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return false;
       }        
       SugarConfection tmp = (SugarConfection) o;
-      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.patternCore.equals(this.patternCore) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.optionalWhen.equals(this.optionalWhen) ; 
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.patternCore.equals(this.patternCore) && tmp.optionalWhen.equals(this.optionalWhen) ; 
     }
    
     @Override
     public int hashCode() {
-      return 773 + 277 * tags.hashCode() + 239 * visibility.hashCode() + 151 * typeCore.hashCode() + 397 * name.hashCode() + 137 * patternSurface.hashCode() + 811 * patternCore.hashCode() + 709 * optionalFallbackSugar.hashCode() + 167 * optionalSugarType.hashCode() + 53 * optionalWhen.hashCode() ; 
+      return 773 + 277 * tags.hashCode() + 239 * visibility.hashCode() + 151 * typeCore.hashCode() + 397 * name.hashCode() + 137 * patternSurface.hashCode() + 811 * optionalFallbackSugar.hashCode() + 709 * optionalSugarType.hashCode() + 167 * patternCore.hashCode() + 53 * optionalWhen.hashCode() ; 
     } 
   
     
@@ -1082,15 +1082,6 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
-    public org.rascalmpl.ast.Expression getPatternCore() {
-      return this.patternCore;
-    }
-  
-    @Override
-    public boolean hasPatternCore() {
-      return true;
-    }
-    @Override
     public org.rascalmpl.ast.OptionalFallbackSugar getOptionalFallbackSugar() {
       return this.optionalFallbackSugar;
     }
@@ -1109,6 +1100,15 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
+    public org.rascalmpl.ast.Expression getPatternCore() {
+      return this.patternCore;
+    }
+  
+    @Override
+    public boolean hasPatternCore() {
+      return true;
+    }
+    @Override
     public org.rascalmpl.ast.OptionalWhen getOptionalWhen() {
       return this.optionalWhen;
     }
@@ -1120,7 +1120,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(patternCore), clone(optionalFallbackSugar), clone(optionalSugarType), clone(optionalWhen));
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(optionalFallbackSugar), clone(optionalSugarType), clone(patternCore), clone(optionalWhen));
     }
             
   }
