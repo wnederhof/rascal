@@ -88,8 +88,8 @@ public class LiteralPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
-		return Arrays.asList(literal);
+	public List<IValue> accept(IMatchingResultVisitor callback) {
+		return callback.visit(this, Arrays.asList(literal));
 	}
 	
 	

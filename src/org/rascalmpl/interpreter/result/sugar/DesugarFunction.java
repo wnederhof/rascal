@@ -104,6 +104,7 @@ public class DesugarFunction extends NamedFunction {
 							}
 						}
 					}
+					ensureNoVariablesLeak(eval.getCurrentEnvt());
 				}
 				return desugar(src, resultToDesugar);
 			}

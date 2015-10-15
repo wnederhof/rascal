@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.Expression.CallOrTree;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
@@ -44,7 +45,7 @@ class ConcreteAmbiguityPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// Next does not ever yield any result. Furthermore, this class is never used.
 		throw new UnsupportedOperation("substitute", getAST());
 	}

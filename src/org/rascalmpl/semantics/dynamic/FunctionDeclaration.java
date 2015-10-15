@@ -29,6 +29,7 @@ import org.rascalmpl.ast.Name;
 import org.rascalmpl.ast.OptionalFallbackSugar;
 import org.rascalmpl.ast.OptionalSugarType;
 import org.rascalmpl.ast.OptionalUsingDesugaring;
+import org.rascalmpl.ast.OptionalUsingOneDesugaring;
 import org.rascalmpl.ast.OptionalWhen;
 import org.rascalmpl.ast.Signature;
 import org.rascalmpl.ast.Tags;
@@ -199,10 +200,11 @@ public abstract class FunctionDeclaration extends
 
 		public SugarConfection(ISourceLocation src, IConstructor node, Tags tags, Visibility visibility,
 				org.rascalmpl.ast.Type typeCore, Name name, org.rascalmpl.ast.Expression patternSurface,
-				OptionalFallbackSugar optionalFallbackSugar, OptionalSugarType optionalSugarType,
-				org.rascalmpl.ast.Expression patternCore, OptionalWhen optionalWhen) {
-			super(src, node, tags, visibility, typeCore, name, patternSurface, optionalFallbackSugar, optionalSugarType,
-					patternCore, optionalWhen);
+				OptionalUsingOneDesugaring optionalUsingOneDesugaring, OptionalFallbackSugar optionalFallbackSugar,
+				OptionalSugarType optionalSugarType, org.rascalmpl.ast.Expression patternCore,
+				OptionalWhen optionalWhen) {
+			super(src, node, tags, visibility, typeCore, name, patternSurface, optionalUsingOneDesugaring, optionalFallbackSugar,
+					optionalSugarType, patternCore, optionalWhen);
 		}
 
 		private void createFallbackSugar(IEvaluator<Result<IValue>> __eval) {

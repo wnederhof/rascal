@@ -60,7 +60,7 @@ public class ValuePattern extends AbstractMatchingResult {
 	}
 	
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// NOT USED ANYWHERE.
 		throw new UnsupportedOperation("substitute", getAST());
 	}

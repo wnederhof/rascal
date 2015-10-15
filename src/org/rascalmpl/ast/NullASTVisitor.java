@@ -933,6 +933,14 @@ public class NullASTVisitor<T> implements IASTVisitor<T> {
     return null; 
   }
 
+  public T visitOptionalUsingOneDesugaringDefault(OptionalUsingOneDesugaring.Default x) { 
+    return null; 
+  }
+
+  public T visitOptionalUsingOneDesugaringNone(OptionalUsingOneDesugaring.None x) { 
+    return null; 
+  }
+
   public T visitOptionalWhenDefault(OptionalWhen.Default x) { 
     return null; 
   }

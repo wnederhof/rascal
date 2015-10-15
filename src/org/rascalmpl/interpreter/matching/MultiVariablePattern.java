@@ -105,16 +105,16 @@ public class MultiVariablePattern extends QualifiedNamePattern {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		List<IValue> resultList = new LinkedList<>();
-		IValue resultElem = super.substitute(substitutionMap).get(0);
+		IValue resultElem = super.accept(callback).get(0);
 		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
 			for (IValue val : (Iterable<IValue>) resultElem) {
 				resultList.add(val);
 			}
 		} // We follow Expression.List on this: just return an empty list if not
 		  // a list or a set.
-		return resultList;
+		return callback.visit(this, resultList);
 	}
 	
 }

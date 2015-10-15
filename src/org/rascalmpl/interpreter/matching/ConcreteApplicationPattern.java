@@ -32,6 +32,7 @@ import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.exceptions.IllegalOperationException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
+import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
@@ -254,29 +255,36 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// LOOKS OK.
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
 		
-		int i = 0;
+		int i = 0, i2 = 0;
+		
 		for (Expression l : layoutExprs) {
 			if (l == null) {
-				List<IValue> x = tupleMatcher.getChildren().get(i).substitute(substitutionMap);
+				List<IValue> x = tupleMatcher.getChildren().get(i).accept(callback);
 				w.append(x.get(0));
 				i++;
 			} else {
 				// M(&@$#&F@#*&(@#KING LAYOUTS!!!!
-				w.append(l.interpret((IEvaluator<Result<IValue>>) ctx).getValue());
+				if (subject.getValue() instanceof IConstructor) {
+					w.append( ((IList)  ((IConstructor) subject.getValue()).get(1)).get(i2) );
+				} else {
+					w.append(l.interpret((IEvaluator<Result<IValue>>) ctx).getValue());
+				}
 			}
+			i2++;
 		}
+	
 
 		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {
-			return Arrays.asList(VF.appl(annos, production, w.done()));
+			return callback.visit(this, Arrays.asList(VF.appl(annos, production, w.done()) ));
 		} else {
-			return Arrays.asList(VF.appl(production, w.done()));
+			return callback.visit(this, Arrays.asList(VF.appl(production, w.done())));
 		}
 	}
 	

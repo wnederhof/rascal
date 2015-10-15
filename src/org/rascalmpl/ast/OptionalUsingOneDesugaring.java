@@ -19,17 +19,17 @@ package org.rascalmpl.ast;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 
-public abstract class OptionalWhen extends AbstractAST {
-  public OptionalWhen(ISourceLocation src, IConstructor node) {
+public abstract class OptionalUsingOneDesugaring extends AbstractAST {
+  public OptionalUsingOneDesugaring(ISourceLocation src, IConstructor node) {
     super(src /* we forget node on purpose */);
   }
 
   
-  public boolean hasConditions() {
+  public boolean hasQualifiedName() {
     return false;
   }
 
-  public java.util.List<org.rascalmpl.ast.Expression> getConditions() {
+  public org.rascalmpl.ast.QualifiedName getQualifiedName() {
     throw new UnsupportedOperationException();
   }
 
@@ -40,16 +40,16 @@ public abstract class OptionalWhen extends AbstractAST {
     return false;
   }
 
-  static public class Default extends OptionalWhen {
-    // Production: sig("Default",[arg("java.util.List\<org.rascalmpl.ast.Expression\>","conditions")],breakable=false)
+  static public class Default extends OptionalUsingOneDesugaring {
+    // Production: sig("Default",[arg("org.rascalmpl.ast.QualifiedName","qualifiedName")],breakable=false)
   
     
-    private final java.util.List<org.rascalmpl.ast.Expression> conditions;
+    private final org.rascalmpl.ast.QualifiedName qualifiedName;
   
-    public Default(ISourceLocation src, IConstructor node , java.util.List<org.rascalmpl.ast.Expression> conditions) {
+    public Default(ISourceLocation src, IConstructor node , org.rascalmpl.ast.QualifiedName qualifiedName) {
       super(src, node);
       
-      this.conditions = conditions;
+      this.qualifiedName = qualifiedName;
     }
   
     @Override
@@ -59,7 +59,7 @@ public abstract class OptionalWhen extends AbstractAST {
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitOptionalWhenDefault(this);
+      return visitor.visitOptionalUsingOneDesugaringDefault(this);
     }
   
     @Override
@@ -69,16 +69,14 @@ public abstract class OptionalWhen extends AbstractAST {
       }
       ISourceLocation $l;
       
-      for (AbstractAST $elem : conditions) {
-        $l = $elem.getLocation();
-        if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
-          $elem.addForLineNumber($line, $result);
-        }
-        if ($l.getBeginLine() > $line) {
-          return;
-        }
-  
+      $l = qualifiedName.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        qualifiedName.addForLineNumber($line, $result);
       }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
     }
   
     @Override
@@ -87,28 +85,28 @@ public abstract class OptionalWhen extends AbstractAST {
         return false;
       }        
       Default tmp = (Default) o;
-      return true && tmp.conditions.equals(this.conditions) ; 
+      return true && tmp.qualifiedName.equals(this.qualifiedName) ; 
     }
    
     @Override
     public int hashCode() {
-      return 859 + 3 * conditions.hashCode() ; 
+      return 157 + 139 * qualifiedName.hashCode() ; 
     } 
   
     
     @Override
-    public java.util.List<org.rascalmpl.ast.Expression> getConditions() {
-      return this.conditions;
+    public org.rascalmpl.ast.QualifiedName getQualifiedName() {
+      return this.qualifiedName;
     }
   
     @Override
-    public boolean hasConditions() {
+    public boolean hasQualifiedName() {
       return true;
     }	
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(conditions));
+      return newInstance(getClass(), src, (IConstructor) null , clone(qualifiedName));
     }
             
   }
@@ -116,7 +114,7 @@ public abstract class OptionalWhen extends AbstractAST {
     return false;
   }
 
-  static public class None extends OptionalWhen {
+  static public class None extends OptionalUsingOneDesugaring {
     // Production: sig("None",[],breakable=false)
   
     
@@ -133,7 +131,7 @@ public abstract class OptionalWhen extends AbstractAST {
   
     @Override
     public <T> T accept(IASTVisitor<T> visitor) {
-      return visitor.visitOptionalWhenNone(this);
+      return visitor.visitOptionalUsingOneDesugaringNone(this);
     }
   
     @Override
@@ -156,7 +154,7 @@ public abstract class OptionalWhen extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 701 ; 
+      return 193 ; 
     } 
   
     	

@@ -88,6 +88,13 @@ public abstract class FunctionDeclaration extends AbstractAST {
   public org.rascalmpl.ast.OptionalUsingDesugaring getOptionalUsing() {
     throw new UnsupportedOperationException();
   }
+  public boolean hasOptionalUsingOneDesugaring() {
+    return false;
+  }
+
+  public org.rascalmpl.ast.OptionalUsingOneDesugaring getOptionalUsingOneDesugaring() {
+    throw new UnsupportedOperationException();
+  }
   public boolean hasOptionalWhen() {
     return false;
   }
@@ -903,7 +910,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   }
 
   static public class SugarConfection extends FunctionDeclaration {
-    // Production: sig("SugarConfection",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
+    // Production: sig("SugarConfection",[arg("org.rascalmpl.ast.Tags","tags"),arg("org.rascalmpl.ast.Visibility","visibility"),arg("org.rascalmpl.ast.Type","typeCore"),arg("org.rascalmpl.ast.Name","name"),arg("org.rascalmpl.ast.Expression","patternSurface"),arg("org.rascalmpl.ast.OptionalUsingOneDesugaring","optionalUsingOneDesugaring"),arg("org.rascalmpl.ast.OptionalFallbackSugar","optionalFallbackSugar"),arg("org.rascalmpl.ast.OptionalSugarType","optionalSugarType"),arg("org.rascalmpl.ast.Expression","patternCore"),arg("org.rascalmpl.ast.OptionalWhen","optionalWhen")],breakable=false)
   
     
     private final org.rascalmpl.ast.Tags tags;
@@ -911,12 +918,13 @@ public abstract class FunctionDeclaration extends AbstractAST {
     private final org.rascalmpl.ast.Type typeCore;
     private final org.rascalmpl.ast.Name name;
     private final org.rascalmpl.ast.Expression patternSurface;
+    private final org.rascalmpl.ast.OptionalUsingOneDesugaring optionalUsingOneDesugaring;
     private final org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar;
     private final org.rascalmpl.ast.OptionalSugarType optionalSugarType;
     private final org.rascalmpl.ast.Expression patternCore;
     private final org.rascalmpl.ast.OptionalWhen optionalWhen;
   
-    public SugarConfection(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
+    public SugarConfection(ISourceLocation src, IConstructor node , org.rascalmpl.ast.Tags tags,  org.rascalmpl.ast.Visibility visibility,  org.rascalmpl.ast.Type typeCore,  org.rascalmpl.ast.Name name,  org.rascalmpl.ast.Expression patternSurface,  org.rascalmpl.ast.OptionalUsingOneDesugaring optionalUsingOneDesugaring,  org.rascalmpl.ast.OptionalFallbackSugar optionalFallbackSugar,  org.rascalmpl.ast.OptionalSugarType optionalSugarType,  org.rascalmpl.ast.Expression patternCore,  org.rascalmpl.ast.OptionalWhen optionalWhen) {
       super(src, node);
       
       this.tags = tags;
@@ -924,6 +932,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
       this.typeCore = typeCore;
       this.name = name;
       this.patternSurface = patternSurface;
+      this.optionalUsingOneDesugaring = optionalUsingOneDesugaring;
       this.optionalFallbackSugar = optionalFallbackSugar;
       this.optionalSugarType = optionalSugarType;
       this.patternCore = patternCore;
@@ -987,6 +996,14 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return;
       }
       
+      $l = optionalUsingOneDesugaring.getLocation();
+      if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
+        optionalUsingOneDesugaring.addForLineNumber($line, $result);
+      }
+      if ($l.getBeginLine() > $line) {
+        return;
+      }
+      
       $l = optionalFallbackSugar.getLocation();
       if ($l.hasLineColumn() && $l.getBeginLine() <= $line && $l.getEndLine() >= $line) {
         optionalFallbackSugar.addForLineNumber($line, $result);
@@ -1027,12 +1044,12 @@ public abstract class FunctionDeclaration extends AbstractAST {
         return false;
       }        
       SugarConfection tmp = (SugarConfection) o;
-      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.patternCore.equals(this.patternCore) && tmp.optionalWhen.equals(this.optionalWhen) ; 
+      return true && tmp.tags.equals(this.tags) && tmp.visibility.equals(this.visibility) && tmp.typeCore.equals(this.typeCore) && tmp.name.equals(this.name) && tmp.patternSurface.equals(this.patternSurface) && tmp.optionalUsingOneDesugaring.equals(this.optionalUsingOneDesugaring) && tmp.optionalFallbackSugar.equals(this.optionalFallbackSugar) && tmp.optionalSugarType.equals(this.optionalSugarType) && tmp.patternCore.equals(this.patternCore) && tmp.optionalWhen.equals(this.optionalWhen) ; 
     }
    
     @Override
     public int hashCode() {
-      return 773 + 277 * tags.hashCode() + 239 * visibility.hashCode() + 151 * typeCore.hashCode() + 397 * name.hashCode() + 137 * patternSurface.hashCode() + 811 * optionalFallbackSugar.hashCode() + 709 * optionalSugarType.hashCode() + 167 * patternCore.hashCode() + 53 * optionalWhen.hashCode() ; 
+      return 773 + 277 * tags.hashCode() + 239 * visibility.hashCode() + 151 * typeCore.hashCode() + 397 * name.hashCode() + 137 * patternSurface.hashCode() + 811 * optionalUsingOneDesugaring.hashCode() + 709 * optionalFallbackSugar.hashCode() + 167 * optionalSugarType.hashCode() + 53 * patternCore.hashCode() + 463 * optionalWhen.hashCode() ; 
     } 
   
     
@@ -1082,6 +1099,15 @@ public abstract class FunctionDeclaration extends AbstractAST {
       return true;
     }
     @Override
+    public org.rascalmpl.ast.OptionalUsingOneDesugaring getOptionalUsingOneDesugaring() {
+      return this.optionalUsingOneDesugaring;
+    }
+  
+    @Override
+    public boolean hasOptionalUsingOneDesugaring() {
+      return true;
+    }
+    @Override
     public org.rascalmpl.ast.OptionalFallbackSugar getOptionalFallbackSugar() {
       return this.optionalFallbackSugar;
     }
@@ -1120,7 +1146,7 @@ public abstract class FunctionDeclaration extends AbstractAST {
   
     @Override
     public Object clone()  {
-      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(optionalFallbackSugar), clone(optionalSugarType), clone(patternCore), clone(optionalWhen));
+      return newInstance(getClass(), src, (IConstructor) null , clone(tags), clone(visibility), clone(typeCore), clone(name), clone(patternSurface), clone(optionalUsingOneDesugaring), clone(optionalFallbackSugar), clone(optionalSugarType), clone(patternCore), clone(optionalWhen));
     }
             
   }

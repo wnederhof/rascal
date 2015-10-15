@@ -160,17 +160,17 @@ public class TuplePattern extends AbstractMatchingResult {
 	}
 	
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		List<IValue> results = new LinkedList<IValue>();
 		for (IMatchingResult c : children) {
-			results.addAll(c.substitute(substitutionMap));
+			results.addAll(c.accept(callback));
 		}
 		List<IValue> resultsAsValues = new LinkedList<IValue>();
 		for (IValue value : results) {
 			resultsAsValues.add(value);
 		}
 		ITuple t = VF.tuple(resultsAsValues.toArray(new IValue[resultsAsValues.size()]));
-		return Arrays.asList(t);
+		return callback.visit(this, Arrays.asList(t));
 	}
 }

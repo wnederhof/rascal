@@ -133,20 +133,21 @@ public class ResugarFunction extends NamedFunction {
 	 * @return the resugared term.
 	 */
 	private Result<IValue> disassembleSugarParametersAndResugar(IValue termToResugar) {
-		Result<IValue> resultToDesugar = makeResult(termToResugar);
+		Result<IValue> resultToResugar = makeResult(termToResugar);
 		IMatchingResult matcher;
 		if (!repeatMode() && coreIsEqualToArgument()) {
 			matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
-			matcher.initMatch(resultToDesugar);
+			matcher.initMatch(resultToResugar);
 			resugarOnlyArgument();
 		} else {
 			termToResugar = callInnerSugarsFirst(termToResugar.getType(), termToResugar);
+			resultToResugar = makeResult(termToResugar);
 			matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
-			matcher.initMatch(resultToDesugar);
+			matcher.initMatch(resultToResugar);
 		}
 		ISourceLocation src = eval.getCurrentAST().getLocation();
-		if (matcher.next()) {
-			Result<IValue> r = resugar(src, resultToDesugar);
+		if (matcher.hasNext() && matcher.next()) {
+			Result<IValue> r = resugar(src, resultToResugar);
 			return r;
 		}
 		throw new MatchFailed();

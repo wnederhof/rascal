@@ -64,15 +64,15 @@ public class NegativePattern extends AbstractMatchingResult {
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// TODO Unsupported.
 		
-		List<IValue> substituted = pat.substitute(substitutionMap);
+		List<IValue> substituted = pat.accept(callback);
 		if (substituted.size() != 1) {
 			throw new RuntimeException("Substituted is not of length 1.");
 		}
 		
 		// IBool extends from IValue, but casting does not work directly, so we add @suppressWarning.
-		return Arrays.asList(((INumber) substituted.get(0)).negate());
+		return callback.visit(this, Arrays.asList(((INumber) substituted.get(0)).negate()));
 	}
 }

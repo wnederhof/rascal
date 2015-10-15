@@ -160,7 +160,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
 			}
 			long t2 = System.nanoTime();
-			System.out.println(" & " + ((t2 - t1)/(totalIterations * 1000)));
+			//System.out.println(" & " + ((t2 - t1)/(totalIterations * 1000)));
 			return finalResult;
 		}
 		
@@ -190,7 +190,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 				finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
 			}
 			long t2 = System.nanoTime();
-			System.out.print("" + ((t2 - t1)/(totalIterations * 1000)));
+			//System.out.print("" + ((t2 - t1)/(totalIterations * 1000)));
 			return finalResult;
 		}
 	}

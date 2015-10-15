@@ -105,9 +105,9 @@ public class DescendantPattern extends AbstractMatchingResult  {
 		hasNext = false;
 		return false;
 	}
-	
+
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		throw new UnsupportedOperation("substitute", getAST());
 	}
 }

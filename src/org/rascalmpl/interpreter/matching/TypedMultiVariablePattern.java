@@ -12,15 +12,12 @@ package org.rascalmpl.interpreter.matching;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
-import org.rascalmpl.interpreter.result.Result;
-import org.rascalmpl.interpreter.result.ResultFactory;
 
 
 public class TypedMultiVariablePattern extends TypedVariablePattern {
@@ -56,19 +53,12 @@ public class TypedMultiVariablePattern extends TypedVariablePattern {
 		return "*" + declaredType + " " + getName();
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// TO DO: Types.
 		List<IValue> resultList = new LinkedList<>();
-		IValue resultElem = super.substitute(substitutionMap).get(0);
-		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
-			for (IValue val : (Iterable<IValue>) resultElem) {
-				resultList.add(val);
-			}
-		} // We follow Expression.List on this: just return an empty list if not
-		  // a list or a set.
-		return resultList;
+		resultList.add(subject.getValue());
+		return callback.visit(this, resultList);
 	}
 
 }

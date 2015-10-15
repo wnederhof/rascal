@@ -108,9 +108,8 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 		}
 	
 		if (!anonymous && !iDeclaredItMyself && !ctx.getCurrentEnvt().declareVariable(declaredType, name)) {
-			// TODO: Experimental.
-			throw new RedeclaredVariable(name, ctx.getCurrentAST());
-//			return true;
+			// TODO: Experimental. // TODO: Wouter: Turned off.
+			//throw new RedeclaredVariable(name, ctx.getCurrentAST());
 		}
 		
 		iDeclaredItMyself = true;
@@ -205,18 +204,10 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 	}
 
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		if (!initialized) throw new RuntimeException("Not initialized!");
-		if (!substitutionMap.containsKey(name)) {
-			throw new UndeclaredVariable(name, getAST());
-		}
 		List<IValue> resultList = new LinkedList<>();
-		Result<IValue> resultElem = substitutionMap.get(name);
-		
-		resultList.add(resultElem.getValue());
-		
-		// We follow Expression.List on this: just return an empty list if not
-		  // a list or a set.
-		return resultList;
+		resultList.add(subject.getValue());
+		return callback.visit(this, resultList);
 	}
 }

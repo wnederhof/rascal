@@ -92,7 +92,7 @@ public abstract class OptionalFallbackSugar extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 23 + 23 * names.hashCode() ; 
+      return 23 + 491 * names.hashCode() ; 
     } 
   
     
@@ -156,7 +156,7 @@ public abstract class OptionalFallbackSugar extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 491 ; 
+      return 617 ; 
     } 
   
     	

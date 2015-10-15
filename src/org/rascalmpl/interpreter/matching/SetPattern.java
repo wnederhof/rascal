@@ -727,12 +727,12 @@ public class SetPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// The cool thing about sets is that order does not matter, and the pattern children are
 		// initialized earlier and "nexted" earlier, so in contrast to list patterns, we don't have to track anything.
 		List<IValue> result = new LinkedList<IValue>();
 		for (IMatchingResult pc : patternChildren) {
-			List<IValue> substitute = pc.substitute(substitutionMap);
+			List<IValue> substitute = pc.accept(callback);
 			result.addAll(substitute);
 		}
 		List<IValue> resultValues = new LinkedList<IValue>();
@@ -741,6 +741,6 @@ public class SetPattern extends AbstractMatchingResult {
 		}
 		IValue[] setArr = resultValues.toArray(new IValue[resultValues.size()]);
 		ISet set = VF.set(setArr);
-		return Arrays.asList(set);
+		return callback.visit(this, Arrays.asList(set));
 	}
 }

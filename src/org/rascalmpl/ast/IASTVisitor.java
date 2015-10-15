@@ -475,6 +475,10 @@ public interface IASTVisitor<T> {
 
   public T visitOptionalUsingDesugaringNone(OptionalUsingDesugaring.None x);
 
+  public T visitOptionalUsingOneDesugaringDefault(OptionalUsingOneDesugaring.Default x);
+
+  public T visitOptionalUsingOneDesugaringNone(OptionalUsingOneDesugaring.None x);
+
   public T visitOptionalWhenDefault(OptionalWhen.Default x);
 
   public T visitOptionalWhenNone(OptionalWhen.None x);

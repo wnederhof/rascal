@@ -92,7 +92,7 @@ public abstract class OptionalUsingDesugaring extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 5 + 19 * sugarFunctionMapping.hashCode() ; 
+      return 19 + 19 * sugarFunctionMapping.hashCode() ; 
     } 
   
     

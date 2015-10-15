@@ -107,7 +107,7 @@ public abstract class SugarFunctionMapping extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 103 + 67 * from.hashCode() + 769 * to.hashCode() ; 
+      return 541 + 353 * from.hashCode() + 23 * to.hashCode() ; 
     } 
   
     

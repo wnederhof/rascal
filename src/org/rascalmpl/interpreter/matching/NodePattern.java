@@ -432,7 +432,7 @@ public class NodePattern extends AbstractMatchingResult {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		Map<String, IValue> subjectKeywords = null;
 		// Set original keyword parameters.
 		if (subject.mayHaveKeywordParameters()) {
@@ -441,7 +441,7 @@ public class NodePattern extends AbstractMatchingResult {
 		// We can completely ignore annotations atm as there is no matching for annotations.
 		// Now, override every matched keyword parameters.
 		for (String s : keywordParameters.keySet()) {
-			List<IValue> substituted = keywordParameters.get(s).substitute(substitutionMap);
+			List<IValue> substituted = keywordParameters.get(s).accept(callback);
 			if (substituted.size() != 1) {
 				throw new RuntimeException("Substituted length != 1");
 			}
@@ -453,7 +453,7 @@ public class NodePattern extends AbstractMatchingResult {
 		// Reconstruct using the patterns.
 		List<IValue> result = new LinkedList<IValue>();
 		for (IMatchingResult pc : patternChildren) {
-			List<IValue> substitute = pc.substitute(substitutionMap);
+			List<IValue> substitute = pc.accept(callback);
 			result.addAll(substitute);
 		}
 		List<IValue> resultValues = new LinkedList<IValue>();
@@ -467,7 +467,7 @@ public class NodePattern extends AbstractMatchingResult {
 			cons = cons.asAnnotatable().setAnnotations(annotations);
 		}
 		
-		return Arrays.asList(cons);
+		return callback.visit(this, Arrays.asList(cons));
 	}
 
 }

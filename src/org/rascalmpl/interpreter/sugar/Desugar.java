@@ -56,17 +56,19 @@ public class Desugar {
 
 	private void desugarPatternVariables() {
 		// We only need to desugar the variables in the core pattern.
-		for (IVarPattern varPattern : corePattern.buildMatcher(eval).getVariables()) {
+		start: for (IVarPattern varPattern : corePattern.buildMatcher(eval).getVariables()) {
 			if (functionDeclaration.hasOptionalUsing() && functionDeclaration.getOptionalUsing().isDefault()) {
 				for (SugarFunctionMapping sfm : functionDeclaration.getOptionalUsing().getSugarFunctionMapping()) {
 					if (Names.name(sfm.getFrom()).equals(varPattern.name())) {
+						System.out.println(varPattern.name());
 						DesugarTransformer<RuntimeException> customDesugarTransformer = new DesugarTransformer<RuntimeException>(
 								new IdentityVisitor<RuntimeException>() {}, ValueFactory.getInstance(), eval, sfm.getTo());
 						setVariable(varPattern.name(), desugarTransform(customDesugarTransformer, getVariable(varPattern)));
-						continue;
+						continue start;
 					}
 				}
 			}
+			System.out.println(">" + varPattern.name());
 			setVariable(varPattern.name(), desugarTransform(desugarTransformer, getVariable(varPattern)));
 		}
 	}
@@ -77,8 +79,16 @@ public class Desugar {
 	}
 
 	private Result<IValue> desugarTermAndTransform(IValue originalTerm) {
+		IValue transformedTerm;
 		Result<IValue> desugaredTerm = desugarTerm(originalTerm);
-		IValue transformedTerm = desugarTransform(desugarTransformer, desugaredTerm);
+		if (functionDeclaration.hasOptionalUsingOneDesugaring() && functionDeclaration.getOptionalUsingOneDesugaring().hasQualifiedName()) {
+			DesugarTransformer<RuntimeException> customDesugarTransformer = new DesugarTransformer<RuntimeException>(
+					new IdentityVisitor<RuntimeException>() {}, ValueFactory.getInstance(), eval,
+					functionDeclaration.getOptionalUsingOneDesugaring().getQualifiedName());
+			transformedTerm = desugarTransform(customDesugarTransformer, desugaredTerm);
+		} else {
+			transformedTerm = desugarTransform(desugarTransformer, desugaredTerm);
+		}
 		return attachResugarFunction(makeResult(transformedTerm), originalTerm);
 	}
 	

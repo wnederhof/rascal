@@ -77,14 +77,14 @@ public class ListPattern extends AbstractMatchingResult  {
   private Type staticListSubjectType;
 
   @Override
-  public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+  public List<IValue> accept(IMatchingResultVisitor callback) {
 		List<IValue> resultValues = new LinkedList<IValue>();
-		for (IValue arg : substituteChildren(substitutionMap)) {
+		for (IValue arg : substituteChildren(callback)) {
 			resultValues.add(arg);
 		}
 		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
 		IList list = VF.list(listArr);
-		return Arrays.asList(list);
+		return callback.visit(this, Arrays.asList(list));
   }
 
   public ListPattern(IEvaluatorContext ctx, AbstractAST x, List<IMatchingResult> list){
@@ -93,14 +93,15 @@ public class ListPattern extends AbstractMatchingResult  {
   
   // This function gets the patterns at the right location, while considering the deltas
   // and the shifted positions of the patterns.
-  public  List<IValue> substituteChildren(Map<String, Result<IValue>> substitutionMap) {
+  public  List<IValue> substituteChildren(IMatchingResultVisitor callback) {
 	  List<IValue> usedPatternChildren = new LinkedList<IValue>();
 	  for (int i = 0; i < patternChildren.size(); i ++) {
 		  if (i % delta == 0) {
-			  usedPatternChildren.addAll(matchResultAtPosition.get(i).substitute(substitutionMap));
+			  usedPatternChildren.addAll(matchResultAtPosition.get(i).accept(callback));
 		  } else {
 			  // TODO: If the list being substituted is shorter than the original, we have a problem.
 			  //if (i < listSubject.length()) {
+			  System.out.println("ashjkashsdhaskjadkjashdksajdhaskjdhasd");
 				  usedPatternChildren.add(listSubject.get(i % listSubject.length()));
 				// }
 		  }

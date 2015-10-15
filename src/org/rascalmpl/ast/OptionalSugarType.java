@@ -92,7 +92,7 @@ public abstract class OptionalSugarType extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 617 + 761 * names.hashCode() ; 
+      return 761 + 197 * names.hashCode() ; 
     } 
   
     
@@ -156,7 +156,7 @@ public abstract class OptionalSugarType extends AbstractAST {
    
     @Override
     public int hashCode() {
-      return 197 ; 
+      return 5 ; 
     } 
   
     	

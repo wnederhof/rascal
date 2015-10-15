@@ -150,14 +150,8 @@ public class TypedVariablePattern extends AbstractMatchingResult implements IVar
 	}
 	
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
-		// TO DO: Types.
-		if (substitutionMap.containsKey(name)) {
-			// Here we do the substitution.
-			return Arrays.asList(substitutionMap.get(name).getValue());
-		}
-		System.out.println(name);
-		return Arrays.asList(ctx.getCurrentEnvt().getVariable(name).getValue());
+	public List<IValue> accept(IMatchingResultVisitor callback) {
+		return callback.visit(this, Arrays.asList(subject.getValue()));
 	}
 	 
 }

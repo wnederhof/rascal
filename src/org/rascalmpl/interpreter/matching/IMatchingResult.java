@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.result.Result;
@@ -34,7 +35,7 @@ public interface IMatchingResult extends IBooleanResult {
 	  * @param substitutionMap the substitution map.
 	  * @return
 	  */
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap);
+	public List<IValue> accept(IMatchingResultVisitor callback);
 	  
 	/**
 	 * @param patternVars TODO

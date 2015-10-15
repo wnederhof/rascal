@@ -89,7 +89,7 @@ public class FallbackSugarFunction extends NamedFunction {
 			IMatchingResult matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
 			matcher.initMatch(resultToResugar);
 			try {
-				if (matcher.next()) {
+				if (matcher.hasNext() && matcher.next()) {
 					return functionDeclaration.getPatternSurface().interpret(eval);
 				}
 			} catch(UndeclaredVariable e) {

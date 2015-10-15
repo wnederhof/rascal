@@ -163,14 +163,14 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 	
 	// TODO source tracking etc.
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// LOOKS OK.
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
 		
 		// TODO: Not sure what to do with Opt.MayExist
 		if (type != Opt.NotExist) {
-			List<IValue> x = optArg.substitute(substitutionMap);
+			List<IValue> x = optArg.accept(callback);
 			for (int i = 0; i < x.size(); i++) {
 				w.append(x.get(i));
 			}
@@ -181,9 +181,9 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {
-			return Arrays.asList(VF.appl(annos, production, w.done()));
+			return callback.visit(this, Arrays.asList(VF.appl(annos, production, w.done())));
 		} else {
-			return Arrays.asList(VF.appl(production, w.done()));
+			return callback.visit(this, Arrays.asList(VF.appl(production, w.done())));
 		}
 	}
 

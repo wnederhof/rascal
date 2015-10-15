@@ -24,6 +24,7 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
@@ -163,17 +164,17 @@ public class ConcreteListPattern extends AbstractMatchingResult {
 	}
 	
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		IConstructor production = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).getProduction();
 		IListWriter w = ctx.getValueFactory().listWriter();
-		for (IValue arg : pat.substituteChildren(substitutionMap)) {
+		for (IValue arg : pat.substituteChildren(callback)) {
 			w.append(arg);
 		}
 		Map<String, IValue> annos = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).asAnnotatable().getAnnotations();
 		int delta = getDelta(production);
 		if (annos.isEmpty()) {
-			return Arrays.asList(VF.appl(production, flatten(w.done(), delta, production)));
+			return callback.visit(this, Arrays.asList(VF.appl(production, flatten(w.done(), delta, production))));
 		}
-		return Arrays.asList(VF.appl(annos, production, flatten(w.done(), delta, production)));
+		return callback.visit(this, Arrays.asList(VF.appl(annos, production, flatten(w.done(), delta, production))));
 	}
 }

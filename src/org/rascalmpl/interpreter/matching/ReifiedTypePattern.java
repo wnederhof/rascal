@@ -83,10 +83,10 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> substitute(Map<String, Result<IValue>> substitutionMap) {
+	public List<IValue> accept(IMatchingResultVisitor callback) {
 		// We don't get a list here.
-		IValue symbol = _symbol.substitute(substitutionMap).get(0);
-		IValue declarations = _definitions.substitute(substitutionMap).get(0);
+		IValue symbol = _symbol.accept(callback).get(0);
+		IValue declarations = _definitions.accept(callback).get(0);
 		
 		if (!symbol.getType().isSubtypeOf(RascalValueFactory.Symbol)) {
 			throw new UnexpectedType(RascalValueFactory.Symbol, symbol.getType(), _symbol.getAST());
@@ -104,6 +104,6 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 		bindings.put(RascalValueFactory.TypeParam, TF.valueType());
 		Type typ = RascalValueFactory.Type.instantiate(bindings);
 		
-		return Arrays.asList(val);
+		return callback.visit(this, Arrays.asList(val));
 	}
 }
