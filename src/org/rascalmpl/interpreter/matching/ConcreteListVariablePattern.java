@@ -20,7 +20,6 @@ import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
@@ -29,10 +28,9 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
-import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
-import org.rascalmpl.interpreter.staticErrors.UndeclaredVariable;
 import org.rascalmpl.interpreter.types.NonTerminalType;
 import org.rascalmpl.interpreter.utils.Names;
 import org.rascalmpl.values.uptr.RascalValueFactory;
@@ -203,11 +201,20 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 		return declaredType;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		List<IValue> resultList = new LinkedList<>();
-		resultList.add(subject.getValue());
+		Result<IValue> resultElem = subject;
+		if (subject.getValue() instanceof Iterable) {
+			for (IValue val : (Iterable<IValue>) resultElem.getValue()) {
+				resultList.add(val);
+			}
+		} else {
+			// This should not happen.
+			resultList.add(resultElem.getValue());
+		}
 		return callback.visit(this, resultList);
 	}
 }

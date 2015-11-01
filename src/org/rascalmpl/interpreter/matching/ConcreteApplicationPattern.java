@@ -32,11 +32,11 @@ import org.eclipse.imp.pdb.facts.exceptions.FactTypeUseException;
 import org.eclipse.imp.pdb.facts.exceptions.IllegalOperationException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.semantics.dynamic.Tree;
@@ -255,7 +255,7 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		// LOOKS OK.
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
@@ -279,6 +279,7 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 		}
 	
 
+		@SuppressWarnings("deprecation")
 		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {

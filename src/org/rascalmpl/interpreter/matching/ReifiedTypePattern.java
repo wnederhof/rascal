@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IMap;
@@ -28,8 +27,8 @@ import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.TypeReifier;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
-import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 import org.rascalmpl.interpreter.types.RascalTypeFactory;
 import org.rascalmpl.values.uptr.IRascalValueFactory;
@@ -83,7 +82,7 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		// We don't get a list here.
 		IValue symbol = _symbol.accept(callback).get(0);
 		IValue declarations = _definitions.accept(callback).get(0);
@@ -102,7 +101,7 @@ public class ReifiedTypePattern extends AbstractMatchingResult {
 		IValue val = VF.constructor(RascalValueFactory.Type_Reified.instantiate(bindings), symbol, declarations);
 		
 		bindings.put(RascalValueFactory.TypeParam, TF.valueType());
-		Type typ = RascalValueFactory.Type.instantiate(bindings);
+		// Type typ = RascalValueFactory.Type.instantiate(bindings);
 		
 		return callback.visit(this, Arrays.asList(val));
 	}

@@ -1,8 +1,11 @@
 package org.rascalmpl.interpreter.result.sugar;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.eclipse.imp.pdb.facts.IList;
+import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -21,6 +24,8 @@ import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
+import org.rascalmpl.interpreter.matching.visitor.IdentityValueMatchingResultVisitor;
+import org.rascalmpl.interpreter.matching.visitor.PatternUUIDAccumulator;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.NamedFunction;
 import org.rascalmpl.interpreter.result.Result;
@@ -36,6 +41,8 @@ import org.rascalmpl.interpreter.utils.Names;
 public class ResugarFunction extends NamedFunction {
 	private FunctionDeclaration functionDeclaration;
 	private IValue originalTerm;
+	private PatternUUIDAccumulator patternUuidAccumulator;
+	private Map<String, Integer> maxEllipsisVariablesLength;
 
 	private static FunctionType createResugarFunctionType(FunctionDeclaration functionDeclaration,
 			IEvaluator<Result<IValue>> eval, Environment env) {
@@ -47,16 +54,19 @@ public class ResugarFunction extends NamedFunction {
 	}
 
 	public ResugarFunction(AbstractAST ast, IEvaluator<Result<IValue>> eval, FunctionDeclaration functionDeclaration,
-			String name, Environment env, IValue originalTerm) {
+			String name, Environment env, IValue originalTerm, PatternUUIDAccumulator patternUuidAccumulator,
+			Map<String, Integer> maxEllipsisVariablesLength) {
 		super(ast, eval, createResugarFunctionType(functionDeclaration, eval, env), new LinkedList<>(), name, false,
 				false, false, env);
 		this.functionDeclaration = functionDeclaration;
 		this.originalTerm = originalTerm;
+		this.patternUuidAccumulator = patternUuidAccumulator;
+		this.maxEllipsisVariablesLength = maxEllipsisVariablesLength;
 	}
 
 	@Override
 	public ICallableValue cloneInto(Environment env) {
-		return new ResugarFunction(ast, eval, functionDeclaration, name, env, originalTerm);
+		return new ResugarFunction(ast, eval, functionDeclaration, name, env, originalTerm, patternUuidAccumulator, maxEllipsisVariablesLength);
 	}
 
 	@Override
@@ -66,14 +76,15 @@ public class ResugarFunction extends NamedFunction {
 
 	private Result<IValue> resugar(ISourceLocation src, Result<IValue> resultToDesugar) {
 		IValueVisitor<IValue, RuntimeException> identityVisitor = new IdentityVisitor<RuntimeException>() {};
-		ResugarTransformer<RuntimeException> desugarTransformer = new ResugarTransformer<RuntimeException>(
+		ResugarTransformer<RuntimeException> resugarTransformer = new ResugarTransformer<RuntimeException>(
 				identityVisitor, vf, eval);
 		Resugar resugar = new Resugar(
 				functionDeclaration.getPatternSurface(),
 				functionDeclaration.getPatternCore(),
-				desugarTransformer,
+				resugarTransformer,
 				eval,
-				repeatMode());
+				repeatMode(),
+				maxEllipsisVariablesLength);
 		return resugar.resugar(resultToDesugar, originalTerm);
 	}
 	
@@ -136,21 +147,73 @@ public class ResugarFunction extends NamedFunction {
 		Result<IValue> resultToResugar = makeResult(termToResugar);
 		IMatchingResult matcher;
 		if (!repeatMode() && coreIsEqualToArgument()) {
+			//resugarOnlyArgument();
 			matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
 			matcher.initMatch(resultToResugar);
-			resugarOnlyArgument();
 		} else {
 			termToResugar = callInnerSugarsFirst(termToResugar.getType(), termToResugar);
 			resultToResugar = makeResult(termToResugar);
 			matcher = functionDeclaration.getPatternCore().buildMatcher(eval);
-			matcher.initMatch(resultToResugar);
+			try {
+				matcher.initMatch(resultToResugar);
+			} catch(Throwable t) {
+				//throw new MatchFailed();
+				//throw new RuntimeException("WTF");
+			}
 		}
 		ISourceLocation src = eval.getCurrentAST().getLocation();
-		if (matcher.hasNext() && matcher.next()) {
-			Result<IValue> r = resugar(src, resultToResugar);
-			return r;
+		while (matcher.hasNext() && matcher.next()) {
+			PatternUUIDAccumulator steppedPua = new PatternUUIDAccumulator(
+					new IdentityValueMatchingResultVisitor(),
+					new IdentityValueMatchingResultVisitor());
+			matcher.accept(steppedPua);
+			if (steppedPua.equals(patternUuidAccumulator)) {
+				if (!ellipsisVariablesLengthsAreCorrect()) {
+					//System.out.println("bounce.");
+					continue;
+				}
+				Result<IValue> r = resugar(src, resultToResugar);
+				return r;
+			} else {
+				//System.out.println("Continue;");
+				continue;
+			}
 		}
 		throw new MatchFailed();
+	}
+	
+	private Integer getLength(Result<IValue> variable) {
+		IValue value = variable.getValue();
+		if (value instanceof Iterable) {
+			Iterator<?> it = ((Iterable<?>) value).iterator();
+			it.next(); // TODO: Evil hack.
+			value = (IValue) it.next();
+			if (value instanceof IList) {
+				return ((IList) value).length();
+			} else if (value instanceof ISet) {
+				return ((ISet) value).size();
+			} else if (value instanceof Iterable) {
+				int i = 0;
+				Iterator<?> iterator = ((Iterable<?>) value).iterator();
+				while (iterator.hasNext()) {
+					i++;
+					iterator.next();
+				}
+				return i;
+			}
+		}
+		throw new MatchFailed();
+	}
+	
+	private boolean ellipsisVariablesLengthsAreCorrect() {
+		for (String s : maxEllipsisVariablesLength.keySet()) {
+			int i = getLength(eval.getCurrentEnvt().getVariable(s));
+			System.out.println("v: " + s + "i: " + i + ", o: " + maxEllipsisVariablesLength.get(s));
+			if (i != maxEllipsisVariablesLength.get(s)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private Result<IValue> fallbackSugar(IValue termToResugar) {

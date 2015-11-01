@@ -6,7 +6,6 @@ import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.BottomUpTransformer;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
-import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
 import org.rascalmpl.interpreter.result.Result;
@@ -14,7 +13,6 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 
 public class ResugarTransformer<E extends Throwable> extends BottomUpTransformer<E> {
 	protected IEvaluator<Result<IValue>> eval;
-	private QualifiedName desugarName;
 
 	public ResugarTransformer(IValueVisitor<IValue,E> visitor, IValueFactory factory,
 			IEvaluator<Result<IValue>> eval) {
@@ -52,7 +50,7 @@ public class ResugarTransformer<E extends Throwable> extends BottomUpTransformer
 				return resugar(o);
 			} catch(MatchFailed e) {
 				e.printStackTrace();
-				return resugarChildren(o);
+				return o; //resugarChildren(o);
 			}
 		}
 		return resugarChildren(o);

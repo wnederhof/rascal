@@ -15,7 +15,6 @@ package org.rascalmpl.interpreter.matching;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -24,6 +23,7 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
@@ -95,7 +95,7 @@ public class GuardedPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		return callback.visit(this, pat.accept(callback));
 	}
 }

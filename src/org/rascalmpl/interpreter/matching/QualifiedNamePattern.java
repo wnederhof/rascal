@@ -17,7 +17,6 @@ package org.rascalmpl.interpreter.matching;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
@@ -25,9 +24,9 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
-import org.rascalmpl.interpreter.staticErrors.UndeclaredVariable;
 import org.rascalmpl.interpreter.utils.Names;
 
 public class QualifiedNamePattern extends AbstractMatchingResult implements IVarPattern {
@@ -189,7 +188,7 @@ public class QualifiedNamePattern extends AbstractMatchingResult implements IVar
 	}
 
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		return callback.visit(this, Arrays.asList(subject.getValue()));
 	}
 }

@@ -26,6 +26,7 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
@@ -163,7 +164,7 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 	
 	// TODO source tracking etc.
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		// LOOKS OK.
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
@@ -176,8 +177,9 @@ public class ConcreteOptPattern extends AbstractMatchingResult {
 			}
 		}
 		
-		Type type = RTF.nonTerminalType(production);
+		// Type type = RTF.nonTerminalType(production);
 
+		@SuppressWarnings("deprecation")
 		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
 		
 		if (!annos.isEmpty()) {

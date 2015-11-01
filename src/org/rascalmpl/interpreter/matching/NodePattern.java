@@ -41,6 +41,7 @@ import org.rascalmpl.ast.QualifiedName;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.ConstructorFunction;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
@@ -432,7 +433,7 @@ public class NodePattern extends AbstractMatchingResult {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		Map<String, IValue> subjectKeywords = null;
 		// Set original keyword parameters.
 		if (subject.mayHaveKeywordParameters()) {

@@ -24,11 +24,11 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
@@ -162,12 +162,12 @@ public class ConcreteListPattern extends AbstractMatchingResult {
 
 		return result.done();
 	}
-	
+
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		IConstructor production = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).getProduction();
 		IListWriter w = ctx.getValueFactory().listWriter();
-		for (IValue arg : pat.substituteChildren(callback)) {
+		for (IValue arg : pat.acceptChildren(callback)) {
 			w.append(arg);
 		}
 		Map<String, IValue> annos = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).asAnnotatable().getAnnotations();

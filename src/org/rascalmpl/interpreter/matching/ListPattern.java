@@ -28,15 +28,14 @@ import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.AbstractAST;
-import org.rascalmpl.interpreter.BasicTypeEvaluator;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.types.NonTerminalType;
-import org.rascalmpl.interpreter.utils.TypeUtils;
 import org.rascalmpl.values.uptr.SymbolAdapter;
 
 public class ListPattern extends AbstractMatchingResult  {
@@ -77,9 +76,9 @@ public class ListPattern extends AbstractMatchingResult  {
   private Type staticListSubjectType;
 
   @Override
-  public List<IValue> accept(IMatchingResultVisitor callback) {
+  public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		List<IValue> resultValues = new LinkedList<IValue>();
-		for (IValue arg : substituteChildren(callback)) {
+		for (IValue arg : acceptChildren(callback)) {
 			resultValues.add(arg);
 		}
 		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
@@ -93,17 +92,15 @@ public class ListPattern extends AbstractMatchingResult  {
   
   // This function gets the patterns at the right location, while considering the deltas
   // and the shifted positions of the patterns.
-  public  List<IValue> substituteChildren(IMatchingResultVisitor callback) {
+  public  List<IValue> acceptChildren(IValueMatchingResultVisitor callback) {
 	  List<IValue> usedPatternChildren = new LinkedList<IValue>();
 	  for (int i = 0; i < patternChildren.size(); i ++) {
 		  if (i % delta == 0) {
+			  //System.out.println(matchResultAtPosition.get(i));
 			  usedPatternChildren.addAll(matchResultAtPosition.get(i).accept(callback));
 		  } else {
 			  // TODO: If the list being substituted is shorter than the original, we have a problem.
-			  //if (i < listSubject.length()) {
-			  System.out.println("ashjkashsdhaskjadkjashdksajdhaskjdhasd");
-				  usedPatternChildren.add(listSubject.get(i % listSubject.length()));
-				// }
+			  usedPatternChildren.add(listSubject.get(i % listSubject.length()));
 		  }
 	  }
 	  return usedPatternChildren;

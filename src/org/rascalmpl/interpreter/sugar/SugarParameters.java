@@ -1,5 +1,7 @@
 package org.rascalmpl.interpreter.sugar;
 
+import java.util.UUID;
+
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
@@ -8,7 +10,16 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.interpreter.env.Environment;
 
 public class SugarParameters {
-	private final static String RESUGAR_FUNCTION = "__resugarFunction";
+	private final static ValueFactory VF = ValueFactory.getInstance();
+	private final static String RESUGAR_FUNCTION = "__resugarFunction",
+								SUGAR_UUID = "__uuid",
+								NOTIFY_TRACER_FN = "__tracerFn";
+
+	public static void declareSugarParameters(Environment env, Type onType, TypeFactory TF) {
+		declareSugarParameter(RESUGAR_FUNCTION, env, onType, TF.valueType());
+		declareSugarParameter(SUGAR_UUID, env, onType, TF.valueType());
+		declareSugarParameter(NOTIFY_TRACER_FN, env, onType, TF.valueType());
+	}
 
 	@SuppressWarnings("deprecation")
 	private static IValue getParameter(String name, IValue value) {
@@ -46,11 +57,10 @@ public class SugarParameters {
 		env.getStore().declareKeywordParameter(onType, name, valueType);
 	}
 
-	private static IValue attachSugarKeywordLayer(String keyword, IValue attachTo, IValue value, ValueFactory VF) {
+	private static IValue attachSugarKeywordLayer(String keyword, IValue attachTo, IValue value) {
 		if (getParameter(keyword, attachTo) == null) {
 			return setParameter(attachTo, keyword, value);
 		}
-		System.out.println("Size > 1");
 		return setParameter(attachTo, keyword, VF.tuple(value, getParameter(keyword, attachTo)));
 	}
 	
@@ -70,11 +80,6 @@ public class SugarParameters {
 		}
 		return unsetParameter(stripFrom, keyword);
 	}
-
-	public static void declareSugarParameters(Environment env, Type onType, TypeFactory TF) {
-		declareSugarParameter(RESUGAR_FUNCTION, env, onType, TF.valueType());
-	}
-
 	@SuppressWarnings("deprecation")
 	public static boolean isResugarable(IValue v) {
 		if (v.isAnnotatable() || v.mayHaveKeywordParameters()) {
@@ -94,8 +99,8 @@ public class SugarParameters {
 		return null;
 	}
 
-	public static IValue attachSugarKeywordsLayer(IValue attachTo, IValue resugarFunction, ValueFactory VF) {
-		return attachSugarKeywordLayer(RESUGAR_FUNCTION, attachTo, resugarFunction, VF);
+	public static IValue attachSugarKeywordsLayer(IValue attachTo, IValue resugarFunction) {
+		return attachSugarKeywordLayer(RESUGAR_FUNCTION, attachTo, resugarFunction);
 	}
 
 	public static IValue peelSugarKeywordsLayer(IValue stripFrom) {
@@ -114,6 +119,32 @@ public class SugarParameters {
 
 	public static boolean hasMultipleLayers(IValue termToDesugar) {
 		return termToDesugar != null && getParameter(RESUGAR_FUNCTION, termToDesugar) instanceof ITuple;
+	}
+	
+	public static IValue tag(IValue v) {
+		 UUID uuid = UUID.randomUUID();
+		 String uuidStr = uuid.toString();
+		 try {
+			 return attachSugarKeywordLayer(SUGAR_UUID, v, VF.string(uuidStr));
+		 } catch(RuntimeException e) {
+			 // Just ignore the tagging.
+			 return v;
+		 }
+	}
+
+	public static IValue tagValue(IValue l) {
+		return getParameter(SUGAR_UUID, l);
+	}
+
+	public static IValue getTopMostTracer(IValue value) {
+		IValue parameter = getParameter(NOTIFY_TRACER_FN, value);
+		if (parameter != null) {
+			if (parameter instanceof ITuple) {
+				return ((ITuple) parameter).get(0);
+			}
+			return parameter;
+		}
+		return null;
 	}
 
 }

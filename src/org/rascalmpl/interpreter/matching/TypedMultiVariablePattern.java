@@ -18,6 +18,7 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 
 
 public class TypedMultiVariablePattern extends TypedVariablePattern {
@@ -54,7 +55,7 @@ public class TypedMultiVariablePattern extends TypedVariablePattern {
 	}
 	
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		// TO DO: Types.
 		List<IValue> resultList = new LinkedList<>();
 		resultList.add(subject.getValue());

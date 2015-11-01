@@ -13,18 +13,15 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
-
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.Expression.CallOrTree;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
-import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.staticErrors.UnsupportedOperation;
 
 class ConcreteAmbiguityPattern extends AbstractMatchingResult {
@@ -45,7 +42,7 @@ class ConcreteAmbiguityPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		// Next does not ever yield any result. Furthermore, this class is never used.
 		throw new UnsupportedOperation("substitute", getAST());
 	}

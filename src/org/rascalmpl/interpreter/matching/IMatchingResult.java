@@ -13,13 +13,12 @@ package org.rascalmpl.interpreter.matching;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
-import org.eclipse.imp.pdb.facts.visitors.VisitorAdapter;
 import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 
 /**
@@ -31,11 +30,10 @@ import org.rascalmpl.interpreter.result.Result;
  */
 public interface IMatchingResult extends IBooleanResult {
 	/**
-	  * Create a new value while substituting the variables in the substitution map. 
-	  * @param substitutionMap the substitution map.
+	  * Accepts a value.
 	  * @return
 	  */
-	public List<IValue> accept(IMatchingResultVisitor callback);
+	public List<IValue> accept(IValueMatchingResultVisitor callback);
 	  
 	/**
 	 * @param patternVars TODO

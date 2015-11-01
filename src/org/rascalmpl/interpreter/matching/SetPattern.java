@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -30,6 +29,7 @@ import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.control_exceptions.InterruptException;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
@@ -727,7 +727,7 @@ public class SetPattern extends AbstractMatchingResult {
 	}
 
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		// The cool thing about sets is that order does not matter, and the pattern children are
 		// initialized earlier and "nexted" earlier, so in contrast to list patterns, we don't have to track anything.
 		List<IValue> result = new LinkedList<IValue>();

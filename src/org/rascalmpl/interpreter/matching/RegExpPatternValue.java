@@ -19,7 +19,6 @@ import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -31,6 +30,7 @@ import org.rascalmpl.ast.AbstractAST;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.asserts.ImplementationError;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.staticErrors.SyntaxError;
@@ -198,7 +198,7 @@ public class RegExpPatternValue extends AbstractMatchingResult  {
 	}
 	
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		throw new UnsupportedOperation("substitute", getAST());
 	}
 }

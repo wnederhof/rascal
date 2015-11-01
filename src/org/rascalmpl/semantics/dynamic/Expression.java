@@ -155,12 +155,17 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			Result<IValue> finalResult = null;
 			long t1 = System.nanoTime();
 			long totalIterations = 1;
-			for (int ctr = 0; ctr < 1; ctr++) {
+			for (int ctr = 0; ctr < totalIterations; ctr++) {
 				IValue v = result.getValue().accept(i);
-				finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
+				try {
+					finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
+				} catch(Throwable e) {
+					e.printStackTrace();
+					return result;
+				}
 			}
 			long t2 = System.nanoTime();
-			//System.out.println(" & " + ((t2 - t1)/(totalIterations * 1000)));
+			System.out.println(" & " + ((t2 - t1)/(totalIterations * 1000)));
 			return finalResult;
 		}
 		
@@ -187,10 +192,15 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 			long totalIterations = 1;
 			for (int ctr = 0; ctr < totalIterations; ctr++) {
 				v = result.getValue().accept(i);
-				finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
+				try {
+					finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
+				} catch(Throwable e) {
+					e.printStackTrace();
+					return result;
+				}
 			}
 			long t2 = System.nanoTime();
-			//System.out.print("" + ((t2 - t1)/(totalIterations * 1000)));
+			System.out.print("" + ((t2 - t1)/(totalIterations * 1000)));
 			return finalResult;
 		}
 	}
@@ -206,7 +216,7 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 		public Result<IValue> interpret(IEvaluator<Result<IValue>> eval) {
 			eval.setCurrentAST(this);
 			eval.notifyAboutSuspension(this);	
-			return SubstitutionEvaluator.substitute(getPattern(), getExpression().interpret(eval).getValue(), eval);
+			return SubstitutionEvaluator.substitute(getPattern(), getExpression().interpret(eval).getValue(), eval, null);
 		}
 		
 	}

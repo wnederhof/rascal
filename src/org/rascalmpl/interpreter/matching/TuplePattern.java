@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -27,6 +26,7 @@ import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 
@@ -160,7 +160,7 @@ public class TuplePattern extends AbstractMatchingResult {
 	}
 	
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		List<IValue> results = new LinkedList<IValue>();
 		for (IMatchingResult c : children) {

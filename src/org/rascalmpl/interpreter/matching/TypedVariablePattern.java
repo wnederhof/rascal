@@ -27,9 +27,8 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.rascalmpl.ast.Expression;
 import org.rascalmpl.interpreter.IEvaluatorContext;
 import org.rascalmpl.interpreter.env.Environment;
-import org.rascalmpl.interpreter.result.Result;
+import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.ResultFactory;
-import org.rascalmpl.interpreter.staticErrors.UndeclaredVariable;
 import org.rascalmpl.interpreter.utils.Names;
 
 
@@ -150,7 +149,7 @@ public class TypedVariablePattern extends AbstractMatchingResult implements IVar
 	}
 	
 	@Override
-	public List<IValue> accept(IMatchingResultVisitor callback) {
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		return callback.visit(this, Arrays.asList(subject.getValue()));
 	}
 	 
