@@ -19,29 +19,32 @@ public class SubstitutionEvaluator {
 	
 	private static Integer getLength(Result<IValue> variable) {
 		IValue value = variable.getValue();
-		if (value instanceof Iterable) {
+		System.out.println("ClassName: " + value.getClass());
+		// TODO: Hack ^ 2.
+		if (value.getClass().toString().startsWith("class org.rascalmpl.values.uptr.RascalValueFactory$")) {
 			Iterator<?> it = ((Iterable<?>) value).iterator();
 			it.next(); // TODO: Evil hack.
 			value = (IValue) it.next();
-			if (value instanceof IList) {
-				return ((IList) value).length();
-			} else if (value instanceof ISet) {
-				return ((ISet) value).size();
-			} else if (value instanceof Iterable) {
-				int i = 0;
-				Iterator<?> iterator = ((Iterable<?>) value).iterator();
-				while (iterator.hasNext()) {
-					i++;
-					iterator.next();
-				}
-				return i;
+		}
+		if (value instanceof IList) {
+			return ((IList) value).length();
+		} else if (value instanceof ISet) {
+			return ((ISet) value).size();
+		} else if (value instanceof Iterable) {
+			int i = 0;
+			Iterator<?> iterator = ((Iterable<?>) value).iterator();
+			while (iterator.hasNext()) {
+				i++;
+				iterator.next();
 			}
+			return i;
 		}
 		throw new MatchFailed();
 	}
 	
 	public static Result<IValue> substitute(Expression pattern, IValue subject, IEvaluator<Result<IValue>> eval,
 			Map<String, Result<IValue>> variables, Map<String, Integer> maxEllipsisVariablesLength) {
+		
 		Environment old = eval.getCurrentEnvt();
 		try {
 			EmptyVariablesEnvironment eve = new EmptyVariablesEnvironment(old);
@@ -58,6 +61,7 @@ public class SubstitutionEvaluator {
 					}
 				}
 				IValue subs = r.accept(new SubstitutionVisitor(eval.getCurrentEnvt(), eve.getVariables())).get(0);
+				System.out.println(subs.getType());
 				if (ResultFactory.makeResult(subject.getType(), subject, eval)
 						.equals(ResultFactory.makeResult(subs.getType(), subs, eval)).isTrue()) {
 					IValue substituted = r.accept(new SubstitutionVisitor(eval.getCurrentEnvt(), variables)).get(0);

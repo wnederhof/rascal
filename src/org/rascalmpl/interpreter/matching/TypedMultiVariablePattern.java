@@ -10,6 +10,7 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -54,11 +55,19 @@ public class TypedMultiVariablePattern extends TypedVariablePattern {
 		return "*" + declaredType + " " + getName();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<IValue> accept(IValueMatchingResultVisitor callback) {
-		// TO DO: Types.
+		IValue resultElem;
+		resultElem = super.accept(callback).get(0);
 		List<IValue> resultList = new LinkedList<>();
-		resultList.add(subject.getValue());
+		
+		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
+			for (IValue val : (Iterable<IValue>) resultElem) {
+				resultList.add(val);
+			}
+		} // We follow Expression.List on this: just return an empty list if not
+		  // a list or a set.
 		return callback.visit(this, resultList);
 	}
 

@@ -17,7 +17,6 @@ package org.rascalmpl.interpreter.matching;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IList;
@@ -32,6 +31,7 @@ import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.types.NonTerminalType;
+import org.rascalmpl.values.uptr.ITree;
 import org.rascalmpl.values.uptr.ProductionAdapter;
 import org.rascalmpl.values.uptr.RascalValueFactory;
 import org.rascalmpl.values.uptr.SymbolAdapter;
@@ -165,16 +165,13 @@ public class ConcreteListPattern extends AbstractMatchingResult {
 
 	@Override
 	public List<IValue> accept(IValueMatchingResultVisitor callback) {
-		IConstructor production = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).getProduction();
 		IListWriter w = ctx.getValueFactory().listWriter();
 		for (IValue arg : pat.acceptChildren(callback)) {
 			w.append(arg);
 		}
-		Map<String, IValue> annos = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).asAnnotatable().getAnnotations();
+		IConstructor production = ((org.rascalmpl.values.uptr.ITree) subject.getValue()).getProduction();
 		int delta = getDelta(production);
-		if (annos.isEmpty()) {
-			return callback.visit(this, Arrays.asList(VF.appl(production, flatten(w.done(), delta, production))));
-		}
-		return callback.visit(this, Arrays.asList(VF.appl(annos, production, flatten(w.done(), delta, production))));
+		return Arrays.asList(
+				((org.rascalmpl.values.uptr.ITree) subject.getValue()).set(1, flatten(w.done(), delta, production)));
 	}
 }

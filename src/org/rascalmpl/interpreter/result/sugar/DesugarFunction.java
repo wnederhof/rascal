@@ -15,6 +15,7 @@ import org.rascalmpl.ast.FunctionDeclaration;
 import org.rascalmpl.interpreter.IEvaluator;
 import org.rascalmpl.interpreter.control_exceptions.ControlException;
 import org.rascalmpl.interpreter.control_exceptions.MatchFailed;
+import org.rascalmpl.interpreter.control_exceptions.Return;
 import org.rascalmpl.interpreter.env.Environment;
 import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
@@ -23,6 +24,7 @@ import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.NamedFunction;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
+import org.rascalmpl.interpreter.staticErrors.UnexpectedType;
 import org.rascalmpl.interpreter.sugar.Desugar;
 import org.rascalmpl.interpreter.sugar.DesugarTransformer;
 import org.rascalmpl.interpreter.types.FunctionType;
@@ -76,7 +78,16 @@ public class DesugarFunction extends NamedFunction {
 				eval,
 				repeatMode(),
 				functionDeclaration);
-		return desugar.desugar(resultToDesugar);
+		IValue val = desugar.desugar(resultToDesugar).getValue();
+		try {
+			return ResultFactory.makeResult(
+					functionDeclaration.getTypeCore().typeOf(eval.getCurrentEnvt(), true, eval), 
+					val,
+					ctx);
+		} catch(Exception e) {
+			throw new UnexpectedType(functionDeclaration.getTypeCore().typeOf(eval.getCurrentEnvt(), true, eval),
+					val.getType(), eval.getCurrentAST());
+		}
 	}
 
 	@Override
@@ -90,12 +101,12 @@ public class DesugarFunction extends NamedFunction {
 		try {
 			ensureNoVariablesLeak(declarationEnvironment);
 			IMatchingResult matcher = functionDeclaration.getPatternSurface().buildMatcher(eval);
-			matcher.initMatch(resultToDesugar);
 			ISourceLocation src = eval.getCurrentAST().getLocation();
 			if (matcher instanceof IVarPattern) {
 				throw new ControlException("Cannot desugar identity variables.");
 			}
-			if (matcher.next()) {
+			matcher.initMatch(resultToDesugar);
+			if (matcher.hasNext() && matcher.next()) {
 				if (functionDeclaration.hasOptionalWhen()) {
 					if (functionDeclaration.getOptionalWhen().hasConditions()) {
 						for (Expression e : functionDeclaration.getOptionalWhen().getConditions()) {
@@ -106,8 +117,10 @@ public class DesugarFunction extends NamedFunction {
 					}
 					ensureNoVariablesLeak(eval.getCurrentEnvt());
 				}
+				
 				return desugar(src, resultToDesugar);
 			}
+//			System.out.println(matcher);
 			throw new MatchFailed();
 		} finally {
 			eval.unwind(old);

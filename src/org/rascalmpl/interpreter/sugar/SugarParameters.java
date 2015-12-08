@@ -1,5 +1,6 @@
 package org.rascalmpl.interpreter.sugar;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.eclipse.imp.pdb.facts.ITuple;
@@ -12,12 +13,12 @@ import org.rascalmpl.interpreter.env.Environment;
 public class SugarParameters {
 	private final static ValueFactory VF = ValueFactory.getInstance();
 	private final static String RESUGAR_FUNCTION = "__resugarFunction",
-								SUGAR_UUID = "__uuid",
+								SUGAR_NODEID = "__nodeId",
 								NOTIFY_TRACER_FN = "__tracerFn";
 
 	public static void declareSugarParameters(Environment env, Type onType, TypeFactory TF) {
 		declareSugarParameter(RESUGAR_FUNCTION, env, onType, TF.valueType());
-		declareSugarParameter(SUGAR_UUID, env, onType, TF.valueType());
+		declareSugarParameter(SUGAR_NODEID, env, onType, TF.valueType());
 		declareSugarParameter(NOTIFY_TRACER_FN, env, onType, TF.valueType());
 	}
 
@@ -120,20 +121,21 @@ public class SugarParameters {
 	public static boolean hasMultipleLayers(IValue termToDesugar) {
 		return termToDesugar != null && getParameter(RESUGAR_FUNCTION, termToDesugar) instanceof ITuple;
 	}
-	
+		
 	public static IValue tag(IValue v) {
-		 UUID uuid = UUID.randomUUID();
-		 String uuidStr = uuid.toString();
-		 try {
-			 return attachSugarKeywordLayer(SUGAR_UUID, v, VF.string(uuidStr));
-		 } catch(RuntimeException e) {
-			 // Just ignore the tagging.
-			 return v;
-		 }
+		String nodeIdStr;
+		nodeIdStr = "" + new Random().nextInt();
+		try {
+			return attachSugarKeywordLayer(SUGAR_NODEID, v, VF.string(nodeIdStr));
+		} catch(RuntimeException e) {
+			// Just ignore the tagging.
+			return v;
+		}
 	}
 
 	public static IValue tagValue(IValue l) {
-		return getParameter(SUGAR_UUID, l);
+		IValue r = getParameter(SUGAR_NODEID, l);
+		return r;
 	}
 
 	public static IValue getTopMostTracer(IValue value) {

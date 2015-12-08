@@ -55,7 +55,6 @@ public class Resugar {
 		HashMap<String, Result<IValue>> union = new HashMap<String, Result<IValue>>();
 		union.putAll(sigma);
 		union.putAll(T_acc_P_acc_j);
-		//System.out.println("Effie en Beffie: " + TreeAdapter.yield((IConstructor) union.get("bef").getValue()));
 		return SubstitutionEvaluator.substitute(surfacePattern, original, eval, union, maxEllipsisVariablesLength);
 	}
 	
@@ -86,6 +85,7 @@ public class Resugar {
 
 	public Result<IValue> resugar(Result<IValue> toResugar, IValue original) {
 		Environment old = eval.getCurrentEnvt();
+		System.out.println("Check!");
 		try {
 			ensureNoVariablesLeak(old);
 			/* In repeat mode, variables are not resugared,

@@ -458,9 +458,12 @@ public class NodePattern extends AbstractMatchingResult {
 			result.addAll(substitute);
 		}
 		List<IValue> resultValues = new LinkedList<IValue>();
+		//System.out.println("*" + Names.fullName(qName));
 		for (IValue pc : result) {
+			//System.out.println("-" + pc);
 			resultValues.add(pc);
-		}		
+		}
+		//System.out.println("+" + subject);
 		IConstructor cons = (IConstructor) ((IEvaluator) ctx).call(qName, subjectKeywords, resultValues.toArray(new IValue[resultValues.size()]));
 		
 		if (subjectKeywords == null) {

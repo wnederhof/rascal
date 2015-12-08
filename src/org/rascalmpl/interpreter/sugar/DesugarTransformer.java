@@ -40,8 +40,13 @@ public class DesugarTransformer<E extends Throwable> extends BottomUpTransformer
 					return true;
 				}
 			}
+			return false;
 		}
-		return false;
+		// TODO Hack.
+		return (o.getClass().toString().equals("class org.eclipse.imp.pdb.facts.impl.fast.Constructor")); 
+//		System.out.println("Scheiße!");
+//		System.out.println(o.getClass());
+//		return false;
 	}
 	
 	private IValue desugarChildren(IConstructor o) throws E {

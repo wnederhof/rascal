@@ -41,6 +41,7 @@ public class SubstitutionVisitor extends IdentityValueMatchingResultVisitor impl
 	public List<IValue> visit(TypedVariablePattern a, List<IValue> list) {
 		// TODO: Typing.
 		if (substitutionVariables.containsKey(a.name())) {
+//			System.out.println(substitutionVariables.get(a.name()).getValue());
 			return Arrays.asList(substitutionVariables.get(a.name()).getValue());
 		} else if (env.getVariable(a.name()) != null) {
 			return Arrays.asList(env.getVariable(a.name()).getValue());
@@ -53,14 +54,25 @@ public class SubstitutionVisitor extends IdentityValueMatchingResultVisitor impl
 	public List<IValue> visit(TypedMultiVariablePattern a, List<IValue> list) {
 		// TODO: Typing.
 		List<IValue> resultList = new LinkedList<>();
-		IValue resultElem = list.get(0);
-		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
-			for (IValue val : (Iterable<IValue>) resultElem) {
-				resultList.add(val);
+		IValue resultElem;
+		if (substitutionVariables.containsKey(a.name())) {
+			resultElem = substitutionVariables.get(a.name()).getValue();
+			if (resultElem.getType().isList() || resultElem.getType().isSet()) {
+				for (IValue val : (Iterable<IValue>) resultElem) {
+					resultList.add(val);
+				}
 			}
-		} // We follow Expression.List on this: just return an empty list if not
-		  // a list or a set.
-		return resultList;
+			return resultList;
+		} else if (env.getVariable(a.name()) != null) {
+			resultElem = env.getVariable(a.name()).getValue();
+			if (resultElem.getType().isList() || resultElem.getType().isSet()) {
+				for (IValue val : (Iterable<IValue>) resultElem) {
+					resultList.add(val);
+				}
+			}
+			return resultList;
+		}
+		return list;
 	}
 	
 	public SubstitutionVisitor(Environment env, Map<String, Result<IValue>> substitutionVariables) {

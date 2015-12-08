@@ -25,7 +25,7 @@ import org.rascalmpl.interpreter.env.StayInScopeEnvironment;
 import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.matching.visitor.IdentityValueMatchingResultVisitor;
-import org.rascalmpl.interpreter.matching.visitor.PatternUUIDAccumulator;
+import org.rascalmpl.interpreter.matching.visitor.PatternNodeIDAccumulator;
 import org.rascalmpl.interpreter.result.ICallableValue;
 import org.rascalmpl.interpreter.result.NamedFunction;
 import org.rascalmpl.interpreter.result.Result;
@@ -41,7 +41,7 @@ import org.rascalmpl.interpreter.utils.Names;
 public class ResugarFunction extends NamedFunction {
 	private FunctionDeclaration functionDeclaration;
 	private IValue originalTerm;
-	private PatternUUIDAccumulator patternUuidAccumulator;
+	private PatternNodeIDAccumulator patternNodeIdAccumulator;
 	private Map<String, Integer> maxEllipsisVariablesLength;
 
 	private static FunctionType createResugarFunctionType(FunctionDeclaration functionDeclaration,
@@ -54,19 +54,19 @@ public class ResugarFunction extends NamedFunction {
 	}
 
 	public ResugarFunction(AbstractAST ast, IEvaluator<Result<IValue>> eval, FunctionDeclaration functionDeclaration,
-			String name, Environment env, IValue originalTerm, PatternUUIDAccumulator patternUuidAccumulator,
+			String name, Environment env, IValue originalTerm, PatternNodeIDAccumulator patternNodeIdAccumulator,
 			Map<String, Integer> maxEllipsisVariablesLength) {
 		super(ast, eval, createResugarFunctionType(functionDeclaration, eval, env), new LinkedList<>(), name, false,
 				false, false, env);
 		this.functionDeclaration = functionDeclaration;
 		this.originalTerm = originalTerm;
-		this.patternUuidAccumulator = patternUuidAccumulator;
+		this.patternNodeIdAccumulator = patternNodeIdAccumulator;
 		this.maxEllipsisVariablesLength = maxEllipsisVariablesLength;
 	}
 
 	@Override
 	public ICallableValue cloneInto(Environment env) {
-		return new ResugarFunction(ast, eval, functionDeclaration, name, env, originalTerm, patternUuidAccumulator, maxEllipsisVariablesLength);
+		return new ResugarFunction(ast, eval, functionDeclaration, name, env, originalTerm, patternNodeIdAccumulator, maxEllipsisVariablesLength);
 	}
 
 	@Override
@@ -157,17 +157,18 @@ public class ResugarFunction extends NamedFunction {
 			try {
 				matcher.initMatch(resultToResugar);
 			} catch(Throwable t) {
-				//throw new MatchFailed();
+				System.out.println("Throwing " + t);
+				throw new MatchFailed();
 				//throw new RuntimeException("WTF");
 			}
 		}
 		ISourceLocation src = eval.getCurrentAST().getLocation();
 		while (matcher.hasNext() && matcher.next()) {
-			PatternUUIDAccumulator steppedPua = new PatternUUIDAccumulator(
+			PatternNodeIDAccumulator steppedPua = new PatternNodeIDAccumulator(
 					new IdentityValueMatchingResultVisitor(),
 					new IdentityValueMatchingResultVisitor());
 			matcher.accept(steppedPua);
-			if (steppedPua.equals(patternUuidAccumulator)) {
+			if (steppedPua.equals(patternNodeIdAccumulator)) {
 				if (!ellipsisVariablesLengthsAreCorrect()) {
 					//System.out.println("bounce.");
 					continue;
@@ -175,32 +176,35 @@ public class ResugarFunction extends NamedFunction {
 				Result<IValue> r = resugar(src, resultToResugar);
 				return r;
 			} else {
-				//System.out.println("Continue;");
+//				//System.out.println("Continue;");
 				continue;
 			}
 		}
+		
 		throw new MatchFailed();
 	}
 	
 	private Integer getLength(Result<IValue> variable) {
 		IValue value = variable.getValue();
-		if (value instanceof Iterable) {
+		System.out.println("ClassName: " + value.getClass());
+		// TODO: Hack ^ 2.
+		if (value.getClass().toString().startsWith("class org.rascalmpl.values.uptr.RascalValueFactory$")) {
 			Iterator<?> it = ((Iterable<?>) value).iterator();
 			it.next(); // TODO: Evil hack.
 			value = (IValue) it.next();
-			if (value instanceof IList) {
-				return ((IList) value).length();
-			} else if (value instanceof ISet) {
-				return ((ISet) value).size();
-			} else if (value instanceof Iterable) {
-				int i = 0;
-				Iterator<?> iterator = ((Iterable<?>) value).iterator();
-				while (iterator.hasNext()) {
-					i++;
-					iterator.next();
-				}
-				return i;
+		}
+		if (value instanceof IList) {
+			return ((IList) value).length();
+		} else if (value instanceof ISet) {
+			return ((ISet) value).size();
+		} else if (value instanceof Iterable) {
+			int i = 0;
+			Iterator<?> iterator = ((Iterable<?>) value).iterator();
+			while (iterator.hasNext()) {
+				i++;
+				iterator.next();
 			}
+			return i;
 		}
 		throw new MatchFailed();
 	}

@@ -2,6 +2,7 @@ package org.rascalmpl.interpreter.sugar;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.imp.pdb.facts.IList;
@@ -24,7 +25,7 @@ import org.rascalmpl.interpreter.matching.IMatchingResult;
 import org.rascalmpl.interpreter.matching.IVarPattern;
 import org.rascalmpl.interpreter.matching.visitor.IValueMatchingResultVisitor;
 import org.rascalmpl.interpreter.matching.visitor.IdentityValueMatchingResultVisitor;
-import org.rascalmpl.interpreter.matching.visitor.PatternUUIDAccumulator;
+import org.rascalmpl.interpreter.matching.visitor.PatternNodeIDAccumulator;
 import org.rascalmpl.interpreter.matching.visitor.TagDesugared;
 import org.rascalmpl.interpreter.result.Result;
 import org.rascalmpl.interpreter.result.ResultFactory;
@@ -37,7 +38,7 @@ public class Desugar {
 	private IEvaluator<Result<IValue>> eval;
 	private boolean repeatMode;
 	private FunctionDeclaration functionDeclaration;
-	private PatternUUIDAccumulator patternUuidAccumulator;
+	private PatternNodeIDAccumulator patternNodeIdAccumulator;
 	private Map<String, Integer> maxEllipsisVariablesLength;
 	
 	private Result<IValue> makeResult(IValue v) {
@@ -66,7 +67,7 @@ public class Desugar {
 		return makeResult(SugarParameters.attachSugarKeywordsLayer(coreTerm.getValue(),
 				new ResugarFunction(eval.getCurrentAST(), eval, functionDeclaration,
 						Names.name(functionDeclaration.getName()), eval.getCurrentEnvt(), originalTerm,
-						patternUuidAccumulator, maxEllipsisVariablesLength)));
+						patternNodeIdAccumulator, maxEllipsisVariablesLength)));
 	}
 
 	private Map<String, Integer> accumulateMaxEllipsisVariablesLength() {
@@ -91,6 +92,16 @@ public class Desugar {
 
 	private Integer getLength(Result<IValue> variable) {
 		IValue value = variable.getValue();
+		// TODO add support for multipattern.
+		// Concrete
+		if (value instanceof IList) {
+			return ((IList) value).length();
+		} else if (value instanceof ISet) {
+			return ((ISet) value).size();
+		}
+		System.out.println(value.getClass());
+		
+		// TODO: Bit hacky, but works for concrete ellipses.
 		if (value instanceof Iterable) {
 			Iterator<?> it = ((Iterable<?>) value).iterator();
 			it.next(); // TODO: Evil hack.
@@ -138,6 +149,7 @@ public class Desugar {
 	}
 	
 	private boolean ellipsisVariablesLengthsAreCorrect() {
+		// class org.rascalmpl.values.uptr.RascalValueFactory$Appl1
 		for (String s : maxEllipsisVariablesLength.keySet()) {
 			int i = getLength(eval.getCurrentEnvt().getVariable(s));
 			if (i != maxEllipsisVariablesLength.get(s)) {
@@ -149,20 +161,28 @@ public class Desugar {
 
 	private Result<IValue> desugarTerm(IValue originalTerm) {
 		Result<IValue> coreTerm = corePattern.interpret(eval);
+		// if (true) return coreTerm;
 		
 		// imrv tags the inner nodes with a unique identifer,
-		// while patternUuidAccumulator accumulates these
+		// while patternNodeIdAccumulator accumulates these
 		// values for comparing node identity during resugaring.
 		IMatchingResult imr = corePattern.buildMatcher(eval);
 		imr.initMatch(coreTerm);
 		while (imr.hasNext() && imr.next()) {
-			patternUuidAccumulator = new PatternUUIDAccumulator(
+			patternNodeIdAccumulator = new PatternNodeIDAccumulator(
 					new IdentityValueMatchingResultVisitor(),
 					new IdentityValueMatchingResultVisitor());
 			IValueMatchingResultVisitor imrv = new TagDesugared(
-					patternUuidAccumulator,
+					patternNodeIdAccumulator,
 					new IdentityValueMatchingResultVisitor());
-			IValue v = imr.accept(imrv).get(0);
+			IValue v;
+			try {
+				List<IValue> vs = imr.accept(imrv);
+				v = vs.get(0);
+			} catch(Exception e) {
+				e.printStackTrace();
+				throw e;
+			}
 			if (!ellipsisVariablesLengthsAreCorrect())
 				continue;
 			return makeResult(v);

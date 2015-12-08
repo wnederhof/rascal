@@ -18,6 +18,7 @@
 package org.rascalmpl.semantics.dynamic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -108,7 +109,17 @@ import org.rascalmpl.values.uptr.SymbolAdapter;
 import org.rascalmpl.values.uptr.visitors.IdentityTreeVisitor;
 
 public abstract class Expression extends org.rascalmpl.ast.Expression {
-  private static final Name IT = ASTBuilder.makeLex("Name", null, "<it>");
+	private static final Name IT = ASTBuilder.makeLex("Name", null, "<it>");
+	private static final Integer SUGAR_ITERATIONS = 1;
+	
+	private static long median(Long[] numbers) {
+		Arrays.sort(numbers);
+		if (numbers.length % 2 == 0) {
+			return (numbers[numbers.length / 2] + numbers[numbers.length / 2 - 1]) / 2;
+		}
+		return numbers[numbers.length / 2];
+	}
+	
 	static public class Addition extends org.rascalmpl.ast.Expression.Addition {
 
 		public Addition(ISourceLocation __param1, IConstructor tree, org.rascalmpl.ast.Expression __param2,
@@ -153,9 +164,11 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 					VF, __eval);
 			Result<IValue> result = this.getExpression().interpret(__eval);
 			Result<IValue> finalResult = null;
-			long t1 = System.nanoTime();
-			long totalIterations = 1;
+			long totalIterations = SUGAR_ITERATIONS;
+			LinkedList<Long> numbers = new LinkedList<Long>();
+			
 			for (int ctr = 0; ctr < totalIterations; ctr++) {
+				long t1 = System.nanoTime();
 				IValue v = result.getValue().accept(i);
 				try {
 					finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
@@ -163,9 +176,10 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 					e.printStackTrace();
 					return result;
 				}
+				long t2 = System.nanoTime();
+				numbers.add((Long) (t2 - t1));
 			}
-			long t2 = System.nanoTime();
-			System.out.println(" & " + ((t2 - t1)/(totalIterations * 1000)));
+			System.out.println(" & " + (median(numbers.toArray(new Long[numbers.size()])) / 1000));
 			return finalResult;
 		}
 		
@@ -188,9 +202,11 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 					new IdentityTreeVisitor<RuntimeException>() {},
 					VF, __eval, getSugarFn());
 			Result<IValue> result = this.getExpression().interpret(__eval);
-			long t1 = System.nanoTime();
-			long totalIterations = 1;
+			LinkedList<Long> numbers = new LinkedList<Long>();
+			
+			long totalIterations = SUGAR_ITERATIONS;
 			for (int ctr = 0; ctr < totalIterations; ctr++) {
+				long t1 = System.nanoTime();
 				v = result.getValue().accept(i);
 				try {
 					finalResult = ResultFactory.makeResult(v.getType(), v, __eval);
@@ -198,9 +214,11 @@ public abstract class Expression extends org.rascalmpl.ast.Expression {
 					e.printStackTrace();
 					return result;
 				}
+				long t2 = System.nanoTime();
+				numbers.add((Long) (t2 - t1));
 			}
-			long t2 = System.nanoTime();
-			System.out.print("" + ((t2 - t1)/(totalIterations * 1000)));
+
+			System.out.print("" + median(numbers.toArray(new Long[numbers.size()])) / 1000);
 			return finalResult;
 		}
 	}

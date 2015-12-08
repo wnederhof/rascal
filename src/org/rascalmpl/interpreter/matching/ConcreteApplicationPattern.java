@@ -253,40 +253,26 @@ public class ConcreteApplicationPattern extends AbstractMatchingResult {
 	  return production.toString();
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<IValue> accept(IValueMatchingResultVisitor callback) {
-		// LOOKS OK.
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		IListWriter w = ctx.getValueFactory().listWriter();
-		
 		int i = 0, i2 = 0;
-		
+		IConstructor res = (IConstructor) subject.getValue();
+		IList els = (IList) res.get(1);
 		for (Expression l : layoutExprs) {
 			if (l == null) {
+				//System.out.println("1:" + TreeAdapter.yield((IConstructor) els.get(i2)));
 				List<IValue> x = tupleMatcher.getChildren().get(i).accept(callback);
-				w.append(x.get(0));
+				els = els.put(i2, x.get(0));
+				//System.out.println("2:" + TreeAdapter.yield((IConstructor) els.get(i2)));
+				//System.out.println("3:" + tupleMatcher.getChildren().get(i).getClass());
 				i++;
-			} else {
-				// M(&@$#&F@#*&(@#KING LAYOUTS!!!!
-				if (subject.getValue() instanceof IConstructor) {
-					w.append( ((IList)  ((IConstructor) subject.getValue()).get(1)).get(i2) );
-				} else {
-					w.append(l.interpret((IEvaluator<Result<IValue>>) ctx).getValue());
-				}
 			}
 			i2++;
 		}
-	
-
-		@SuppressWarnings("deprecation")
-		Map<String, IValue> annos = subject.getValue().asAnnotatable().getAnnotations();
-		
-		if (!annos.isEmpty()) {
-			return callback.visit(this, Arrays.asList(VF.appl(annos, production, w.done()) ));
-		} else {
-			return callback.visit(this, Arrays.asList(VF.appl(production, w.done())));
-		}
+		res = res.set(1, els);
+		return callback.visit(this, Arrays.asList(res));
 	}
 	
 }

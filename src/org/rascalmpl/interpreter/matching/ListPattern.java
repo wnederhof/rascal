@@ -37,6 +37,7 @@ import org.rascalmpl.interpreter.result.ResultFactory;
 import org.rascalmpl.interpreter.staticErrors.RedeclaredVariable;
 import org.rascalmpl.interpreter.types.NonTerminalType;
 import org.rascalmpl.values.uptr.SymbolAdapter;
+import org.rascalmpl.values.uptr.TreeAdapter;
 
 public class ListPattern extends AbstractMatchingResult  {
   private List<IMatchingResult> patternChildren;  // The elements of this list pattern
@@ -75,8 +76,8 @@ public class ListPattern extends AbstractMatchingResult  {
   private Type staticListSubjectElementType;
   private Type staticListSubjectType;
 
-  @Override
-  public List<IValue> accept(IValueMatchingResultVisitor callback) {
+	@Override
+	public List<IValue> accept(IValueMatchingResultVisitor callback) {
 		List<IValue> resultValues = new LinkedList<IValue>();
 		for (IValue arg : acceptChildren(callback)) {
 			resultValues.add(arg);
@@ -84,27 +85,37 @@ public class ListPattern extends AbstractMatchingResult  {
 		IValue[] listArr = resultValues.toArray(new IValue[resultValues.size()]);
 		IList list = VF.list(listArr);
 		return callback.visit(this, Arrays.asList(list));
-  }
+	}
 
   public ListPattern(IEvaluatorContext ctx, AbstractAST x, List<IMatchingResult> list){
     this(ctx, x, list, 1);  // Default delta=1; Set to 2 to run DeltaListPatternTests
   }
   
-  // This function gets the patterns at the right location, while considering the deltas
-  // and the shifted positions of the patterns.
-  public  List<IValue> acceptChildren(IValueMatchingResultVisitor callback) {
-	  List<IValue> usedPatternChildren = new LinkedList<IValue>();
-	  for (int i = 0; i < patternChildren.size(); i ++) {
-		  if (i % delta == 0) {
-			  //System.out.println(matchResultAtPosition.get(i));
-			  usedPatternChildren.addAll(matchResultAtPosition.get(i).accept(callback));
-		  } else {
-			  // TODO: If the list being substituted is shorter than the original, we have a problem.
-			  usedPatternChildren.add(listSubject.get(i % listSubject.length()));
-		  }
-	  }
-	  return usedPatternChildren;
-  }
+	// This function gets the patterns at the right location, while considering
+	// the deltas
+	// and the shifted positions of the patterns.
+	public List<IValue> acceptChildren(IValueMatchingResultVisitor callback) {
+		int i = 0, i2 = 0;
+		List<IValue> usedPatternChildren = new LinkedList<IValue>();
+		System.out.println(listSubject.length() + ", " + patternSize);
+		
+		for (i = 0; i < patternChildren.size(); i ++) {
+			if (i % delta == 0) {
+				if (delta != 1) {
+					usedPatternChildren.add(patternChildren.get(i).accept(callback).get(0));
+				} else {
+					usedPatternChildren.addAll(patternChildren.get(i).accept(callback));
+				}
+			} else {
+				if (patternChildren.get(i) instanceof ConcreteApplicationPattern) {
+					System.out.println(((ConcreteApplicationPattern) patternChildren.get(i)).subject);
+				}
+				usedPatternChildren.add(patternChildren.get(i).toIValue());
+				
+			}
+		}
+		return usedPatternChildren;
+	}
 
   ListPattern(IEvaluatorContext ctx, AbstractAST x, List<IMatchingResult> list, int delta){
     super(ctx, x);

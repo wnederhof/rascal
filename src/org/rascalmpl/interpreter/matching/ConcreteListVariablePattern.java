@@ -17,6 +17,7 @@ package org.rascalmpl.interpreter.matching;
 
 import static org.rascalmpl.interpreter.result.ResultFactory.makeResult;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -207,14 +208,12 @@ public class ConcreteListVariablePattern extends AbstractMatchingResult implemen
 		if (!initialized) throw new RuntimeException("Not initialized!");
 		List<IValue> resultList = new LinkedList<>();
 		Result<IValue> resultElem = subject;
-		if (subject.getValue() instanceof Iterable) {
-			for (IValue val : (Iterable<IValue>) resultElem.getValue()) {
-				resultList.add(val);
-			}
-		} else {
-			// This should not happen.
-			resultList.add(resultElem.getValue());
+		System.out.println(toIValue().getClass());
+		for (IValue val : (Iterable<IValue>) resultElem.getValue()) {
+			resultList.add(val);
 		}
-		return callback.visit(this, resultList);
+		List<IValue> resList = callback.visit(this, resultList);
+		IList iList = VF.list(resList.toArray(new IValue[resList.size()]));
+		return Arrays.asList(wrapWithListProd(iList));
 	}
 }

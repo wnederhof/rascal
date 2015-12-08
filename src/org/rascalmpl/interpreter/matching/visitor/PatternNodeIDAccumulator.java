@@ -7,7 +7,7 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.rascalmpl.interpreter.matching.AbstractMatchingResult;
 import org.rascalmpl.interpreter.sugar.SugarParameters;
 
-public class PatternUUIDAccumulator extends InnerOuterVisitor {
+public class PatternNodeIDAccumulator extends InnerOuterVisitor {
 	private final int prime = 31; // Source: http://stackoverflow.com/questions/2730865/how-do-i-calculate-a-good-hash-code-for-a-list-of-strings
 	private final int emptyStringHash = "".hashCode(); // note that tagValues are never empty.
 	private int hashResult = 1;
@@ -24,7 +24,6 @@ public class PatternUUIDAccumulator extends InnerOuterVisitor {
 			}
 			hashResult = hashResult * prime + emptyStringHash;
 		}
-		
 		return super.visitInner(result, list);
 	}
 	
@@ -35,10 +34,10 @@ public class PatternUUIDAccumulator extends InnerOuterVisitor {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof PatternUUIDAccumulator) ? obj.hashCode() == this.hashCode() : false;
+		return (obj instanceof PatternNodeIDAccumulator) ? obj.hashCode() == this.hashCode() : false;
 	}
 	
-	public PatternUUIDAccumulator(IValueMatchingResultVisitor innerNext, IValueMatchingResultVisitor outerNext) {
+	public PatternNodeIDAccumulator(IValueMatchingResultVisitor innerNext, IValueMatchingResultVisitor outerNext) {
 		super(innerNext, outerNext);
 	}
 }

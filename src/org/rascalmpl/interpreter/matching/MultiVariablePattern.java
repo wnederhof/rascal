@@ -12,6 +12,7 @@
 *******************************************************************************/
 package org.rascalmpl.interpreter.matching;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -105,8 +106,15 @@ public class MultiVariablePattern extends QualifiedNamePattern {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<IValue> accept(IValueMatchingResultVisitor callback) {
+		boolean wasNull = subject == null;
+		IValue resultElem;
+		if (wasNull) {
+			resultElem = callback.visit(this, Arrays.asList(ctx.getCurrentEnvt().getSimpleVariable(name).getValue())).get(0);
+		} else {
+			resultElem = super.accept(callback).get(0);
+		}
 		List<IValue> resultList = new LinkedList<>();
-		IValue resultElem = super.accept(callback).get(0);
+		
 		if (resultElem.getType().isList() || resultElem.getType().isSet()) {
 			for (IValue val : (Iterable<IValue>) resultElem) {
 				resultList.add(val);
